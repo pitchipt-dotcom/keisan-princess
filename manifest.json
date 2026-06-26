@@ -1,0 +1,42 @@
+{
+  "name": "けいさんプリンセス",
+  "short_name": "けいさんプリンセス",
+  "description": "まじょ・にんぎょ・プリンセスと あそぶ さんすうゲーム。九九・くりあがり・くりさがり・10づくりを たのしく れんしゅう！",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF6FB",
+  "theme_color": "#3A2A6B",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["education", "kids", "games"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
+
