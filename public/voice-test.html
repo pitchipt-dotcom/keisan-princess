@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>voice test</title>
+<style>
+body{font-family:sans-serif;padding:16px;max-width:520px;margin:auto}
+button{font-size:20px;padding:14px 24px}
+pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all}
+</style></head><body>
+<h1>音声認識テスト</h1>
+<p id="support"></p>
+<p>「はなす」を押して「ににんがし」「さんしじゅうに」などを言ってください。</p>
+<button id="btn">はなす</button>
+<h2>認識結果</h2>
+<pre id="res">(まだなし)</pre>
+<h2>ログ</h2>
+<pre id="log"></pre>
+<script>
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const $ = id => document.getElementById(id);
+const log = m => { $('log').textContent += new Date().toLocaleTimeString() + ' ' + m + '\n'; };
+$('support').textContent = SR ? '対応: SpeechRecognition あり' : '非対応: SpeechRecognition がありません';
+$('btn').onclick = () => {
+  if (!SR) return log('SpeechRecognition なし');
+  const r = new SR();
+  r.lang = 'ja-JP';
+  r.interimResults = true;
+  r.maxAlternatives = 5;
+  r.continuous = false;
+  ['start','audiostart','speechstart','speechend','audioend','end','nomatch']
+    .forEach(n => r.addEventListener(n, () => log(n)));
+  r.onerror = e => log('error: ' + e.error);
+  r.onresult = e => {
+    const out = [];
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const res = e.results[i];
+      for (let j = 0; j < res.length; j++) {
+        out.push((res.isFinal ? '確定' : '途中') + ' ' + j + ': ' + res[j].transcript + ' (' + res[j].confidence.toFixed(2) + ')');
+      }
+    }
+    $('res').textContent = out.join('\n');
+    if (e.results[e.results.length - 1].isFinal) log('FINAL\n' + out.join('\n'));
+  };
+  try { r.start(); } catch (err) { log('start失敗: ' + err.message); }
+};
+</script></body></html>
