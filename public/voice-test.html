@@ -1,24 +1,27 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>voice test 2</title>
+<title>voice test 3</title>
 <style>
 body{font-family:sans-serif;padding:16px;max-width:520px;margin:auto}
-button,select{font-size:20px;padding:12px 18px;margin:4px 0}
-#lines div{font-size:20px;padding:2px 0}
+button,select{font-size:20px;padding:12px 16px;margin:4px 0}
+#now{font-size:44px;font-weight:bold;text-align:center;margin:12px 0}
+#lines div{font-size:19px;padding:1px 0}
 .ok{color:#0a7d2c;font-weight:bold}
+.cur{color:#c2185b;font-weight:bold}
+.skip{color:#999}
 pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:13px}
 </style></head><body>
-<h1>音声認識テスト2(だんごと)</h1>
+<h1>音声認識テスト3(1行ずつ自動)</h1>
 <p id="support"></p>
-<p>だんをえらんで「はなす」を押し、1から9まで続けて唱えてください。全部そろうか、「おわり」を押すか、90秒たつと止まります。</p>
+<p>「はなす」を1回押したら、1行ずつ唱えてください。行と行の間で少し間をあけてください。</p>
 <select id="dan"></select>
 <button id="start">はなす</button>
 <button id="stop" disabled>おわり</button>
+<button id="skip" disabled>とばす</button>
+<div id="now">-</div>
 <p id="status">待機中</p>
 <div id="lines"></div>
-<h2>聞き取った文字(確定分)</h2>
-<pre id="heard"></pre>
 <h2>途中</h2>
 <pre id="interim"></pre>
 <h2>ログ</h2>
@@ -48,36 +51,53 @@ function digitsOnly(s) {
   return kanjiToNum(s).replace(/[^0-9]/g, '');
 }
 
-let rec = null, active = false, finals = [], timer = null;
+let rec = null, active = false, line = 1, marks = {}, misses = {}, timer = null;
 
-function render(text) {
-  const d = Number($('dan').value), s = digitsOnly(text);
-  let cur = 0, n = 0, html = '';
+function render() {
+  const d = Number($('dan').value);
+  let html = '';
   for (let b = 1; b <= 9; b++) {
-    const ans = String(d * b), idx = s.indexOf(ans, cur);
-    const ok = idx >= 0;
-    if (ok) { cur = idx + ans.length; n++; }
-    html += '<div class="' + (ok ? 'ok' : '') + '">' + (ok ? '◯ ' : '・ ') + d + '×' + b + '=' + ans + '</div>';
+    const m = marks[b];
+    let cls = '', head = '・ ';
+    if (m === 'ok') { cls = 'ok'; head = '◯ '; }
+    else if (m === 'skip') { cls = 'skip'; head = '− '; }
+    else if (b === line && active) { cls = 'cur'; head = '▶ '; }
+    const miss = misses[b] ? '(聞きとれず ' + misses[b] + '回)' : '';
+    html += '<div class="' + cls + '">' + head + d + '×' + b + '=' + (d * b) + ' ' + miss + '</div>';
   }
   $('lines').innerHTML = html;
-  $('heard').textContent = finals.join('\n');
-  if (active) $('status').textContent = '聞いています… ' + n + '/9';
-  if (n === 9 && active) stopAll('ぜんぶそろった');
+  $('now').textContent = line <= 9 ? d + ' × ' + line : 'できた!';
+}
+
+function judge(text) {
+  const d = Number($('dan').value), s = digitsOnly(text);
+  let pos = 0, adv = 0;
+  while (line <= 9) {
+    const ans = String(d * line), idx = s.indexOf(ans, pos);
+    if (idx < 0) break;
+    pos = idx + ans.length;
+    marks[line] = 'ok'; line++; adv++;
+  }
+  if (adv) log('確定: ' + text + ' → ' + adv + '行すすむ');
+  else if (line <= 9) { misses[line] = (misses[line] || 0) + 1; log('確定: ' + text + ' → ' + d + '×' + line + ' 聞きとれず'); }
+  render();
+  if (line > 9 && active) stopAll('ぜんぶできた');
 }
 
 function stopAll(reason) {
   active = false;
   clearTimeout(timer);
   if (rec) { try { rec.stop(); } catch (e) {} }
-  $('start').disabled = false; $('stop').disabled = true; $('dan').disabled = false;
+  $('start').disabled = false; $('stop').disabled = true; $('skip').disabled = true; $('dan').disabled = false;
   $('status').textContent = '停止: ' + reason;
   log('停止: ' + reason);
+  render();
 }
 
 function listenOnce() {
   rec = new SR();
   rec.lang = 'ja-JP';
-  rec.continuous = true;
+  rec.continuous = false;
   rec.interimResults = true;
   rec.maxAlternatives = 1;
   rec.onstart = () => log('start');
@@ -89,28 +109,34 @@ function listenOnce() {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) { finals.push(t); log('確定: ' + t); }
+      if (e.results[i].isFinal) judge(t);
       else interim += t;
     }
     $('interim').textContent = interim;
-    render(finals.join(' ') + ' ' + interim);
   };
   rec.onend = () => {
-    log('end');
-    if (active) setTimeout(() => { if (active) { log('再開'); listenOnce(); } }, 250);
+    if (active) setTimeout(() => { if (active) listenOnce(); }, 200);
   };
   try { rec.start(); } catch (err) { log('start失敗: ' + err.message); }
 }
 
 $('start').onclick = () => {
   if (!SR) return log('SpeechRecognition なし');
-  finals = []; $('interim').textContent = ''; $('log').textContent = '';
+  line = 1; marks = {}; misses = {};
+  $('interim').textContent = ''; $('log').textContent = '';
   active = true;
-  $('start').disabled = true; $('stop').disabled = false; $('dan').disabled = true;
-  render('');
-  timer = setTimeout(() => stopAll('時間切れ(90秒)'), 90000);
+  $('start').disabled = true; $('stop').disabled = false; $('skip').disabled = false; $('dan').disabled = true;
+  $('status').textContent = '聞いています…';
+  render();
+  timer = setTimeout(() => stopAll('時間切れ(120秒)'), 120000);
   listenOnce();
 };
 $('stop').onclick = () => stopAll('おわりボタン');
-render('');
+$('skip').onclick = () => {
+  if (line > 9) return;
+  log('とばす: ' + line + '行目');
+  marks[line] = 'skip'; line++; render();
+  if (line > 9) stopAll('ぜんぶおわり');
+};
+render();
 </script></body></html>
