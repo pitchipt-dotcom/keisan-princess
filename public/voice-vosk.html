@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>voice test vosk</title>
+<style>
+body{font-family:sans-serif;padding:16px;max-width:520px;margin:auto}
+button{font-size:20px;padding:12px 16px;margin:4px 0}
+#now{font-size:40px;font-weight:bold;text-align:center;margin:12px 0}
+#lines div{font-size:18px;padding:1px 0}
+.ok{color:#0a7d2c;font-weight:bold}
+.cur{color:#c2185b;font-weight:bold}
+.skip{color:#999}
+pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:13px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
+</head><body>
+<h1>音声認識テスト Vosk(3のだん)</h1>
+<p id="status">「じゅんび」を押してください(初回は約48MBを読み込みます)</p>
+<button id="load">じゅんび</button>
+<button id="start" disabled>はなす</button>
+<button id="stop" disabled>おわり</button>
+<button id="skip" disabled>とばす</button>
+<div id="now">-</div>
+<div id="lines"></div>
+<h2>途中</h2>
+<pre id="partial"></pre>
+<h2>ログ</h2>
+<pre id="log"></pre>
+<script>
+const $ = id => document.getElementById(id);
+const log = m => { $('log').textContent += new Date().toLocaleTimeString() + ' ' + m + '\n'; };
+
+const PHRASES = [
+  'さん いち が さん', 'さん に が ろく', 'さ ざん が く',
+  'さん し じゅう に', 'さん ご じゅう ご', 'さぶ ろく じゅう はち',
+  'さん しち に じゅう いち', 'さん ぱ に じゅう し', 'さん く に じゅう しち'
+];
+const GRAMMAR = JSON.stringify(PHRASES.concat(['[unk]']));
+const norm = s => s.replace(/\[unk\]/g, '').replace(/\s+/g, '');
+
+let model = null, rec = null, ctx = null, stream = null, node = null, sink = null;
+let active = false, line = 0, marks = {}, misses = {};
+
+function render() {
+  let html = '';
+  PHRASES.forEach((p, i) => {
+    let cls = '', head = '・ ';
+    if (marks[i] === 'ok') { cls = 'ok'; head = '◯ '; }
+    else if (marks[i] === 'skip') { cls = 'skip'; head = '− '; }
+    else if (i === line && active) { cls = 'cur'; head = '▶ '; }
+    const miss = misses[i] ? '(ちがう ' + misses[i] + '回)' : '';
+    html += '<div class="' + cls + '">' + head + '3×' + (i + 1) + ' ' + p.replace(/ /g, '') + ' ' + miss + '</div>';
+  });
+  $('lines').innerHTML = html;
+  $('now').textContent = line < 9 ? '3 × ' + (line + 1) : 'できた!';
+}
+
+function judge(text) {
+  const t = norm(text);
+  if (!t) { log('結果: (空 or [unk]のみ) ' + text); return; }
+  let pos = 0, adv = 0;
+  while (line < 9) {
+    const idx = t.indexOf(norm(PHRASES[line]), pos);
+    if (idx < 0) break;
+    pos = idx + norm(PHRASES[line]).length;
+    marks[line] = 'ok'; line++; adv++;
+  }
+  if (adv) log('結果: ' + text + ' → ' + adv + '行すすむ');
+  else if (line < 9) { misses[line] = (misses[line] || 0) + 1; log('結果: ' + text + ' → 3×' + (line + 1) + ' と一致せず'); }
+  render();
+  if (line >= 9 && active) stopAll('ぜんぶできた');
+}
+
+async function stopAll(reason) {
+  active = false;
+  try { if (node) node.disconnect(); } catch (e) {}
+  try { if (stream) stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+  try { if (ctx) await ctx.close(); } catch (e) {}
+  try { if (rec) rec.remove(); } catch (e) {}
+  node = stream = ctx = rec = null;
+  $('start').disabled = false; $('stop').disabled = true; $('skip').disabled = true;
+  $('status').textContent = '停止: ' + reason;
+  log('停止: ' + reason);
+  render();
+}
+
+$('load').onclick = async () => {
+  $('load').disabled = true;
+  $('status').textContent = 'モデル読み込み中…';
+  const t0 = performance.now();
+  try {
+    model = await Vosk.createModel('/models/ja-small.tar.gz');
+    const sec = ((performance.now() - t0) / 1000).toFixed(1);
+    log('モデル読み込み完了 ' + sec + '秒');
+    $('status').textContent = '準備できました。「はなす」を押してください';
+    $('start').disabled = false;
+  } catch (e) {
+    log('モデル読み込み失敗: ' + e);
+    $('status').textContent = 'モデル読み込み失敗';
+    $('load').disabled = false;
+  }
+};
+
+$('start').onclick = async () => {
+  line = 0; marks = {}; misses = {};
+  $('partial').textContent = '';
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: false,
+      audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 }
+    });
+    ctx = new AudioContext();
+    log('sampleRate ' + ctx.sampleRate);
+    rec = new model.KaldiRecognizer(ctx.sampleRate, GRAMMAR);
+    rec.on('result', m => judge(m.result.text || ''));
+    rec.on('partialresult', m => { $('partial').textContent = m.result.partial || ''; });
+    node = ctx.createScriptProcessor(4096, 1, 1);
+    node.onaudioprocess = ev => { try { if (active && rec) rec.acceptWaveform(ev.inputBuffer); } catch (e) { log('acceptWaveform失敗: ' + e); } };
+    sink = ctx.createGain(); sink.gain.value = 0;
+    ctx.createMediaStreamSource(stream).connect(node);
+    node.connect(sink); sink.connect(ctx.destination);
+    active = true;
+    $('start').disabled = true; $('stop').disabled = false; $('skip').disabled = false;
+    $('status').textContent = '聞いています…(行と行の間で少し間をあけてください)';
+    log('start');
+    render();
+  } catch (e) {
+    log('開始失敗: ' + e);
+    stopAll('開始失敗');
+  }
+};
+$('stop').onclick = () => stopAll('おわりボタン');
+$('skip').onclick = () => {
+  if (line >= 9) return;
+  log('とばす: 3×' + (line + 1));
+  marks[line] = 'skip'; line++; render();
+  if (line >= 9) stopAll('ぜんぶおわり');
+};
+render();
+</script></body></html>
