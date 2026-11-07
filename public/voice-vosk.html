@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>voice test vosk 3</title>
+<title>voice test vosk 4</title>
 <style>
 body{font-family:sans-serif;padding:16px;max-width:520px;margin:auto}
 button{font-size:22px;padding:14px 22px;margin:4px 0}
@@ -15,7 +15,7 @@ pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;fon
 </style>
 <script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
 </head><body>
-<h1>音声認識テスト Vosk 3(3のだん)</h1>
+<h1>音声認識テスト Vosk 4(3のだん)</h1>
 <p id="status">じゅんび中…</p>
 <button id="start">はなす</button>
 <button id="stop" disabled>おわり</button>
@@ -72,12 +72,29 @@ function render() {
   else $('now').textContent = '-';
 }
 
+function wordDist(a, b) {
+  const dp = [];
+  for (let i = 0; i <= a.length; i++) { dp.push([i]); }
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return dp[a.length][b.length];
+}
+
 function bestDiff(pw) {
   let best = 99;
-  for (let s = 0; s + pw.length <= heard.length; s++) {
-    let diff = 0;
-    for (let k = 0; k < pw.length; k++) if (heard[s + k] !== pw[k]) diff++;
-    if (diff < best) best = diff;
+  for (let len = Math.max(1, pw.length - 1); len <= pw.length + 1; len++) {
+    for (let s = 0; s + len <= heard.length; s++) {
+      const d = wordDist(heard.slice(s, s + len), pw);
+      if (d < best) best = d;
+    }
   }
   return best;
 }
