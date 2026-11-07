@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>voice test vosk 4</title>
+<title>Vosk 5</title>
 <style>
 body{font-family:sans-serif;padding:16px;max-width:520px;margin:auto}
 button{font-size:22px;padding:14px 22px;margin:4px 0}
@@ -15,7 +15,8 @@ pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;fon
 </style>
 <script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
 </head><body>
-<h1>音声認識テスト Vosk 4(3のだん)</h1>
+<h1>Vosk 5</h1>
+<p>音声認識テスト(3のだん)</p>
 <p id="status">じゅんび中…</p>
 <button id="start">はなす</button>
 <button id="stop" disabled>おわり</button>
@@ -24,6 +25,7 @@ pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;fon
 <h2>途中</h2>
 <pre id="partial"></pre>
 <h2>ログ</h2>
+<button id="copy">ログをコピー</button> <span id="copymsg"></span>
 <pre id="log"></pre>
 <script>
 const $ = id => document.getElementById(id);
@@ -171,5 +173,14 @@ $('start').onclick = async () => {
   }
 };
 $('stop').onclick = () => stopAll('おわりボタン');
+$('copy').onclick = async () => {
+  const text = $('log').textContent;
+  try { await navigator.clipboard.writeText(text); $('copymsg').textContent = 'コピーしました'; }
+  catch (e) {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy'); document.body.removeChild(ta);
+    $('copymsg').textContent = ok ? 'コピーしました' : 'コピーできませんでした(ログを長押しして選択してください)';
+  }
+};
 render();
 </script></body></html>
