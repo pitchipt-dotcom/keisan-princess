@@ -1,18 +1,26 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>voice test</title>
+<title>voice test 2</title>
 <style>
 body{font-family:sans-serif;padding:16px;max-width:520px;margin:auto}
-button{font-size:20px;padding:14px 24px}
-pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all}
+button,select{font-size:20px;padding:12px 18px;margin:4px 0}
+#lines div{font-size:20px;padding:2px 0}
+.ok{color:#0a7d2c;font-weight:bold}
+pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:13px}
 </style></head><body>
-<h1>音声認識テスト</h1>
+<h1>音声認識テスト2(だんごと)</h1>
 <p id="support"></p>
-<p>「はなす」を押して「ににんがし」「さんしじゅうに」などを言ってください。</p>
-<button id="btn">はなす</button>
-<h2>認識結果</h2>
-<pre id="res">(まだなし)</pre>
+<p>だんをえらんで「はなす」を押し、1から9まで続けて唱えてください。全部そろうか、「おわり」を押すか、90秒たつと止まります。</p>
+<select id="dan"></select>
+<button id="start">はなす</button>
+<button id="stop" disabled>おわり</button>
+<p id="status">待機中</p>
+<div id="lines"></div>
+<h2>聞き取った文字(確定分)</h2>
+<pre id="heard"></pre>
+<h2>途中</h2>
+<pre id="interim"></pre>
 <h2>ログ</h2>
 <pre id="log"></pre>
 <script>
@@ -20,27 +28,89 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const $ = id => document.getElementById(id);
 const log = m => { $('log').textContent += new Date().toLocaleTimeString() + ' ' + m + '\n'; };
 $('support').textContent = SR ? '対応: SpeechRecognition あり' : '非対応: SpeechRecognition がありません';
-$('btn').onclick = () => {
-  if (!SR) return log('SpeechRecognition なし');
-  const r = new SR();
-  r.lang = 'ja-JP';
-  r.interimResults = true;
-  r.maxAlternatives = 5;
-  r.continuous = false;
-  ['start','audiostart','speechstart','speechend','audioend','end','nomatch']
-    .forEach(n => r.addEventListener(n, () => log(n)));
-  r.onerror = e => log('error: ' + e.error);
-  r.onresult = e => {
-    const out = [];
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const res = e.results[i];
-      for (let j = 0; j < res.length; j++) {
-        out.push((res.isFinal ? '確定' : '途中') + ' ' + j + ': ' + res[j].transcript + ' (' + res[j].confidence.toFixed(2) + ')');
-      }
+for (let d = 1; d <= 9; d++) $('dan').add(new Option(d + 'のだん', d));
+$('dan').value = '3';
+
+const KD = {'〇':0,'零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+function kanjiToNum(s) {
+  return s.replace(/[〇零一二三四五六七八九十百]+/g, m => {
+    let total = 0, cur = 0;
+    for (const ch of m) {
+      if (ch === '百') { total += (cur || 1) * 100; cur = 0; }
+      else if (ch === '十') { total += (cur || 1) * 10; cur = 0; }
+      else cur = cur * 10 + KD[ch];
     }
-    $('res').textContent = out.join('\n');
-    if (e.results[e.results.length - 1].isFinal) log('FINAL\n' + out.join('\n'));
+    return String(total + cur);
+  });
+}
+function digitsOnly(s) {
+  s = s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+  return kanjiToNum(s).replace(/[^0-9]/g, '');
+}
+
+let rec = null, active = false, finals = [], timer = null;
+
+function render(text) {
+  const d = Number($('dan').value), s = digitsOnly(text);
+  let cur = 0, n = 0, html = '';
+  for (let b = 1; b <= 9; b++) {
+    const ans = String(d * b), idx = s.indexOf(ans, cur);
+    const ok = idx >= 0;
+    if (ok) { cur = idx + ans.length; n++; }
+    html += '<div class="' + (ok ? 'ok' : '') + '">' + (ok ? '◯ ' : '・ ') + d + '×' + b + '=' + ans + '</div>';
+  }
+  $('lines').innerHTML = html;
+  $('heard').textContent = finals.join('\n');
+  if (active) $('status').textContent = '聞いています… ' + n + '/9';
+  if (n === 9 && active) stopAll('ぜんぶそろった');
+}
+
+function stopAll(reason) {
+  active = false;
+  clearTimeout(timer);
+  if (rec) { try { rec.stop(); } catch (e) {} }
+  $('start').disabled = false; $('stop').disabled = true; $('dan').disabled = false;
+  $('status').textContent = '停止: ' + reason;
+  log('停止: ' + reason);
+}
+
+function listenOnce() {
+  rec = new SR();
+  rec.lang = 'ja-JP';
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.maxAlternatives = 1;
+  rec.onstart = () => log('start');
+  rec.onerror = e => {
+    log('error: ' + e.error);
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') stopAll('マイクが使えません');
   };
-  try { r.start(); } catch (err) { log('start失敗: ' + err.message); }
+  rec.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) { finals.push(t); log('確定: ' + t); }
+      else interim += t;
+    }
+    $('interim').textContent = interim;
+    render(finals.join(' ') + ' ' + interim);
+  };
+  rec.onend = () => {
+    log('end');
+    if (active) setTimeout(() => { if (active) { log('再開'); listenOnce(); } }, 250);
+  };
+  try { rec.start(); } catch (err) { log('start失敗: ' + err.message); }
+}
+
+$('start').onclick = () => {
+  if (!SR) return log('SpeechRecognition なし');
+  finals = []; $('interim').textContent = ''; $('log').textContent = '';
+  active = true;
+  $('start').disabled = true; $('stop').disabled = false; $('dan').disabled = true;
+  render('');
+  timer = setTimeout(() => stopAll('時間切れ(90秒)'), 90000);
+  listenOnce();
 };
+$('stop').onclick = () => stopAll('おわりボタン');
+render('');
 </script></body></html>
