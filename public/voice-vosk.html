@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vosk 5</title>
+<title>Vosk 6</title>
 <style>
 body{font-family:sans-serif;padding:16px;max-width:520px;margin:auto}
 button{font-size:22px;padding:14px 22px;margin:4px 0}
@@ -10,13 +10,15 @@ button{font-size:22px;padding:14px 22px;margin:4px 0}
 .ok{color:#0a7d2c;font-weight:bold}
 .cur{color:#c2185b;font-weight:bold}
 .unk{color:#999}
+.dan button.sel{background:#c2185b;color:#fff;border-color:#c2185b}
 .sub{font-size:13px;color:#999;font-weight:normal}
 pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:13px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
 </head><body>
-<h1>Vosk 5</h1>
-<p>音声認識テスト(3のだん)</p>
+<h1>Vosk 6</h1>
+<div class="dan"><button id="dan3">3のだん</button> <button id="dan7">7のだん</button></div>
+<p id="danlabel">音声認識テスト(3のだん)</p>
 <p id="status">じゅんび中…</p>
 <button id="start">はなす</button>
 <button id="stop" disabled>おわり</button>
@@ -31,15 +33,22 @@ pre{background:#f4f4f4;padding:8px;white-space:pre-wrap;word-break:break-all;fon
 const $ = id => document.getElementById(id);
 const log = m => { $('log').textContent += new Date().toLocaleTimeString() + ' ' + m + '\n'; };
 
-const PHRASES = [
-  'さん いち が さん', 'さん に が ろく', 'さ ざん が く',
-  'さん し じゅう に', 'さん ご じゅう ご', 'さぶ ろく じゅう はち',
-  'さん しち に じゅう いち', 'さん ぱ に じゅう し', 'さん く に じゅう しち'
-];
-const GRAMMAR = JSON.stringify(PHRASES.concat(['[unk]']));
+const DANS = {
+  3: ['さん いち が さん', 'さん に が ろく', 'さ ざん が く',
+      'さん し じゅう に', 'さん ご じゅう ご', 'さぶ ろく じゅう はち',
+      'さん しち に じゅう いち', 'さん ぱ に じゅう し', 'さん く に じゅう しち'],
+  7: ['しち いち が しち', 'しち に じゅう し', 'しち さん に じゅう いち',
+      'しち し に じゅう はち', 'しち ご さん じゅう ご', 'しち ろく し じゅう に',
+      'しち しち し じゅう く', 'しち は ご じゅう ろく', 'しち く ろく じゅう さん']
+};
+const DAN_KEY = 'voiceVosk.dan';
+let dan = 3;
+try { const v = Number(localStorage.getItem(DAN_KEY)); if (DANS[v]) dan = v; } catch (e) {}
+let PHRASES = DANS[dan];
+const grammarFor = d => JSON.stringify(DANS[d].concat(['[unk]']));
 
 let model = null, rec = null, ctx = null, stream = null, node = null, sink = null, timer = null;
-let active = false, finished = false, marks = {}, heard = [];
+let active = false, finished = false, marks = {}, heard = [], used = [];
 
 const t0 = performance.now();
 const modelPromise = Vosk.createModel('/models/ja-small.tar.gz');
@@ -66,11 +75,11 @@ function render() {
     if (marks[i]) { cls = 'ok'; head = '◯ '; if (marks[i] === 'near') sub = ' <span class="sub">(1語ちがい)</span>'; }
     else if (i < last || finished) { cls = 'unk'; head = '？ '; sub = ' <span class="sub">(きこえなかった)</span>'; }
     else if (i === last + 1 && active) { cls = 'cur'; head = '▶ '; }
-    html += '<div class="' + cls + '">' + head + '3×' + (i + 1) + ' ' + p.replace(/ /g, '') + sub + '</div>';
+    html += '<div class="' + cls + '">' + head + dan + '×' + (i + 1) + ' ' + p.replace(/ /g, '') + sub + '</div>';
   });
   $('lines').innerHTML = html;
   if (finished) $('now').textContent = 'できた!';
-  else if (active) $('now').textContent = last + 1 < 9 ? '3 × ' + (last + 2) : 'できた!';
+  else if (active) $('now').textContent = last + 1 < 9 ? dan + ' × ' + (last + 2) : 'できた!';
   else $('now').textContent = '-';
 }
 
@@ -90,14 +99,26 @@ function wordDist(a, b) {
   return dp[a.length][b.length];
 }
 
-function bestDiff(pw) {
-  let best = 99;
-  for (let len = Math.max(1, pw.length - 1); len <= pw.length + 1; len++) {
-    for (let s = 0; s + len <= heard.length; s++) {
-      const d = wordDist(heard.slice(s, s + len), pw);
-      if (d < best) best = d;
+// 聞きとった語の列 heard の中から「行 i に1語ちがい以内でそろう区間」をさがす。
+// ひとつの語は1つの行にしか使わない(used)。候補は 距離が小さい → 次に言うはずの行に近い → 長い区間 の順で1つずつ確定する。
+function bestCandidate() {
+  const next = PHRASES.findIndex((_, i) => !marks[i]);
+  let best = null;
+  PHRASES.forEach((p, i) => {
+    if (marks[i]) return;
+    const pw = p.split(' ');
+    for (let len = Math.max(1, pw.length - 1); len <= pw.length + 1; len++) {
+      for (let s = 0; s + len <= heard.length; s++) {
+        let free = true;
+        for (let k = s; k < s + len; k++) if (used[k]) { free = false; break; }
+        if (!free) continue;
+        const d = wordDist(heard.slice(s, s + len), pw);
+        if (d > 1) continue;
+        const c = { i, s, len, d, pri: i - next };
+        if (!best || (c.d - best.d || c.pri - best.pri || best.len - c.len || c.s - best.s) < 0) best = c;
+      }
     }
-  }
+  });
   return best;
 }
 
@@ -105,16 +126,16 @@ function judge(text) {
   const w = text.trim().split(/\s+/).filter(Boolean);
   if (!w.length) return;
   heard = heard.concat(w);
+  used = used.concat(w.map(() => false));
   const found = [];
-  PHRASES.forEach((p, i) => {
-    if (marks[i]) return;
-    const d = bestDiff(p.split(' '));
-    if (d === 0) { marks[i] = 'ok'; found.push('3×' + (i + 1) + '◯'); }
-    else if (d === 1) { marks[i] = 'near'; found.push('3×' + (i + 1) + '◯(1語ちがい)'); }
-  });
+  for (let c = bestCandidate(); c; c = bestCandidate()) {
+    marks[c.i] = c.d === 0 ? 'ok' : 'near';
+    for (let k = c.s; k < c.s + c.len; k++) used[k] = true;
+    found.push(dan + '×' + (c.i + 1) + (c.d === 0 ? '◯' : '◯(1語ちがい)'));
+  }
   log('結果: ' + text + ' → ' + (found.length ? found.join(' ') : '新しい一致なし'));
   render();
-  if (active && marks[8]) stopAll('3×9まで言えた');
+  if (active && marks[8]) stopAll(dan + '×9まで言えた');
 }
 
 async function stopAll(reason) {
@@ -127,6 +148,7 @@ async function stopAll(reason) {
   try { if (rec) rec.remove(); } catch (e) {}
   node = stream = ctx = rec = null;
   $('start').disabled = false; $('stop').disabled = true;
+  setDanButtons(false);
   $('status').textContent = 'おしまい(' + reason + ')。もう一回なら「はなす」';
   log('停止: ' + reason);
   const ok = PHRASES.filter((_, i) => marks[i] === 'ok').length;
@@ -136,7 +158,8 @@ async function stopAll(reason) {
 }
 
 $('start').onclick = async () => {
-  marks = {}; heard = []; finished = false;
+  marks = {}; heard = []; used = []; finished = false;
+  setDanButtons(true);
   $('partial').textContent = '';
   $('start').disabled = true;
   try {
@@ -152,7 +175,8 @@ $('start').onclick = async () => {
     }
     if (ctx.state === 'suspended') await ctx.resume();
     log('sampleRate ' + ctx.sampleRate);
-    rec = new model.KaldiRecognizer(ctx.sampleRate, GRAMMAR);
+    rec = new model.KaldiRecognizer(ctx.sampleRate, grammarFor(dan));
+    log(dan + 'のだん で開始');
     rec.on('result', m => judge(m.result.text || ''));
     rec.on('partialresult', m => { $('partial').textContent = m.result.partial || ''; });
     node = ctx.createScriptProcessor(4096, 1, 1);
@@ -173,6 +197,26 @@ $('start').onclick = async () => {
   }
 };
 $('stop').onclick = () => stopAll('おわりボタン');
+function setDanButtons(disabled) {
+  [3, 7].forEach(d => {
+    const b = $('dan' + d);
+    b.disabled = disabled;
+    b.className = d === dan ? 'sel' : '';
+  });
+  $('danlabel').textContent = '音声認識テスト(' + dan + 'のだん)';
+}
+function selectDan(d) {
+  if (active || !DANS[d]) return;
+  dan = d; PHRASES = DANS[d];
+  marks = {}; heard = []; used = []; finished = false;
+  try { localStorage.setItem(DAN_KEY, String(d)); } catch (e) {}
+  $('partial').textContent = '';
+  log(d + 'のだん にきりかえ');
+  setDanButtons(false);
+  render();
+}
+$('dan3').onclick = () => selectDan(3);
+$('dan7').onclick = () => selectDan(7);
 $('copy').onclick = async () => {
   const text = $('log').textContent;
   try { await navigator.clipboard.writeText(text); $('copymsg').textContent = 'コピーしました'; }
@@ -182,5 +226,6 @@ $('copy').onclick = async () => {
     $('copymsg').textContent = ok ? 'コピーしました' : 'コピーできませんでした(ログを長押しして選択してください)';
   }
 };
+setDanButtons(false);
 render();
 </script></body></html>
