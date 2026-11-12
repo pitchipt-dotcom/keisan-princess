@@ -487,7 +487,73 @@ function Princess({ mood = "idle", size = 150 }) {
     </svg>
   );
 }
+
+/* ============ さしかえ画像（src/art/ の .webp） ============
+   src/art/items/<id>.webp と src/art/chars/<キャラid>_<表情>.webp を置くと、
+   その絵に さしかわる。画像が無い絵・読みこめなかった絵は、今までの SVG のまま。 */
+const ART = Object.fromEntries(
+  Object.entries(import.meta.glob("./art/**/*.webp", { eager: true, query: "?url", import: "default" }))
+    .map(([path, url]) => [path.replace(/^\.\/art\//, "").replace(/\.webp$/, ""), url])
+);
+const brokenArt = new Set();      // 読みこみに失敗した絵（SVG に もどす）
+const artListeners = new Set();
+const artUrl = (key) => (ART[key] && !brokenArt.has(key) ? ART[key] : null);
+function markArtBroken(key) {
+  if (brokenArt.has(key)) return;
+  brokenArt.add(key);
+  artListeners.forEach((fn) => fn());
+}
+// 画像の URL と onError を返す。失敗したら、その絵を使う ぜんぶの場所が SVG に もどる。
+function useArt(key) {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const fn = () => bump((n) => n + 1);
+    artListeners.add(fn);
+    return () => { artListeners.delete(fn); };
+  }, []);
+  const onError = useCallback(() => markArtBroken(key), [key]);
+  return [artUrl(key), onError];
+}
+// キャラの絵：その表情 → idle → 無し（SVG）
+const charArtKey = (id, mood) =>
+  [`chars/${id}_${mood}`, `chars/${id}_idle`].find((key) => artUrl(key)) || null;
+function charWithArt(id, SvgComp, ratio, label) {
+  function CharArt({ mood = "idle", size = 150 }) {
+    useArt(`chars/${id}_idle`);   // 失敗の知らせを 受けとるため
+    const key = charArtKey(id, mood);
+    if (!key) return <SvgComp mood={mood} size={size} />;
+    // SVG と同じ大きさの わくに、正方形の絵を まん中に置く
+    return (
+      <div role="img" aria-label={label} style={{ width: size, height: size * ratio, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src={artUrl(key)} alt="" draggable={false} onError={() => markArtBroken(key)}
+          style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
+      </div>
+    );
+  }
+  return CharArt;
+}
+// ひまなときに、ぜんぶの絵を 先読みする
+function preloadArt() {
+  const urls = Object.values(ART);
+  if (!urls.length || typeof window === "undefined") return () => {};
+  let stopped = false;
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
+  const next = (i) => {
+    if (stopped || i >= urls.length) return;
+    const img = new Image();
+    img.onload = img.onerror = () => idle(() => next(i + 1));
+    img.src = urls[i];
+  };
+  idle(() => next(0));
+  return () => { stopped = true; };
+}
+
 function ItemIcon({ id, size = 64 }) {
+  const [url, onError] = useArt(`items/${id}`);
+  if (!url) return <ItemIconSvg id={id} size={size} />;
+  return <img src={url} alt="" draggable={false} onError={onError} style={{ width: size, height: size, display: "block", objectFit: "contain" }} />;
+}
+function ItemIconSvg({ id, size = 64 }) {
   const s = { width: size, height: size, display: "block" };
   const sw = 4, stroke = C.plum;
   switch (id) {
@@ -822,9 +888,9 @@ function ColumnMemo({ q, onClose }) {
 
 /* ============ 主人公の せんたくし ============ */
 const CHARACTERS = [
-  { id: "witch",    charaName: "ルナ",   label: "まじょ",     title: "まほうの おしゃれ",       sub: "ふしぎな まほうの アイテムを あつめよう",   Comp: Witch,    ratio: 180 / 160, accent: "#C9A8F0" },
-  { id: "mermaid",  charaName: "マリン", label: "にんぎょ",   title: "うみの たからの おしゃれ", sub: "うみの なかの たからものを あつめよう",     Comp: Mermaid,  ratio: 190 / 160, accent: "#5FD6CB" },
-  { id: "princess", charaName: "ロゼ",   label: "プリンセス", title: "おしろの おしゃれ",         sub: "おしろに ぴったりな ドレスを あつめよう",   Comp: Princess, ratio: 190 / 160, accent: "#FFC2DA" },
+  { id: "witch",    charaName: "ルナ",   label: "まじょ",     title: "まほうの おしゃれ",       sub: "ふしぎな まほうの アイテムを あつめよう",   Comp: charWithArt("witch", Witch, 180 / 160, "まじょのルナ"),          ratio: 180 / 160, accent: "#C9A8F0" },
+  { id: "mermaid",  charaName: "マリン", label: "にんぎょ",   title: "うみの たからの おしゃれ", sub: "うみの なかの たからものを あつめよう",     Comp: charWithArt("mermaid", Mermaid, 190 / 160, "にんぎょのマリン"),    ratio: 190 / 160, accent: "#5FD6CB" },
+  { id: "princess", charaName: "ロゼ",   label: "プリンセス", title: "おしろの おしゃれ",         sub: "おしろに ぴったりな ドレスを あつめよう",   Comp: charWithArt("princess", Princess, 190 / 160, "プリンセスのロゼ"), ratio: 190 / 160, accent: "#FFC2DA" },
 ];
 
 /* ============ きせかえ：アイテムをまとった しゅじんこう ============ */
@@ -835,19 +901,23 @@ const EQUIP_POS = {
   hold:   { top: "62%", left: "10%" },
   feet:   { top: "92%", left: "40%" },
 };
+// 画像キャラは 顔が大きいので、「ふく」のバッジが 顔に かぶらない位置にする
+const EQUIP_POS_ART = { ...EQUIP_POS, outfit: { top: "72%", left: "66%" } };
 function DressedCharacter({ character = "witch", mood = "idle", size = 150, equipped = {} }) {
   const CHAR = CHARACTERS.find((c) => c.id === character) || CHARACTERS[0];
   const Comp = CHAR.Comp;
   const slots = SLOT_DEFS_BY_CHAR[character] || SLOT_DEFS_BY_CHAR.witch;
   const h = size * CHAR.ratio;
   const badge = Math.max(26, size * 0.24);
+  useArt(`chars/${character}_idle`);
+  const positions = charArtKey(character, mood) ? EQUIP_POS_ART : EQUIP_POS;
   return (
     <div style={{ position: "relative", width: size, height: h }}>
       <Comp mood={mood} size={size} />
       {slots.map((slot) => {
         const itemId = equipped[slot.key];
         if (!itemId) return null;
-        const pos = EQUIP_POS[slot.key];
+        const pos = positions[slot.key];
         return (
           <div key={slot.key} className="kk-equip-badge" style={{ top: pos.top, left: pos.left, width: badge, height: badge }}>
             <ItemIcon id={itemId} size={badge * 0.68} />
@@ -1064,6 +1134,7 @@ export default function App() {
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
 
   /* ---- load save ---- */
+  useEffect(() => preloadArt(), []);
   useEffect(() => {
     let cancel = false;
     (async () => {

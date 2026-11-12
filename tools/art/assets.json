@@ -1,0 +1,401 @@
+{
+ "_comment": "generate.py が読む絵の指示。prompt = subject + style + (wearable) + (no_face) + background。'icon' という単語は使わない(角丸タイルが付く)。",
+ "style": "in a soft modern children's mobile game style. Rounded chubby shapes, pastel candy colors, gentle gradients, glossy highlights, tiny sparkles, a thin soft pinkish-brown outline, no harsh black lines.",
+ "background": "Isolated on a plain flat white background, no frame, no rounded square, no border, no shadow, no text. Square composition. Only this one {noun}, nothing else, fully inside the picture with empty margin on all sides.",
+ "lilac_background": "plain flat light lavender purple background",
+ "wearable": "Shown empty, lying by itself with nobody wearing it.",
+ "no_face": "No face, no character.",
+ "sizes": {
+  "chars": 640,
+  "items": 320
+ },
+ "chars": [
+  {
+   "key": "chars/witch_idle",
+   "name": "ルナ",
+   "mode": "generate",
+   "subject": "A cute chibi little witch girl with long wavy lavender purple hair, wearing a tall dark navy-purple pointed witch hat with a gold star and a dark indigo robe, holding a small magic wand with a gold star. Big round plum-colored eyes, pink cheeks and a small gentle closed smile. Full body, standing, facing front"
+  },
+  {
+   "key": "chars/witch_happy",
+   "name": "ルナ",
+   "mode": "edit",
+   "source": "chars/witch_idle",
+   "prompt": "Keep the character, lavender hair, witch hat, robe and wand, pose, outline style and background exactly the same. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. Keep the pink cheeks."
+  },
+  {
+   "key": "chars/witch_oops",
+   "name": "ルナ",
+   "mode": "edit",
+   "source": "chars/witch_idle",
+   "prompt": "Keep the character, lavender hair, witch hat, robe and wand, pose, outline style and background exactly the same. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, eyes looking a little uncertain, and a small closed wobbly mouth. No tears, no crying, no open mouth. Add one small light-blue sweat drop on the side of the forehead, on the face, not on the hair accessory or hat. Keep the pink cheeks."
+  },
+  {
+   "key": "chars/mermaid_idle",
+   "name": "マリン",
+   "mode": "generate",
+   "subject": "A cute chibi little mermaid girl with long wavy aqua blue hair and a small pink seashell hair clip, wearing a pink top, with a turquoise mint fish tail. Big round plum-colored eyes, pink cheeks and a small gentle closed smile. Full body including the whole tail, facing front"
+  },
+  {
+   "key": "chars/mermaid_happy",
+   "name": "マリン",
+   "mode": "edit",
+   "source": "chars/mermaid_idle",
+   "prompt": "Keep the character, aqua hair, shell hair clip, pink top and tail, pose, outline style and background exactly the same. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. Keep the pink cheeks."
+  },
+  {
+   "key": "chars/mermaid_oops",
+   "name": "マリン",
+   "mode": "edit",
+   "source": "chars/mermaid_idle",
+   "prompt": "Keep the character, aqua hair, shell hair clip, pink top and tail, pose, outline style and background exactly the same. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, eyes looking a little uncertain, and a small closed wobbly mouth. No tears, no crying, no open mouth. Add one small light-blue sweat drop on the side of the forehead, on the face, not on the hair accessory or hat. Keep the pink cheeks."
+  },
+  {
+   "key": "chars/princess_idle",
+   "name": "ロゼ",
+   "mode": "generate",
+   "subject": "A cute chibi little princess girl with golden blonde curly hair and a white ribbon hairband, wearing a ball gown with a gold bodice and a wide pale pink skirt. Big round plum-colored eyes, pink cheeks and a small gentle closed smile. Full body, standing, facing front"
+  },
+  {
+   "key": "chars/princess_happy",
+   "name": "ロゼ",
+   "mode": "edit",
+   "source": "chars/princess_idle",
+   "prompt": "Keep the character, blonde hair, hairband and pink dress, pose, outline style and background exactly the same. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. Keep the pink cheeks."
+  },
+  {
+   "key": "chars/princess_oops",
+   "name": "ロゼ",
+   "mode": "edit",
+   "source": "chars/princess_idle",
+   "prompt": "Keep the character, blonde hair, hairband and pink dress, pose, outline style and background exactly the same. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, eyes looking a little uncertain, and a small closed wobbly mouth. No tears, no crying, no open mouth. Add one small light-blue sweat drop on the side of the forehead, on the face, not on the hair accessory or hat. Keep the pink cheeks."
+  }
+ ],
+ "items": [
+  {
+   "key": "items/ribbon",
+   "name": "ピンクのリボン",
+   "mode": "generate",
+   "subject": "A cute pink hair ribbon bow with a deeper pink round knot in the middle"
+  },
+  {
+   "key": "items/starpin",
+   "name": "星のヘアピン",
+   "mode": "generate",
+   "subject": "A golden yellow five-pointed star hair pin with a glossy highlight"
+  },
+  {
+   "key": "items/minihat",
+   "name": "ちびぼうし",
+   "mode": "generate",
+   "subject": "A tiny dark navy-purple pointed witch hat with a round brim and one small gold star on it",
+   "wearable": true
+  },
+  {
+   "key": "items/tiara",
+   "name": "おひめさまティアラ",
+   "mode": "generate",
+   "subject": "A golden princess tiara with three points, a pink gem on the middle point and two mint green gems on the side points",
+   "wearable": true
+  },
+  {
+   "key": "items/dress",
+   "name": "夜空のドレス",
+   "mode": "generate",
+   "subject": "A lavender purple sleeveless night-sky dress with a flared skirt, tiny gold stars and two small gold buttons",
+   "wearable": true
+  },
+  {
+   "key": "items/cape",
+   "name": "ひらひらマント",
+   "mode": "generate",
+   "subject": "A dark indigo-purple flowing cape with a gold trimmed collar and two round gold buttons",
+   "wearable": true
+  },
+  {
+   "key": "items/socks",
+   "name": "みずたまソックス",
+   "mode": "generate",
+   "subject": "A pair of cream socks with pink polka dots and pink cuffs",
+   "wearable": true,
+   "lilac": true
+  },
+  {
+   "key": "items/boots",
+   "name": "まほうのブーツ",
+   "mode": "generate",
+   "subject": "A pair of deep pink magic boots with gold cuffs and small gold buttons",
+   "wearable": true
+  },
+  {
+   "key": "items/wand",
+   "name": "お星さまステッキ",
+   "mode": "generate",
+   "subject": "A magic wand with a lavender purple handle and a big golden star on top"
+  },
+  {
+   "key": "items/candy",
+   "name": "にじいろキャンディ",
+   "mode": "generate",
+   "subject": "One round wrapped candy, mint green with pink swirl stripes, with lavender twisted wrapper ends on both sides"
+  },
+  {
+   "key": "items/flower",
+   "name": "まほうの花",
+   "mode": "generate",
+   "subject": "A pink flower with five round petals and a golden yellow center, seen from the front"
+  },
+  {
+   "key": "items/crystal",
+   "name": "ゆめみるクリスタル",
+   "mode": "generate",
+   "subject": "A lavender purple diamond-shaped crystal gem with a tiny star glowing inside"
+  },
+  {
+   "key": "items/necklace",
+   "name": "月のネックレス",
+   "mode": "generate",
+   "subject": "A gold chain necklace with a lavender purple crescent moon pendant",
+   "wearable": true
+  },
+  {
+   "key": "items/moon",
+   "name": "みかづきの おまもり",
+   "mode": "generate",
+   "subject": "A golden yellow crescent moon charm with one small white star on it"
+  },
+  {
+   "key": "items/cat",
+   "name": "くろねこ ノワール",
+   "mode": "generate",
+   "subject": "A cute chubby black kitten sitting, with golden yellow eyes and a tiny pink nose",
+   "creature": true
+  },
+  {
+   "key": "items/wings",
+   "name": "にじのつばさ",
+   "mode": "generate",
+   "subject": "A pair of small fairy wings in pastel rainbow colors, the left wing mint green and the right wing pink",
+   "wearable": true
+  },
+  {
+   "key": "items/m_shellclip",
+   "name": "シェルの ヘアクリップ",
+   "mode": "generate",
+   "subject": "A pale pink scallop seashell hair clip with ribbed lines and a small gold bead at the bottom"
+  },
+  {
+   "key": "items/m_pearlband",
+   "name": "パールの ヘアバンド",
+   "mode": "generate",
+   "subject": "A teal green arched hairband decorated with four creamy white pearls",
+   "wearable": true,
+   "lilac": true
+  },
+  {
+   "key": "items/m_starfishpin",
+   "name": "ヒトデの ピン",
+   "mode": "generate",
+   "subject": "An orange starfish hair pin with five rounded arms"
+  },
+  {
+   "key": "items/m_coralcrown",
+   "name": "さんごの かんむり",
+   "mode": "generate",
+   "subject": "A coral pink crown made of branching coral, with one white pearl in the middle and a teal green band at the bottom",
+   "wearable": true
+  },
+  {
+   "key": "items/m_scaledress",
+   "name": "うろこの ドレス",
+   "mode": "generate",
+   "subject": "A turquoise mint sleeveless dress with a fish scale pattern on the skirt",
+   "wearable": true
+  },
+  {
+   "key": "items/m_pearlcape",
+   "name": "パールの マント",
+   "mode": "generate",
+   "subject": "A pale aqua blue flowing cape with two white pearl buttons at the collar",
+   "wearable": true,
+   "lilac": true
+  },
+  {
+   "key": "items/m_finanklet",
+   "name": "シェルの あしかざり",
+   "mode": "generate",
+   "subject": "A teal green ring-shaped anklet with a small turquoise seashell charm and one gold bead",
+   "wearable": true
+  },
+  {
+   "key": "items/m_pearlanklet",
+   "name": "パールの あしかざり",
+   "mode": "generate",
+   "subject": "A ring-shaped anklet made of creamy white pearls on a pink-purple string",
+   "wearable": true,
+   "lilac": true
+  },
+  {
+   "key": "items/m_trident",
+   "name": "うみの ステッキ",
+   "mode": "generate",
+   "subject": "A small teal green trident wand with three prongs, each prong tipped with a small gold ball"
+  },
+  {
+   "key": "items/m_seacandy",
+   "name": "うみのほし キャンディ",
+   "mode": "generate",
+   "subject": "One round wrapped candy, aqua blue with pink swirl stripes, with teal green twisted wrapper ends on both sides"
+  },
+  {
+   "key": "items/m_pearl",
+   "name": "おおきな パール",
+   "mode": "generate",
+   "subject": "One big round creamy white pearl with a soft pink and lilac shine",
+   "lilac": true
+  },
+  {
+   "key": "items/m_shellbag",
+   "name": "シェルの ポーチ",
+   "mode": "generate",
+   "subject": "A pale pink seashell-shaped pouch bag with a small handle and a gold clasp"
+  },
+  {
+   "key": "items/m_pearlnecklace",
+   "name": "パールの ネックレス",
+   "mode": "generate",
+   "subject": "A necklace of creamy white pearls on a thin teal green string",
+   "wearable": true,
+   "lilac": true
+  },
+  {
+   "key": "items/m_moonshell",
+   "name": "つきがたの シェル",
+   "mode": "generate",
+   "subject": "An aqua blue crescent-moon-shaped seashell with one small white star on it"
+  },
+  {
+   "key": "items/m_dolphin",
+   "name": "ともの イルカ",
+   "mode": "generate",
+   "subject": "A cute chubby light blue baby dolphin jumping, with a small black eye and a smile",
+   "creature": true
+  },
+  {
+   "key": "items/m_bubblewings",
+   "name": "あわの つばさ",
+   "mode": "generate",
+   "subject": "A pair of small pale aqua blue wings made of soap bubbles, glossy and translucent",
+   "wearable": true,
+   "lilac": true
+  },
+  {
+   "key": "items/p_hairribbon",
+   "name": "リボンの かみかざり",
+   "mode": "generate",
+   "subject": "A pale pink hair ribbon bow with a round gold jewel in the middle"
+  },
+  {
+   "key": "items/p_pearlpin",
+   "name": "しんじゅの ピン",
+   "mode": "generate",
+   "subject": "A gold hair pin stick topped with one round creamy white pearl",
+   "lilac": true
+  },
+  {
+   "key": "items/p_flowercrown",
+   "name": "おはなの かんむり",
+   "mode": "generate",
+   "subject": "A flower crown wreath, a green vine ring with pale pink flowers that have yellow centers",
+   "wearable": true
+  },
+  {
+   "key": "items/p_tiara",
+   "name": "おうじょの ティアラ",
+   "mode": "generate",
+   "subject": "A golden royal tiara with three points, a pale pink gem on the middle point and two white pearls on the side points",
+   "wearable": true
+  },
+  {
+   "key": "items/p_balldress",
+   "name": "きゅうていの ドレス",
+   "mode": "generate",
+   "subject": "A royal ball gown with a gold bodice and a wide puffy pale pink skirt",
+   "wearable": true
+  },
+  {
+   "key": "items/p_cape",
+   "name": "ふわふわケープ",
+   "mode": "generate",
+   "subject": "A pale pink fluffy short cape with gold trim and two round gold buttons",
+   "wearable": true
+  },
+  {
+   "key": "items/p_lacesocks",
+   "name": "レースの ソックス",
+   "mode": "generate",
+   "subject": "A pair of white lace socks with frilly pink lace cuffs",
+   "wearable": true,
+   "lilac": true
+  },
+  {
+   "key": "items/p_glassshoes",
+   "name": "ガラスの くつ",
+   "mode": "generate",
+   "subject": "A pair of pale blue transparent glass slippers with a sparkling shine",
+   "wearable": true
+  },
+  {
+   "key": "items/p_wand",
+   "name": "おうじょの ステッキ",
+   "mode": "generate",
+   "subject": "A royal wand with a pale pink handle and a big golden star on top"
+  },
+  {
+   "key": "items/p_candy",
+   "name": "おしろの あめ",
+   "mode": "generate",
+   "subject": "One round wrapped candy, pale pink with golden swirl stripes, with lavender twisted wrapper ends on both sides"
+  },
+  {
+   "key": "items/p_rose",
+   "name": "あかい バラ",
+   "mode": "generate",
+   "subject": "One red rose flower with a short green stem and two green leaves"
+  },
+  {
+   "key": "items/p_mirror",
+   "name": "まほうの かがみ",
+   "mode": "generate",
+   "subject": "A round hand mirror with a gold frame and gold handle and pale blue shiny glass"
+  },
+  {
+   "key": "items/p_necklace",
+   "name": "しんじゅの ネックレス",
+   "mode": "generate",
+   "subject": "A gold chain necklace with one round pale pink pearl pendant",
+   "wearable": true
+  },
+  {
+   "key": "items/p_moon",
+   "name": "つきの おまもり",
+   "mode": "generate",
+   "subject": "A golden yellow crescent moon charm with one small white star and a tiny pink ribbon tied on top"
+  },
+  {
+   "key": "items/p_kitten",
+   "name": "ともの こねこ",
+   "mode": "generate",
+   "subject": "A cute chubby cream and peach colored kitten sitting, with a tiny pink nose and rosy cheeks",
+   "creature": true
+  },
+  {
+   "key": "items/p_angelwings",
+   "name": "てんしの つばさ",
+   "mode": "generate",
+   "subject": "A pair of small white feathered angel wings joined by a small gold jewel in the middle",
+   "wearable": true,
+   "lilac": true
+  }
+ ]
+}

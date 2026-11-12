@@ -10,3 +10,8 @@ dist-ssr
 
 # OS
 .DS_Store
+
+# 絵の生成(tools/art)の作業ファイル
+art-raw
+tools/art/.venv
+__pycache__
