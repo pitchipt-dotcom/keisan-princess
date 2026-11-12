@@ -1,9 +1,9 @@
 {
- "_comment": "generate.py が読む絵の指示。prompt = subject + style + (wearable) + (no_face) + background。'icon' という単語は使わない(角丸タイルが付く)。",
+ "_comment": "Pitch-chat は that / this / it / same などの語があると、会話の前の指示をプロンプトにまぜる。だから、これらの語は使わない(generate.py が確かめる)。generate.py が読む絵の指示。prompt = subject + style + (wearable) + (no_face) + background。'icon' という単語は使わない(角丸タイルが付く)。 画像編集では「No tears」のように書くと、かえって涙が出る。だから oops は、出したいものだけを書く。",
  "style": "in a soft modern children's mobile game style. Rounded chubby shapes, pastel candy colors, gentle gradients, glossy highlights, tiny sparkles, a thin soft pinkish-brown outline, no harsh black lines.",
- "background": "Isolated on a plain flat white background, no frame, no rounded square, no border, no shadow, no text. Square composition. Only this one {noun}, nothing else, fully inside the picture with empty margin on all sides.",
+ "background": "Isolated on a plain flat white background, no frame, no rounded square, no border, no shadow, no text. Square composition. Only one single {noun}, nothing else, fully inside the picture with empty margin on all sides.",
  "lilac_background": "plain flat light lavender purple background",
- "wearable": "Shown empty, lying by itself with nobody wearing it.",
+ "wearable": "Shown empty, lying by itself, not worn by anyone.",
  "no_face": "No face, no character.",
  "sizes": {
   "chars": 640,
@@ -21,14 +21,14 @@
    "name": "ルナ",
    "mode": "edit",
    "source": "chars/witch_idle",
-   "prompt": "Keep the character, lavender hair, witch hat, robe and wand, pose, outline style and background exactly the same. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. Keep the pink cheeks."
+   "prompt": "Keep the character, lavender hair, witch hat, robe and wand, pose, outline style and background exactly unchanged. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. No sweat drops, no tears, no water drops anywhere. Keep the pink cheeks."
   },
   {
    "key": "chars/witch_oops",
    "name": "ルナ",
    "mode": "edit",
    "source": "chars/witch_idle",
-   "prompt": "Keep the character, lavender hair, witch hat, robe and wand, pose, outline style and background exactly the same. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, eyes looking a little uncertain, and a small closed wobbly mouth. No tears, no crying, no open mouth. Add one small light-blue sweat drop on the side of the forehead, on the face, not on the hair accessory or hat. Keep the pink cheeks."
+   "prompt": "Keep the character, lavender hair, witch hat, robe and wand, pose, outline style and background exactly unchanged. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, round open eyes looking a little uncertain, and a small closed wobbly mouth. Add exactly one small light-blue sweat drop high on the forehead near the hairline, on the face, not on the hair accessory or hat. Dry clean cheeks. Keep the pink cheeks."
   },
   {
    "key": "chars/mermaid_idle",
@@ -41,14 +41,14 @@
    "name": "マリン",
    "mode": "edit",
    "source": "chars/mermaid_idle",
-   "prompt": "Keep the character, aqua hair, shell hair clip, pink top and tail, pose, outline style and background exactly the same. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. Keep the pink cheeks."
+   "prompt": "Keep the character, aqua hair, shell hair clip, pink top and turquoise mint tail, pose, outline style and background exactly unchanged. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. No sweat drops, no tears, no water drops anywhere. Keep the pink cheeks."
   },
   {
    "key": "chars/mermaid_oops",
    "name": "マリン",
    "mode": "edit",
    "source": "chars/mermaid_idle",
-   "prompt": "Keep the character, aqua hair, shell hair clip, pink top and tail, pose, outline style and background exactly the same. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, eyes looking a little uncertain, and a small closed wobbly mouth. No tears, no crying, no open mouth. Add one small light-blue sweat drop on the side of the forehead, on the face, not on the hair accessory or hat. Keep the pink cheeks."
+   "prompt": "Keep the character, aqua hair, shell hair clip, pink top and turquoise mint tail, pose, outline style and background exactly unchanged. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, round open eyes looking a little uncertain, and a small closed wobbly mouth. Add exactly one small light-blue sweat drop high on the forehead near the hairline, on the face, not on the hair accessory or hat. Dry clean cheeks. Keep the pink cheeks."
   },
   {
    "key": "chars/princess_idle",
@@ -61,14 +61,14 @@
    "name": "ロゼ",
    "mode": "edit",
    "source": "chars/princess_idle",
-   "prompt": "Keep the character, blonde hair, hairband and pink dress, pose, outline style and background exactly the same. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. Keep the pink cheeks."
+   "prompt": "Keep the character, blonde hair, hairband and pink dress, pose, outline style and background exactly unchanged. Change only the facial expression: make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. No sweat drops, no tears, no water drops anywhere. Keep the pink cheeks."
   },
   {
    "key": "chars/princess_oops",
    "name": "ロゼ",
    "mode": "edit",
    "source": "chars/princess_idle",
-   "prompt": "Keep the character, blonde hair, hairband and pink dress, pose, outline style and background exactly the same. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, eyes looking a little uncertain, and a small closed wobbly mouth. No tears, no crying, no open mouth. Add one small light-blue sweat drop on the side of the forehead, on the face, not on the hair accessory or hat. Keep the pink cheeks."
+   "prompt": "Keep the character, blonde hair, hairband and pink dress, pose, outline style and background exactly unchanged. Change only the facial expression to a mild \"oops, almost!\" look: eyebrows tilted slightly down in the middle, round open eyes looking a little uncertain, and a small closed wobbly mouth. Add exactly one small light-blue sweat drop high on the forehead near the hairline, on the face, not on the hair accessory or hat. Dry clean cheeks. Keep the pink cheeks."
   }
  ],
  "items": [
@@ -88,7 +88,7 @@
    "key": "items/minihat",
    "name": "ちびぼうし",
    "mode": "generate",
-   "subject": "A tiny dark navy-purple pointed witch hat with a round brim and one small gold star on it",
+   "subject": "A tiny dark navy-purple pointed witch hat with a round brim decorated with one small gold star",
    "wearable": true
   },
   {
@@ -155,14 +155,14 @@
    "key": "items/necklace",
    "name": "月のネックレス",
    "mode": "generate",
-   "subject": "A gold chain necklace with a lavender purple crescent moon pendant",
+   "subject": "A short gold chain necklace with a lavender purple crescent moon pendant, the whole chain visible as a closed loop",
    "wearable": true
   },
   {
    "key": "items/moon",
    "name": "みかづきの おまもり",
    "mode": "generate",
-   "subject": "A golden yellow crescent moon charm with one small white star on it"
+   "subject": "A golden yellow crescent moon charm decorated with one small white star"
   },
   {
    "key": "items/cat",
@@ -182,7 +182,7 @@
    "key": "items/m_shellclip",
    "name": "シェルの ヘアクリップ",
    "mode": "generate",
-   "subject": "A pale pink scallop seashell hair clip with ribbed lines and a small gold bead at the bottom"
+   "subject": "A single pale pink scallop seashell hair clip with ribbed lines and a small gold bead at the bottom, just one shell in the center"
   },
   {
    "key": "items/m_pearlband",
@@ -196,7 +196,7 @@
    "key": "items/m_starfishpin",
    "name": "ヒトデの ピン",
    "mode": "generate",
-   "subject": "An orange starfish hair pin with five rounded arms"
+   "subject": "An orange star-shaped starfish hair pin with five rounded arms and small dots, with no eyes and no mouth"
   },
   {
    "key": "items/m_coralcrown",
@@ -251,7 +251,7 @@
    "key": "items/m_pearl",
    "name": "おおきな パール",
    "mode": "generate",
-   "subject": "One big round creamy white pearl with a soft pink and lilac shine",
+   "subject": "A single big round creamy white pearl with a soft pink shine, just one pearl in the center",
    "lilac": true
   },
   {
@@ -272,7 +272,7 @@
    "key": "items/m_moonshell",
    "name": "つきがたの シェル",
    "mode": "generate",
-   "subject": "An aqua blue crescent-moon-shaped seashell with one small white star on it"
+   "subject": "A single aqua blue seashell shaped like a crescent moon, decorated with one small white star, just one shell in the center"
   },
   {
    "key": "items/m_dolphin",
@@ -293,7 +293,7 @@
    "key": "items/p_hairribbon",
    "name": "リボンの かみかざり",
    "mode": "generate",
-   "subject": "A pale pink hair ribbon bow with a round gold jewel in the middle"
+   "subject": "A single pale pink ribbon bow made of cloth with a round gold jewel in the middle knot, a hair accessory only, no animal"
   },
   {
    "key": "items/p_pearlpin",
@@ -306,7 +306,7 @@
    "key": "items/p_flowercrown",
    "name": "おはなの かんむり",
    "mode": "generate",
-   "subject": "A flower crown wreath, a green vine ring with pale pink flowers that have yellow centers",
+   "subject": "A flower crown wreath, a green vine ring with pale pink flowers with yellow centers",
    "wearable": true
   },
   {

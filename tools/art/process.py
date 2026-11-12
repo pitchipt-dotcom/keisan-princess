@@ -59,7 +59,7 @@ def fill_touching(candidate, seed):
         region = bigger
 
 
-def cut_out(rgb):
+def cut_out(rgb, holes=True):
     """(RGBA の配列, 問題の一覧) を返す。"""
     pixels = rgb.astype(np.float32)
     h, w, _ = pixels.shape
@@ -70,9 +70,11 @@ def cut_out(rgb):
     background = flood_from_border(distance < BG_NEAR)
     # 絵に囲まれた背景(くさりの輪の中、2 つの物のすきま)も抜く。背景色にごく近く、
     # ある程度の大きさがある面だけ(目のハイライトや小さな白いかざりは残す)。
-    tight = (distance < BG_NEAR / 2) & ~background
-    core = ~grow(~tight, max(2, round(min(h, w) * 0.012)))
-    background |= fill_touching(tight, core)
+    # キャラは白いリボンなどが消えてしまうので、アイテムだけで行う(白いアイテムは背景がうす紫)。
+    if holes:
+        tight = (distance < BG_NEAR / 2) & ~background
+        core = ~grow(~tight, max(2, round(min(h, w) * 0.012)))
+        background |= fill_touching(tight, core)
     nearest = np.where(background, 0.0, distance)  # 背景でないところの、背景色との距離
 
     # 色つき外わく+白い角丸タイル: ふちの色が白でなく、残りが画面のほとんどを占めるとき、
@@ -155,17 +157,24 @@ def contact_sheet(results, path):
 
 def main():
     results, redo = [], {}
+    try:  # 3 回作り直してもだめだった絵は src/art に出さない(SVG のまま)
+        svg_only = set(json.loads((RAW / "_state.json").read_text()).get("svg_only", []))
+    except (OSError, ValueError):
+        svg_only = set()
     for folder, size in SIZES.items():
         (OUT / folder).mkdir(parents=True, exist_ok=True)
         wanted = set()
         for source in sorted((RAW / folder).glob("*.png")):
             key = f"{folder}/{source.stem}"
+            if key in svg_only:
+                print(f"svg  {key} (SVG のまま残す)")
+                continue
             try:
                 rgb = np.asarray(Image.open(source).convert("RGB"))
             except OSError:  # generate.py が書いている途中の絵は、次の回にまわす
                 print(f"skip {key} (読めない)")
                 continue
-            rgba, problems, tile = cut_out(rgb)
+            rgba, problems, tile = cut_out(rgb, holes=(folder == "items"))
             image = square(rgba, size)
             image.save(OUT / folder / f"{source.stem}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
             wanted.add(f"{source.stem}.webp")

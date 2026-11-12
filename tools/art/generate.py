@@ -9,12 +9,15 @@
 使い方:
   PITCH_CHAT_URL=https://<Pitch-chat の Tailscale Serve の URL> python3 tools/art/generate.py
   ... generate.py --only items/ribbon chars/witch_happy   # 指定した絵だけ
-  ... generate.py --redo      # art-raw/_redo.json の絵を消して作り直す(1 枚につき 2 回まで)
+  ... generate.py --redo      # art-raw/_redo.json の絵を消して作り直す(1 枚につき 3 回まで)
+  ... generate.py --redo items/cat chars/witch_oops   # 目で見てだめだった絵も、いっしょに作り直す
+      3 回作り直してもだめな絵は _state.json の svg_only に入り、process.py が src/art に出さない
+      (その絵は SVG のまま)。
   ... generate.py --dry-run   # プロンプトを表示するだけ
 
 - すでにある art-raw/<key>.png はとばす(自分で用意した絵を先に置いてもよい)。
 - 失敗しても止めず、最後にまとめて報告する。
-- MOSS-Image は 1 日あたりの回数に上限がある。上限に当たったら、残りの新規生成は
+- MOSS-Image は 24 時間あたり 40 回の上限がある(24 時間たった分から順に戻る)。上限に当たったら、残りの新規生成は
   とばして報告する(次の日にもう一度実行すれば続きから作る)。
 - MOSS の本人確認は Tailscale Serve がつけるので、URL は Serve のものを使う。
 """
@@ -22,6 +25,7 @@ import argparse
 import io
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -36,9 +40,15 @@ RAW = ROOT / "art-raw"
 ORIG = RAW / "_orig"          # 生成されたままの大きさ(編集の元画像に使う)
 STATE = RAW / "_state.json"   # 会話 ID と作り直し回数
 REDO = RAW / "_redo.json"
-MAX_REDO = 2
+MAX_REDO = 3
 POLL_SECONDS = 3
 JOB_TIMEOUT = 30 * 60
+
+
+# Pitch-chat は、指示にこれらの語があると「前の話のつづき」とみなし、同じ会話の前の指示を
+# プロンプトにまぜてしまう(backend/app/contextual_instruction.py)。まざると、happy に汗が付いたり、
+# アイテムが 4 つ並んだりする。だから、プロンプトにこれらの語を入れない。
+REFERENCE_CUE = re.compile(r"\b(?:that|those|it|this|these|previous|earlier|above|same|continue|discussed)\b", re.IGNORECASE)
 
 
 class DailyLimit(Exception):
@@ -113,6 +123,9 @@ def build_prompt(spec, entry):
             parts.append(spec["no_face"])
         parts.append(background)
         prompt = " ".join(parts)
+    cue = REFERENCE_CUE.search(prompt)
+    if cue:
+        raise ValueError(f"{entry['key']}: '{cue.group(0)}' は使わない(前の指示がまざる)")
     if "icon" in prompt.lower():
         raise ValueError(f"{entry['key']}: 'icon' は使わない(角丸タイルが付く)")
     return prompt
@@ -166,7 +179,8 @@ def edit(api, state, prompt, source_key):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--only", nargs="*", default=None, help="この key だけ作る")
-    parser.add_argument("--redo", action="store_true", help="_redo.json の絵を消して作り直す")
+    parser.add_argument("--redo", nargs="*", default=None, metavar="KEY",
+                        help="_redo.json の絵(と、ここに書いた key)を消して作り直す")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -190,12 +204,14 @@ def main():
     attempts = state.setdefault("redo_attempts", {})
 
     gave_up = []
-    if args.redo:
-        for key in load_json(REDO, {}).get("redo", {}):
-            if key not in by_key:
+    svg_only = state.setdefault("svg_only", [])
+    if args.redo is not None:
+        for key in list(dict.fromkeys(list(load_json(REDO, {}).get("redo", {})) + args.redo)):
+            if key not in by_key or key in svg_only:
                 continue
             if attempts.get(key, 0) >= MAX_REDO:
                 gave_up.append(key)
+                svg_only.append(key)
                 continue
             attempts[key] = attempts.get(key, 0) + 1
             doomed = [key]
@@ -211,6 +227,8 @@ def main():
     for entry in entries:
         key = entry["key"]
         if args.only is not None and key not in args.only:
+            continue
+        if key in svg_only:
             continue
         if (RAW / f"{key}.png").exists():
             skipped.append(key)
@@ -247,8 +265,8 @@ def main():
     if limited:
         print("  上限で未作成: " + " ".join(limited))
     if gave_up:
-        print(f"  作り直しは {MAX_REDO} 回まで。残した絵: " + " ".join(gave_up))
-    return 1 if failed or limited else 0
+        print(f"  作り直しは {MAX_REDO} 回まで。SVG のまま残す絵: " + " ".join(gave_up))
+    return 2 if limited else 1 if failed else 0
 
 
 if __name__ == "__main__":
