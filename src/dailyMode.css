@@ -1,0 +1,55 @@
+/* ===== まいにち けいさん ===== */
+.dm-wrap{display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; padding-bottom:16px;}
+.dm-chara{margin-top:4px;}
+.dm-card{background:#fff; border-radius:24px; padding:16px 14px 18px; margin:8px 0 16px; width:100%;
+  box-shadow:0 6px 0 rgba(201,168,240,.5); display:flex; flex-direction:column; align-items:center; gap:8px;}
+.dm-intro-line{font-family:'Zen Maru Gothic'; font-weight:700; font-size:15px; line-height:1.8; color:#3A2A6B;}
+.dm-intro-review{background:#FFF3D6; border-radius:12px; padding:4px 10px;}
+.dm-intro-done{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#C0568A;}
+.dm-badges{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; margin-top:4px;}
+.dm-badges div{background:#FBF7FF; border:2px solid #E7D2F7; border-radius:14px; padding:8px 4px; display:flex; flex-direction:column; gap:2px;}
+.dm-badges b{font-family:'Mochiy Pop One'; font-size:18px; color:#3A2A6B;}
+.dm-badges small{font-size:10px; color:#7A5C98; line-height:1.3;}
+
+.dm-top{display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px; margin-top:4px;}
+.dm-count, .dm-timer{font-family:'Mochiy Pop One'; font-size:16px; color:#3A2A6B; background:#fff; border-radius:999px; padding:4px 12px;}
+.dm-review-tag{font-family:'Mochiy Pop One'; font-size:13px; color:#fff; background:#F2A93B; border-radius:999px; padding:4px 10px;}
+.dm-progress{width:100%; height:10px; background:rgba(255,255,255,.6); border-radius:999px; margin:8px 0 4px; overflow:hidden;}
+.dm-progress-fill{height:100%; background:linear-gradient(90deg,#FF8FC4,#FFC94D); border-radius:999px; transition:width .3s;}
+
+.dm-qcard{min-height:120px; margin-top:0;}
+.dm-mini-chara{height:76px; display:flex; align-items:flex-end; justify-content:center; margin-top:2px; pointer-events:none;}
+.dm-q{font-family:'Mochiy Pop One'; font-size:38px; color:#3A2A6B; margin-top:6px; white-space:nowrap;}
+.dm-ans{display:inline-block; min-width:1.6em; border-bottom:4px solid #FF8FC4; color:#E85FA3;}
+.dm-ans-empty{color:#C9A8F0;}
+.dm-msg{font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; line-height:1.7;}
+.dm-msg-ok{color:#2FAF8E; font-size:22px;}
+.dm-msg-ng{color:#C0568A;}
+
+.dm-col-wrap{display:flex; flex-direction:column; align-items:center; gap:4px; background:#FBF7FF; border:2px dashed #C9A8F0; border-radius:14px; padding:8px 14px; max-width:100%;}
+.dm-col{display:grid; gap:2px 0; align-items:center; justify-items:center;}
+.dm-col-d{font-family:'Mochiy Pop One'; font-size:26px; color:#3A2A6B; width:30px; height:34px; line-height:34px;}
+.dm-col-op{font-family:'Mochiy Pop One'; font-size:22px; color:#7A5C98;}
+.dm-col-line{height:3px; width:100%; background:#3A2A6B; border-radius:2px; margin:2px 0;}
+.dm-col-blank{color:#C9A8F0;}
+.dm-col-note{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#7A5C98; line-height:1.5;}
+.dm-hint-kuku{font-family:'Zen Maru Gothic'; font-weight:700; font-size:15px; color:#3A2A6B; background:#FBF7FF; border:2px dashed #C9A8F0; border-radius:14px; padding:8px 14px; line-height:1.7;}
+
+.dm-keys{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%;}
+.dm-key{font-family:'Mochiy Pop One'; font-size:28px; color:#3A2A6B; background:#fff; border:3px solid #C9A8F0; border-radius:18px;
+  padding:12px 0; cursor:pointer; box-shadow:0 5px 0 #a98bd6; transition:transform .06s; touch-action:manipulation;}
+.dm-key:active{transform:translateY(4px); box-shadow:0 1px 0 #a98bd6;}
+.dm-key-del{font-size:18px; color:#7A5C98;}
+.dm-key-ok{font-size:18px; color:#fff; background:#FF8FC4; border-color:#E85FA3; box-shadow:0 5px 0 #c94d8c;}
+
+.dm-score{font-family:'Mochiy Pop One'; font-size:22px; color:#3A2A6B;}
+.dm-score b{font-size:44px; color:#E85FA3;}
+.dm-best{color:#F2A93B; font-family:'Mochiy Pop One'; font-size:13px;}
+.dm-comment{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#3A2A6B; background:#EAFBF5; border-radius:14px; padding:8px 12px; line-height:1.7;}
+.dm-stars{font-family:'Mochiy Pop One'; font-size:18px; color:#F2A93B; display:flex; flex-direction:column;}
+.dm-stars small{font-family:'Zen Maru Gothic'; font-size:11px; color:#7A5C98;}
+
+@media (max-width:360px){
+  .dm-q{font-size:32px;}
+  .dm-key{font-size:24px; padding:10px 0;}
+}

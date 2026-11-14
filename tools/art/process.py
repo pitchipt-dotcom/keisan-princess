@@ -3,6 +3,7 @@
 
   art-raw/items/*.png (320px) → src/art/items/*.webp
   art-raw/chars/*.png (640px) → src/art/chars/*.webp
+  art-raw/dragons/*.png (512px) → src/art/dragons/*.webp   (ドラゴンそだて。tools/art/moss_dragons.py で作る)
 
 - 背景は、画像のふちから塗りつぶして求める(ふちの中央値の色との距離で判定)。
 - 色つき外わく+白い角丸タイルになった絵は、タイルの白も抜く。
@@ -10,7 +11,8 @@
 - 余白をそろえて正方形にする。
 - art-raw/_contact.png (全部の一覧) と、作り直したほうがよい絵の art-raw/_redo.json を出す。
 
-使い方: tools/art/.venv/bin/python tools/art/process.py   (numpy と Pillow が必要)
+使い方: tools/art/.venv/bin/python tools/art/process.py [フォルダ名 ...]   (numpy と Pillow が必要)
+  フォルダ名を書くと、そのフォルダだけ出す(例: process.py dragons → 一覧は art-raw/_contact_dragons.png)
 """
 import json
 import sys
@@ -23,8 +25,11 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 RAW = ROOT / "art-raw"
 OUT = ROOT / "src" / "art"
-SIZES = {"chars": 640, "items": 320}
+SIZES = {"chars": 640, "items": 320, "dragons": 512}
 BG_NEAR = 26.0      # この距離までは背景とみなす(囲まれた穴は、この半分まで)
+# フォルダごとの BG_NEAR。ドラゴン(MOSS-Image)は 足もとに うすい灰色の かげが 出るので 広めに 抜く
+# (太い りんかく線で 止まるので、白っぽい ひかりドラゴンの 体は のこる)
+BG_NEAR_BY_FOLDER = {"dragons": 60.0}
 EDGE_FULL = 70.0    # ふち 2px で、これ以上はなれた色は完全に不透明
 MARGIN = 0.06       # 仕上がりの余白(1 辺あたり)
 WEBP_QUALITY = 90
@@ -59,7 +64,7 @@ def fill_touching(candidate, seed):
         region = bigger
 
 
-def cut_out(rgb, holes=True):
+def cut_out(rgb, holes=True, bg_near=BG_NEAR):
     """(RGBA の配列, 問題の一覧) を返す。"""
     pixels = rgb.astype(np.float32)
     h, w, _ = pixels.shape
@@ -67,7 +72,7 @@ def cut_out(rgb, holes=True):
                            pixels[:, :3].reshape(-1, 3), pixels[:, -3:].reshape(-1, 3)])
     bg = np.median(ring, axis=0)
     distance = np.sqrt(((pixels - bg) ** 2).sum(axis=2))
-    background = flood_from_border(distance < BG_NEAR)
+    background = flood_from_border(distance < bg_near)
     # 絵に囲まれた背景(くさりの輪の中、2 つの物のすきま)も抜く。背景色にごく近く、
     # ある程度の大きさがある面だけ(目のハイライトや小さな白いかざりは残す)。
     # キャラは白いリボンなどが消えてしまうので、アイテムだけで行う(白いアイテムは背景がうす紫)。
@@ -156,12 +161,17 @@ def contact_sheet(results, path):
 
 
 def main():
+    only = [a for a in sys.argv[1:] if a in SIZES]
+    if sys.argv[1:] and len(only) != len(sys.argv[1:]):
+        sys.exit(f"フォルダ名は {', '.join(SIZES)} のどれか")
+    folders = {k: v for k, v in SIZES.items() if not only or k in only}
+    suffix = "_" + "_".join(only) if only else ""
     results, redo = [], {}
     try:  # 3 回作り直してもだめだった絵は src/art に出さない(SVG のまま)
         svg_only = set(json.loads((RAW / "_state.json").read_text()).get("svg_only", []))
     except (OSError, ValueError):
         svg_only = set()
-    for folder, size in SIZES.items():
+    for folder, size in folders.items():
         (OUT / folder).mkdir(parents=True, exist_ok=True)
         wanted = set()
         for source in sorted((RAW / folder).glob("*.png")):
@@ -174,7 +184,7 @@ def main():
             except OSError:  # generate.py が書いている途中の絵は、次の回にまわす
                 print(f"skip {key} (読めない)")
                 continue
-            rgba, problems, tile = cut_out(rgb, holes=(folder == "items"))
+            rgba, problems, tile = cut_out(rgb, holes=(folder == "items"), bg_near=BG_NEAR_BY_FOLDER.get(folder, BG_NEAR))
             image = square(rgba, size)
             image.save(OUT / folder / f"{source.stem}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
             wanted.add(f"{source.stem}.webp")
@@ -187,9 +197,9 @@ def main():
                 stale.unlink()
     if not results:
         sys.exit("art-raw/ に PNG がありません。先に generate.py を実行してください。")
-    contact_sheet(results, RAW / "_contact.png")
-    (RAW / "_redo.json").write_text(json.dumps({"redo": redo}, ensure_ascii=False, indent=1))
-    print(f"\n{len(results)} 点を src/art/ に出力。作り直し候補 {len(redo)} 点 → art-raw/_redo.json / 一覧 → art-raw/_contact.png")
+    contact_sheet(results, RAW / f"_contact{suffix}.png")
+    (RAW / f"_redo{suffix}.json").write_text(json.dumps({"redo": redo}, ensure_ascii=False, indent=1))
+    print(f"\n{len(results)} 点を src/art/ に出力。作り直し候補 {len(redo)} 点 → art-raw/_redo{suffix}.json / 一覧 → art-raw/_contact{suffix}.png")
 
 
 if __name__ == "__main__":

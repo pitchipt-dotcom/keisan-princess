@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
+import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
+import { DragonScreen } from "./DragonMode.jsx";
+import { normalizeDaily, chooseEgg, setTodayOverride } from "./dragon.js";
+
+// 開発時だけ：?today=YYYY-MM-DD か window.__setToday("YYYY-MM-DD") で「きょう」を さしかえて テストできる
+if (import.meta.env.DEV && typeof window !== "undefined") {
+  const t = new URLSearchParams(window.location.search).get("today");
+  if (t) setTodayOverride(t);
+  window.__setToday = setTodayOverride;
+}
 
 /* =========================================================================
    けいさんプリンセス  —  まじょ・にんぎょ・プリンセスと あそぶ さんすうゲーム
@@ -308,6 +318,7 @@ const TAIL_BY_GAMETYPE = {
 };
 
 const GAMETYPE_INFO = {
+  daily:    { label: "まいにち けいさん",     sub: "1日10もん・2年生の けいさん", icon: "📅", accent: "#FFC94D" },
   kuku:     { label: "九九",                 sub: "かけざんの れんしゅう", icon: "✖️", accent: "#C9A8F0" },
   addCarry: { label: "くりあがりの たしざん", sub: "10を こえる たしざん",   icon: "➕", accent: "#FFC9A0" },
   subBorrow:{ label: "くりさがりの ひきざん", sub: "かりてくる ひきざん",     icon: "➖", accent: "#9CC4FF" },
@@ -1141,6 +1152,7 @@ export default function App() {
   const [importCode, setImportCode] = useState("");
   const [backupMsg, setBackupMsg] = useState("");
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
+  const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1160,6 +1172,7 @@ export default function App() {
             setEquipped(d.equipped || {});
             setSeenMilestones(d.seenMilestones || {});
             if (d.character) setCharacterId(d.character);
+            if (d.daily) setDaily(normalizeDaily(d.daily));
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1171,9 +1184,9 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily]);
 
   /* ---- 現在の主人公に応じた データ ---- */
   const charKey = characterId || "witch";
@@ -1349,9 +1362,22 @@ export default function App() {
     nextQuestion();
   };
 
+  // まいにち けいさん から もどる（上の「‹ もどる」と 結果画面の「もどる」で 共通）
+  const exitDaily = () => {
+    setScreen("mode");
+    if (pulls > 0) { setPulls((p) => p - 1); doPull(); }
+  };
+
+  // たまごを えらぶ（daily だけ かわる。persist は ほかの いまの 値と いっしょに 保存）
+  const pickEgg = (element) => {
+    const nd = chooseEgg(daily, element);
+    setDaily(nd);
+    persist({ daily: nd });
+  };
+
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones,
+    character: characterId, seenMilestones, daily,
   });
 
   const applySnapshot = (d) => {
@@ -1363,6 +1389,7 @@ export default function App() {
     setEquipped(d.equipped || {});
     setSeenMilestones(d.seenMilestones || {});
     if (d.character) setCharacterId(d.character);
+    setDaily(normalizeDaily(d.daily));
   };
 
   const resetAll = () => {
@@ -1436,7 +1463,7 @@ export default function App() {
         {/* ---------- TOP BAR ---------- */}
         {screen !== "title" && (
           <div className="kk-bar">
-            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
+            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily") exitDaily(); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
             <div className="kk-bar-mid">
               <span className="kk-dust">★ {stardust}</span>
             </div>
@@ -1496,7 +1523,7 @@ export default function App() {
                   key={key}
                   className="kk-gametype-card"
                   style={{ borderColor: info.accent }}
-                  onClick={() => startGame(key, key === "kuku" ? "mix" : undefined)}
+                  onClick={() => { if (key === "daily") { SFX.tap(sound); setScreen("daily"); return; } startGame(key, key === "kuku" ? "mix" : undefined); }}
                 >
                   <span className="kk-gt-icon">{info.icon}</span>
                   <span className="kk-gt-text"><b>{info.label}</b><small>{info.sub}</small></span>
@@ -1504,6 +1531,7 @@ export default function App() {
               ))}
             </div>
 
+            <button className="dr-mode-btn" onClick={() => { SFX.tap(sound); setScreen("dragon"); }}>🐉 ドラゴン</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>あつめた おしゃれを 見る →</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("select"); }}>ほかの こで あそぶ</button>
             <div className="kk-parentmenu-hint">九九の だんの せってい・バックアップが できます</div>
@@ -1552,6 +1580,36 @@ export default function App() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ---------- まいにち けいさん ---------- */}
+        {screen === "daily" && (
+          <DailyPlay
+            daily={daily}
+            character={(mood, size = 104) => <DressedCharacter character={charKey} mood={mood} size={size} equipped={myEquipped} />}
+            sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
+            onComplete={(nd, gain) => {
+              // きろくと 星のかけらを いっしょに 保存（べつべつに 保存すると 古い方で 上書きされるため）
+              const nv = stardust + gain;
+              const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
+              if (owed > 0) setPulls((p) => p + owed);
+              setDaily(nd);
+              setStardust(nv);
+              persist({ daily: nd, stardust: nv });
+            }}
+            onPickEgg={pickEgg}
+            onExit={() => { SFX.tap(sound); exitDaily(); }}
+          />
+        )}
+
+        {/* ---------- ドラゴン ---------- */}
+        {screen === "dragon" && (
+          <DragonScreen
+            daily={daily}
+            sfx={{ tap: () => SFX.tap(sound) }}
+            onPickEgg={pickEgg}
+            onExit={() => { SFX.tap(sound); setScreen("mode"); }}
+          />
         )}
 
         {/* ---------- PLAY ---------- */}
