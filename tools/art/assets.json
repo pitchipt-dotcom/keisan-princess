@@ -455,33 +455,33 @@
    "key": "scenes/villain_success",
    "name": "さいごのたたかい:成功",
    "mode": "generate",
-   "subject": "A fairy-tale night scene: the flat rooftop terrace of a castle under a starry night sky with a big glowing moon, and {villain} in the upper part of the sky bursting into many tiny glittering stardust stars and fading away with a dizzy smile, bright sparkles everywhere",
+   "subject": "A fairy-tale night scene: a wide empty flat rooftop terrace of a castle filling the whole lower half of the picture with nothing standing there, under a starry night sky with a big glowing moon; near the very top edge of the sky, one single tiny {villain}, no bigger than a star, bursting into a shower of glittering stardust and fading away",
    "villain": true
   },
   {
    "key": "scenes/villain_fail",
    "name": "さいごのたたかい:失敗",
    "mode": "generate",
-   "subject": "A fairy-tale night scene: the flat rooftop terrace of a castle under a starry night sky with a big glowing moon, and {villain} flying away high up into the sky toward the moon while playfully sticking out a tongue, comical and cute",
+   "subject": "A fairy-tale night scene: the empty flat rooftop terrace of a castle filling the lower half of the picture, under a starry night sky with a big glowing moon, and only one single {villain}, small and far away high in the top part of the sky, flying off toward the moon while playfully sticking out a tongue, comical and cute",
    "villain": true
   },
   {
    "key": "scenes/complete_scene",
    "name": "かんせい:場面",
    "mode": "generate",
-   "subject": "A festive fairy-tale scene: a wide parade boulevard leading straight to a grand golden palace far away, colorful flags, balloons, bunting and flower petals along both sides of the road"
+   "subject": "A festive fairy-tale scene: a completely empty wide parade boulevard with nobody on the street, no crowd, no spectators, no figures, leading straight to a grand golden palace far away, colorful flags, balloons, bunting and flower petals along both sides of the road"
   },
   {
    "key": "scenes/complete_success",
    "name": "かんせい:成功",
    "mode": "generate",
-   "subject": "A festive fairy-tale scene: a shining golden crown resting on a plush red velvet cushion on a tall pedestal in the upper center, surrounded by falling colorful confetti and sparkles, a golden palace hall behind"
+   "subject": "A festive fairy-tale scene: a shining golden crown resting on a plush red velvet cushion on a tall pedestal in the upper center, falling colorful confetti and sparkles, an empty golden palace hall behind, no creatures, no mascots, no animals, no figures"
   },
   {
    "key": "scenes/complete_fail",
    "name": "かんせい:失敗",
    "mode": "generate",
-   "subject": "A festive fairy-tale scene: a wide parade boulevard with flags and balloons on both sides, and far away at the very end of the road a small pedestal with a tiny golden crown on top, bright cheerful daytime"
+   "subject": "A festive fairy-tale scene: a completely empty wide parade boulevard with nobody on the street, no crowd, no spectators, no figures, flags and balloons on both sides, and far away at the very end of the road a small pedestal with a tiny golden crown on top, bright cheerful daytime"
   }
  ]
 }
