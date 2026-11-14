@@ -1353,6 +1353,12 @@ export default function App() {
     nextQuestion();
   };
 
+  // まいにち けいさん から もどる（上の「‹ もどる」と 結果画面の「もどる」で 共通）
+  const exitDaily = () => {
+    setScreen("mode");
+    if (pulls > 0) { setPulls((p) => p - 1); doPull(); }
+  };
+
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
     character: characterId, seenMilestones, daily,
@@ -1441,7 +1447,7 @@ export default function App() {
         {/* ---------- TOP BAR ---------- */}
         {screen !== "title" && (
           <div className="kk-bar">
-            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
+            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily") exitDaily(); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
             <div className="kk-bar-mid">
               <span className="kk-dust">★ {stardust}</span>
             </div>
@@ -1574,11 +1580,7 @@ export default function App() {
               setStardust(nv);
               persist({ daily: nd, stardust: nv });
             }}
-            onExit={() => {
-              SFX.tap(sound);
-              setScreen("mode");
-              if (pulls > 0) { setPulls((p) => p - 1); doPull(); }
-            }}
+            onExit={() => { SFX.tap(sound); exitDaily(); }}
           />
         )}
 
