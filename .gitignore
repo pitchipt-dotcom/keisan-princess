@@ -15,3 +15,7 @@ dist-ssr
 art-raw
 tools/art/.venv
 __pycache__
+tools/handwriting/*.npz
+tools/handwriting/package/
+tools/handwriting/mnist-*.tgz
+tools/handwriting/*.npy

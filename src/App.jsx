@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
 
 /* =========================================================================
    けいさんプリンセス  —  まじょ・にんぎょ・プリンセスと あそぶ さんすうゲーム
@@ -311,21 +312,29 @@ const GAMETYPE_INFO = {
   addCarry: { label: "くりあがりの たしざん", sub: "10を こえる たしざん",   icon: "➕", accent: "#FFC9A0" },
   subBorrow:{ label: "くりさがりの ひきざん", sub: "かりてくる ひきざん",     icon: "➖", accent: "#9CC4FF" },
   make10:   { label: "10を つくろう",         sub: "あわせて 10こに しよう", icon: "🔟", accent: "#9FE6D6" },
+  story:    { label: "おはなし もんだい",     sub: "ぶんしょうだいを ペンで とこう", icon: "📖", accent: "#FFB3C7" },
+  write:    { label: "かきこみ ひっさん",     sub: "大きな かずを ペンで けいさん", icon: "✏️", accent: "#8DB8F5" },
 };
 
 function generateQuestion(gameType, mode, mastery, lastWrongKey) {
   if (gameType === "addCarry") return makeAddCarryQuestion(mastery, lastWrongKey);
   if (gameType === "subBorrow") return makeSubBorrowQuestion(mastery, lastWrongKey);
   if (gameType === "make10") return makeMake10Question(mastery, lastWrongKey);
+  if (gameType === "story") return makeStoryQuestion(mastery, lastWrongKey);
+  if (gameType === "write") return makeWriteQuestion(mastery, lastWrongKey);
   return makeQuestion(mode, mastery, lastWrongKey);
 }
 
 function rewardForGameType(gameType, streak) {
   if (gameType === "kuku") return 12 + Math.min(8, streak) * 2;
+  if (gameType === "story" || gameType === "write") return 16 + Math.min(8, streak) * 2;   // ペンで かくのは 手間が かかるので 多め
   return 7 + Math.min(8, streak) * 1;
 }
 
+const OP_JA = { "+": "＋", "-": "－", "×": "×" };
 function feedbackTextFor(q) {
+  if (q.gameType === "story") return { big: "とけた〜！✨", total: <>こたえは <b>{q.ans}</b> {q.unit}！</>, echo: `${q.a} ${OP_JA[q.op]} ${q.b} ＝ ${q.ans}` };
+  if (q.gameType === "write") return { big: "ひっさん できた〜！✨", total: <><b>{q.a} {OP_JA[q.op]} {q.b} ＝ {q.ans}</b></>, echo: "" };
   if (q.gameType === "addCarry") return { big: "できた〜！✨", total: <>ぜんぶで <b>{q.ans}</b> こ！</>, echo: `${q.a} ＋ ${q.b} ＝ ${q.ans}` };
   if (q.gameType === "subBorrow") return { big: "できた〜！✨", total: <>のこりは <b>{q.ans}</b> こ！</>, echo: `${q.a} － ${q.b} ＝ ${q.ans}` };
   if (q.gameType === "make10") return { big: "10こ できた〜！✨", total: <>あと <b>{q.ans}</b> こで 10こ！</>, echo: `${q.a} ＋ ${q.ans} ＝ 10` };
@@ -1252,7 +1261,18 @@ export default function App() {
   const answer = (opt) => {
     if (phase !== "ask" || !q) return;
     setPicked(opt);
-    const right = opt === q.ans;
+    judge(opt === q.ans);
+  };
+  // ペンの モードで まちがえた とき：その画面の まま なおせるよう、phase は ask の まま
+  const penMiss = () => {
+    if (phase !== "ask" || !q) return;
+    SFX.wrong(sound);
+    setStats((s) => ({ ...s, total: s.total + 1 }));
+    setStreak(0);
+    setLastWrong(q.key);
+    setMastery((m) => ({ ...m, [q.key]: Math.max(-1, (m[q.key] || 0) - 1) }));
+  };
+  const judge = (right) => {
     setStats((s) => {
       const ns = { ...s, total: s.total + 1, correct: s.correct + (right ? 1 : 0) };
       return ns;
@@ -1551,7 +1571,16 @@ export default function App() {
               </div>
             </div>
 
-            {phase === "ask" && (() => {
+            {phase === "ask" && q.gameType === "story" && (
+              <StoryPlay key={q.id} q={q} characters={CHARACTERS} MiniItem={MiniItem}
+                onRight={() => judge(true)} onMiss={penMiss} onSkip={onNext} onTap={() => SFX.tap(sound)} />
+            )}
+            {phase === "ask" && q.gameType === "write" && (
+              <WritePlay key={q.id} q={q}
+                onRight={() => judge(true)} onMiss={penMiss} onSkip={onNext} onTap={() => SFX.tap(sound)} />
+            )}
+
+            {phase === "ask" && q.gameType !== "story" && q.gameType !== "write" && (() => {
               const gt = q.gameType;
               const tail = TAIL_BY_GAMETYPE[gt] || "ぜんぶで いくつ？";
               const m = mastery[q.key] || 0;
