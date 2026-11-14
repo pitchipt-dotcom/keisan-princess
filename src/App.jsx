@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import StoryMode from "./StoryMode.jsx";
+import { EVENT_MODES, eventNeed, eventOutcome, nextEventRecord, fmtTime, fmtMs } from "./eventModes.js";
 
 /* =========================================================================
    けいさんプリンセス  —  まじょ・にんぎょ・プリンセスと あそぶ さんすうゲーム
@@ -1108,26 +1109,9 @@ function MilestoneModal({ milestone, character, equipped, onClose }) {
 // n もんを limit びょう いないに。need(8わり)もん いじょう 1かいで せいかいなら せいこう。
 // ★:1もんごとの ★は ふだんと おなじ。おわりに せいこう bonus / しっぱい failBonus を たす
 // (ストーリーイベントの ボーナス 25 と つりあう 大きさ)。
-const EVENT_MODES = {
-  castle:   { icon: "🏰", title: "おしろへ",         n: 10, limit: 90,  bonus: 30, failBonus: 5, runner: "🎃", goal: "🏰",
-              intro: "かぼちゃの ばしゃで おしろへ むかおう！", win: "おしろに ついたよ！", lose: "ばしゃが おくれちゃった…" },
-  ball:     { icon: "💃", title: "ぶとうかい",       n: 10, limit: 80,  bonus: 35, failBonus: 5, runner: "💃", goal: "🎶",
-              intro: "ぶとうかいで おどろう！ ただしく こたえると ステップが きまるよ。", win: "じょうずに おどれた！", lose: "ころんじゃった…！" },
-  villain:  { icon: "⚔️", title: "さいごの たたかい", n: 12, limit: 90,  bonus: 40, failBonus: 8, runner: "🪄", goal: "👻",
-              intro: "わるものが あらわれた！ 1もん せいかいするごとに まほうが あたるよ。", win: "わるものを たいじ！", lose: "にげられちゃった…" },
-  complete: { icon: "👑", title: "かんせい パレード", n: 15, limit: 120, bonus: 50, failBonus: 10, runner: "🎺", goal: "👑", mix: true,
-              intro: "パレードの はじまり！ ぜんぶの けいさんが まざって でるよ。", win: "おうかんを もらったよ！", lose: "もうすこしで おうかん！" },
-};
-const eventNeed = (cfg) => Math.ceil(cfg.n * 0.8);
 const EVENT_KIND_MOOD = { scene: "idle", success: "happy", fail: "oops" };
 // 開発用の けっかの きょうせい(window.__kpEvent)。本番ビルドでは けされる
 const EVENT_DEV = import.meta.env.DEV || import.meta.env.MODE === "evtest";
-function fmtTime(sec) {
-  const m = Math.floor(sec / 60), s = Math.round(sec % 60);
-  const fun = m ? `${m}${[2, 5, 7, 9].includes(m) ? "ふん" : "ぷん"}` : "";
-  return fun + (s ? `${s}びょう` : "");
-}
-const fmtMs = (ms) => fmtTime(Math.round(ms / 1000));
 
 // イベントの 一枚絵(src/art/scenes/<id>_<scene|success|fail>.webp)の 上に キャラを かさねる。
 // 絵が 無い・読めないときは ストーリーイベントの SVG の 場面。
@@ -1443,19 +1427,8 @@ export default function App() {
     setScreen("play");
   };
   const finishEvent = (e, timeUp) => {
-    const cfg = EVENT_MODES[e.id];
-    const need = eventNeed(cfg);
-    const success = !timeUp && e.idx >= cfg.n && e.firstTry >= need;
-    const elapsed = Math.min(e.limitMs, Date.now() - e.startAt);
-    const bonus = success ? cfg.bonus : cfg.failBonus;
-    const prev = (eventRecords[charKey] || {})[e.id] || {};
-    const newBest = e.firstTry > (prev.best || 0) || (success && (!prev.bestMs || elapsed < prev.bestMs));
-    const rec = {
-      best: Math.max(prev.best || 0, e.firstTry),
-      bestMs: success ? Math.min(prev.bestMs || Infinity, elapsed) : (prev.bestMs || null),
-      clears: (prev.clears || 0) + (success ? 1 : 0),
-      tries: (prev.tries || 0) + 1,
-    };
+    const { success, need, elapsed, bonus } = eventOutcome(EVENT_MODES[e.id], e, timeUp, Date.now());
+    const { record: rec, newBest } = nextEventRecord((eventRecords[charKey] || {})[e.id], { success, elapsed, firstTry: e.firstTry });
     const nr = { ...eventRecords, [charKey]: { ...(eventRecords[charKey] || {}), [e.id]: rec } };
     const nv = stardust + bonus;
     const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
