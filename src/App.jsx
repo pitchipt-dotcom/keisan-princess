@@ -947,10 +947,15 @@ const STAGE_LABEL = {
   complete: "👑 ものがたり かんせい",
 };
 
-function MilestoneScene({ type }) {
+function MilestoneScene({ type, fill = false }) {
+  // 場面の一枚絵(src/art/scenes/<type>_scene.webp)があれば それを使う。無い・読めないときは SVG
+  const [sceneUrl, onSceneError] = useArt(`scenes/${type}_scene`);
+  if (sceneUrl && !fill) {
+    return <img src={sceneUrl} alt="" draggable={false} onError={onSceneError} style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />;
+  }
   if (type === "castle") {
     return (
-      <svg viewBox="0 0 280 160" width="100%" height="160" style={{ display: "block" }}>
+      <svg viewBox="0 0 280 160" width="100%" height={fill ? "100%" : 160} preserveAspectRatio={fill ? "xMidYMid slice" : undefined} style={{ display: "block" }}>
         <defs>
           <linearGradient id="kkSkyCastle" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FFB7D5" /><stop offset="100%" stopColor="#C9A8F0" />
@@ -971,7 +976,7 @@ function MilestoneScene({ type }) {
   }
   if (type === "ball") {
     return (
-      <svg viewBox="0 0 280 160" width="100%" height="160" style={{ display: "block" }}>
+      <svg viewBox="0 0 280 160" width="100%" height={fill ? "100%" : 160} preserveAspectRatio={fill ? "xMidYMid slice" : undefined} style={{ display: "block" }}>
         <defs>
           <linearGradient id="kkSkyBall" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FFE3B0" /><stop offset="100%" stopColor="#FFC2DA" />
@@ -991,7 +996,7 @@ function MilestoneScene({ type }) {
   }
   if (type === "villain") {
     return (
-      <svg viewBox="0 0 280 160" width="100%" height="160" style={{ display: "block" }}>
+      <svg viewBox="0 0 280 160" width="100%" height={fill ? "100%" : 160} preserveAspectRatio={fill ? "xMidYMid slice" : undefined} style={{ display: "block" }}>
         <defs>
           <linearGradient id="kkSkyVillain" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#3A2A6B" /><stop offset="100%" stopColor="#7A5C98" />
@@ -1007,7 +1012,7 @@ function MilestoneScene({ type }) {
     );
   }
   return (
-    <svg viewBox="0 0 280 160" width="100%" height="160" style={{ display: "block" }}>
+    <svg viewBox="0 0 280 160" width="100%" height={fill ? "100%" : 160} preserveAspectRatio={fill ? "xMidYMid slice" : undefined} style={{ display: "block" }}>
       <defs>
         <linearGradient id="kkSkyComplete" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFF3C9" /><stop offset="100%" stopColor="#FFC2DA" />
@@ -1098,6 +1103,79 @@ function MilestoneModal({ milestone, character, equipped, onClose }) {
   );
 }
 
+/* ============ イベントモード(ストーリーイベントごとの 時間つき チャレンジ) ============ */
+// n もんを limit びょう いないに。need(8わり)もん いじょう 1かいで せいかいなら せいこう。
+// ★:1もんごとの ★は ふだんと おなじ。おわりに せいこう bonus / しっぱい failBonus を たす
+// (ストーリーイベントの ボーナス 25 と つりあう 大きさ)。
+const EVENT_MODES = {
+  castle:   { icon: "🏰", title: "おしろへ",         n: 10, limit: 90,  bonus: 30, failBonus: 5, runner: "🎃", goal: "🏰",
+              intro: "かぼちゃの ばしゃで おしろへ むかおう！", win: "おしろに ついたよ！", lose: "ばしゃが おくれちゃった…" },
+  ball:     { icon: "💃", title: "ぶとうかい",       n: 10, limit: 80,  bonus: 35, failBonus: 5, runner: "💃", goal: "🎶",
+              intro: "ぶとうかいで おどろう！ ただしく こたえると ステップが きまるよ。", win: "じょうずに おどれた！", lose: "ころんじゃった…！" },
+  villain:  { icon: "⚔️", title: "さいごの たたかい", n: 12, limit: 90,  bonus: 40, failBonus: 8, runner: "🪄", goal: "👻",
+              intro: "わるものが あらわれた！ 1もん せいかいするごとに まほうが あたるよ。", win: "わるものを たいじ！", lose: "にげられちゃった…" },
+  complete: { icon: "👑", title: "かんせい パレード", n: 15, limit: 120, bonus: 50, failBonus: 10, runner: "🎺", goal: "👑", mix: true,
+              intro: "パレードの はじまり！ ぜんぶの けいさんが まざって でるよ。", win: "おうかんを もらったよ！", lose: "もうすこしで おうかん！" },
+};
+const eventNeed = (cfg) => Math.ceil(cfg.n * 0.8);
+const EVENT_KIND_MOOD = { scene: "idle", success: "happy", fail: "oops" };
+// 開発用の けっかの きょうせい(window.__kpEvent)。本番ビルドでは けされる
+const EVENT_DEV = import.meta.env.DEV || import.meta.env.MODE === "evtest";
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+  const fun = m ? `${m}${[2, 5, 7, 9].includes(m) ? "ふん" : "ぷん"}` : "";
+  return fun + (s ? `${s}びょう` : "");
+}
+const fmtMs = (ms) => fmtTime(Math.round(ms / 1000));
+
+// イベントの 一枚絵(src/art/scenes/<id>_<scene|success|fail>.webp)の 上に キャラを かさねる。
+// 絵が 無い・読めないときは ストーリーイベントの SVG の 場面。
+function EventScene({ id, kind = "scene", character, equipped, children }) {
+  const [url, onError] = useArt(`scenes/${id}_${kind}`);
+  return (
+    <div className={"kk-ev-scene kk-ev-" + kind}>
+      {url
+        ? <img className="kk-ev-bg" src={url} alt="" draggable={false} onError={onError} />
+        : <div className="kk-ev-bg"><MilestoneScene type={id} fill />{kind !== "scene" && <div className="kk-ev-svg-mark">{kind === "success" ? "🎉" : "💦"}</div>}</div>}
+      <div className="kk-ev-char"><DressedCharacter character={character} mood={EVENT_KIND_MOOD[kind]} size={150} equipped={equipped} /></div>
+      {children}
+    </div>
+  );
+}
+
+function EventHud({ cfg, ev, now }) {
+  const left = Math.max(0, ev.limitMs - (now - ev.startAt));
+  const hurry = left <= 10000;
+  return (
+    <div className="kk-ev-hud">
+      <div className={"kk-ev-time" + (hurry ? " kk-ev-hurry" : "")} role="timer" aria-label="のこりの じかん">
+        <span className="kk-ev-glass">⏳</span>
+        <div className="kk-ev-bar"><div className="kk-ev-bar-fill" style={{ width: (left / ev.limitMs) * 100 + "%" }} /></div>
+      </div>
+      <div className="kk-ev-track" aria-label={`${ev.idx} / ${cfg.n}もん`}>
+        <div className="kk-ev-road" />
+        <span className="kk-ev-runner" style={{ left: `calc(${(ev.idx / cfg.n) * 100}% * 0.86)` }}>{cfg.runner}</span>
+        <span className="kk-ev-goal">{cfg.goal}</span>
+        <span className="kk-ev-count">{ev.idx} / {cfg.n}</span>
+      </div>
+    </div>
+  );
+}
+
+// さいごの たたかいの わるもの(まるくて ちいさい むらさきの おばけ)
+function VillainGhost({ size = 64 }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
+      <path d="M12 40 q0 -26 20 -26 q20 0 20 26 v12 l-5 -4 l-5 4 l-5 -4 l-5 4 l-5 -4 l-5 4 l-5 -4 l-5 4 Z" fill="#B48CE8" stroke="#7A5C98" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M22 16 l10 -14 l10 14 Z" fill="#6E4AA8" stroke="#4A2D6B" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="25" cy="32" r="4" fill="#3A2A6B" /><circle cx="39" cy="32" r="4" fill="#3A2A6B" />
+      <circle cx="26.5" cy="30.5" r="1.4" fill="#fff" /><circle cx="40.5" cy="30.5" r="1.4" fill="#fff" />
+      <ellipse cx="20" cy="38" rx="3" ry="2" fill="#FF8FC4" opacity=".7" /><ellipse cx="44" cy="38" rx="3" ry="2" fill="#FF8FC4" opacity=".7" />
+      <path d="M27 40 q5 4 10 0" fill="none" stroke="#3A2A6B" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /* ============================ メイン ==================================== */
 export default function App() {
   const [screen, setScreen] = useState("title");        // title | mode | play | collection
@@ -1132,6 +1210,11 @@ export default function App() {
   const [importCode, setImportCode] = useState("");
   const [backupMsg, setBackupMsg] = useState("");
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
+  const [eventRecords, setEventRecords] = useState({}); // { charId: { eventId: { best, bestMs, clears, tries } } }
+  const [ev, setEv] = useState(null);                   // イベントモード { id, gt, stage: pre|run|result, ... }
+  const [evNow, setEvNow] = useState(0);
+  const evRef = useRef(null);
+  evRef.current = ev;
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1151,6 +1234,7 @@ export default function App() {
             setEquipped(d.equipped || {});
             setSeenMilestones(d.seenMilestones || {});
             if (d.character) setCharacterId(d.character);
+            setEventRecords(d.eventRecords || {});
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1162,9 +1246,9 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, eventRecords, ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, eventRecords]);
 
   /* ---- 現在の主人公に応じた データ ---- */
   const charKey = characterId || "witch";
@@ -1188,6 +1272,7 @@ export default function App() {
   const startGame = (gt, m) => {
     if (ac()) ac().resume && ac().resume();
     SFX.tap(sound);
+    setEv(null);
     setGameType(gt);
     const useMode = gt === "kuku" ? (m || "mix") : null;
     if (gt === "kuku") setMode(useMode);
@@ -1276,6 +1361,7 @@ export default function App() {
       SFX.wrong(sound);
       setPhase("wrong");
       setStreak(0);
+      if (evRef.current && evRef.current.stage === "run") setEv((e) => (e ? { ...e, missed: true } : e));
       setLastWrong(q.key);
       setMastery((m) => { const nm = { ...m, [q.key]: Math.max(-1, (m[q.key] || 0) - 1) }; return nm; });
     }
@@ -1306,6 +1392,7 @@ export default function App() {
       return;
     }
     if (pulls > 0) { setPulls((p) => p - 1); doPull(); return; }
+    if (screen === "event") return;   // イベントの けっか画面なら そのまま
     nextQuestion();
   };
   const goDressUp = () => {
@@ -1326,12 +1413,96 @@ export default function App() {
     afterMilestoneRef.current = null;
     if (after === "dressup") { setScreen("dressup"); return; }
     if (pulls > 0) { setPulls((p) => p - 1); doPull(); return; }
+    if (screen === "event") return;
     nextQuestion();
   };
 
+  /* ---- イベントモード ---- */
+  const evRun = !!ev && ev.stage === "run";
+  const openEvent = (id) => { SFX.tap(sound); setEv({ id, stage: "pre", gt: null }); setScreen("event"); };
+  const askEventQuestion = (gt) => {
+    setGameType(gt);
+    setQ(generateQuestion(gt, "mix", mastery, lastWrong));
+    setPicked(null); setShowHint(false); setShowColumnMemo(false); setPhase("ask");
+  };
+  const eventGameType = (cfg, gt) => (cfg.mix ? Object.keys(GAMETYPE_INFO)[(Math.random() * 4) | 0] : gt);
+  const startEvent = (gt) => {
+    if (ac()) ac().resume && ac().resume();
+    SFX.tap(sound);
+    const cfg = EVENT_MODES[ev.id];
+    setMode("mix"); setStreak(0);
+    askEventQuestion(eventGameType(cfg, gt));
+    const now = Date.now();
+    setEvNow(now);
+    setEv({ id: ev.id, gt, stage: "run", idx: 0, firstTry: 0, missed: false, startAt: now, limitMs: cfg.limit * 1000 });
+    setScreen("play");
+  };
+  const finishEvent = (e, timeUp) => {
+    const cfg = EVENT_MODES[e.id];
+    const need = eventNeed(cfg);
+    const success = !timeUp && e.idx >= cfg.n && e.firstTry >= need;
+    const elapsed = Math.min(e.limitMs, Date.now() - e.startAt);
+    const bonus = success ? cfg.bonus : cfg.failBonus;
+    const prev = (eventRecords[charKey] || {})[e.id] || {};
+    const newBest = e.firstTry > (prev.best || 0) || (success && (!prev.bestMs || elapsed < prev.bestMs));
+    const rec = {
+      best: Math.max(prev.best || 0, e.firstTry),
+      bestMs: success ? Math.min(prev.bestMs || Infinity, elapsed) : (prev.bestMs || null),
+      clears: (prev.clears || 0) + (success ? 1 : 0),
+      tries: (prev.tries || 0) + 1,
+    };
+    const nr = { ...eventRecords, [charKey]: { ...(eventRecords[charKey] || {}), [e.id]: rec } };
+    const nv = stardust + bonus;
+    const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
+    setStardust(nv);
+    if (owed > 0) setPulls((p) => p + owed);
+    setEventRecords(nr);
+    persist({ stardust: nv, eventRecords: nr });
+    if (success) SFX.reveal(sound); else SFX.wrong(sound);
+    setEv({ ...e, stage: "result", result: { success, timeUp, firstTry: e.firstTry, need, elapsed, bonus, newBest, answered: e.idx } });
+    setQ(null); setPhase("ask"); setScreen("event");
+  };
+  const evAdvance = () => {
+    const e = evRef.current;
+    if (!e || e.stage !== "run") return;
+    const cfg = EVENT_MODES[e.id];
+    const next = { ...e, idx: e.idx + 1, firstTry: e.firstTry + (e.missed ? 0 : 1), missed: false };
+    if (next.idx >= cfg.n) { finishEvent(next, false); return; }
+    setEv(next);
+    askEventQuestion(eventGameType(cfg, e.gt));
+  };
+  const abortEvent = () => { setEv((e) => (e ? { id: e.id, gt: e.gt, stage: "pre" } : e)); setQ(null); setPhase("ask"); setScreen("event"); };
+  // せいかいしたら すこし まって つぎの もんだいへ(イベント中は「つぎへ」を おさなくて よい)
+  useEffect(() => {
+    if (!evRun || phase !== "right") return;
+    const t = setTimeout(evAdvance, 900);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line
+  }, [evRun, phase, ev && ev.idx]);
+  // のこり時間
+  useEffect(() => {
+    if (!evRun) return;
+    const t = setInterval(() => setEvNow(Date.now()), 200);
+    return () => clearInterval(t);
+  }, [evRun]);
+  useEffect(() => {
+    if (evRun && evNow - ev.startAt >= ev.limitMs) finishEvent(ev, true);
+    // eslint-disable-next-line
+  }, [evNow]);
+  // 開発用:けっかの きょうせい(本番ビルドには ふくまれない)
+  useEffect(() => {
+    if (!EVENT_DEV || typeof window === "undefined") return;
+    window.__kpEvent = {
+      win: () => { const e = evRef.current; if (e && e.stage === "run") finishEvent({ ...e, idx: EVENT_MODES[e.id].n, firstTry: EVENT_MODES[e.id].n }, false); },
+      lose: () => { const e = evRef.current; if (e && e.stage === "run") finishEvent({ ...e, idx: EVENT_MODES[e.id].n, firstTry: 0 }, false); },
+      timeLeft: (sec) => setEv((e) => (e && e.stage === "run" ? { ...e, startAt: Date.now() - (e.limitMs - sec * 1000) } : e)),
+      state: () => evRef.current,
+    };
+  });
+
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones,
+    character: characterId, seenMilestones, eventRecords,
   });
 
   const applySnapshot = (d) => {
@@ -1343,6 +1514,7 @@ export default function App() {
     setEquipped(d.equipped || {});
     setSeenMilestones(d.seenMilestones || {});
     if (d.character) setCharacterId(d.character);
+    setEventRecords(d.eventRecords || {});
   };
 
   const resetAll = () => {
@@ -1350,7 +1522,7 @@ export default function App() {
     if (typeof window !== "undefined" && storage) {
       try { storage.set(RESET_BACKUP_KEY, JSON.stringify(buildSnapshot())); } catch (e) {}
     }
-    setStardust(0); setCollection({}); setMastery({}); setEquipped({}); setSeenMilestones({});
+    setStardust(0); setCollection({}); setMastery({}); setEquipped({}); setSeenMilestones({}); setEventRecords({});
     setStats({ correct: 0, total: 0, best: 0, shines: 0 });
     if (typeof window !== "undefined" && storage) { try { storage.delete(SAVE_KEY); } catch (e) {} }
   };
@@ -1416,7 +1588,7 @@ export default function App() {
         {/* ---------- TOP BAR ---------- */}
         {screen !== "title" && (
           <div className="kk-bar">
-            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
+            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "play" && evRun) { abortEvent(); return; } if (screen === "event") { setEv(null); setScreen("mode"); return; } if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
             <div className="kk-bar-mid">
               <span className="kk-dust">★ {stardust}</span>
             </div>
@@ -1484,6 +1656,26 @@ export default function App() {
               ))}
             </div>
 
+            <div className="kk-ev-list">
+              <div className="kk-ev-list-title">🎪 イベント</div>
+              {STORY_MILESTONES.map((ms) => {
+                const cfg = EVENT_MODES[ms.id];
+                // そのキャラが その ストーリーイベントを 見たら ひらく(見るまえの 古い セーブで、もう あつまって いる ときも ひらく)
+                const open = (seenMilestones[charKey] || []).includes(ms.id) || collectedCount >= ms.count;
+                const rec = (eventRecords[charKey] || {})[ms.id];
+                return (
+                  <button key={ms.id} className={"kk-ev-item" + (open ? "" : " kk-ev-locked")} disabled={!open} onClick={() => openEvent(ms.id)}>
+                    <span className="kk-ev-item-icon">{open ? cfg.icon : "🔒"}</span>
+                    <span className="kk-ev-item-text">
+                      <b>{cfg.title}</b>
+                      <small>{open ? `${cfg.n}もん・${fmtTime(cfg.limit)}` : `アイテムを あと${ms.count - collectedCount}こ あつめると ひらくよ`}</small>
+                    </span>
+                    {rec && rec.clears > 0 && <span className="kk-ev-item-crown" aria-label="クリア">👑</span>}
+                  </button>
+                );
+              })}
+            </div>
+
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>あつめた おしゃれを 見る →</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("select"); }}>ほかの こで あそぶ</button>
             <div className="kk-parentmenu-hint">九九の だんの せってい・バックアップが できます</div>
@@ -1539,16 +1731,23 @@ export default function App() {
           <div className="kk-play">
             <div className="kk-sky">
               <PracticeBackdrop stage={sceneStage} />
-              {sceneStage && <div className="kk-stage-badge">{STAGE_LABEL[sceneStage]}</div>}
+              {evRun ? <div className="kk-stage-badge">{EVENT_MODES[ev.id].icon} {EVENT_MODES[ev.id].title}</div> : sceneStage && <div className="kk-stage-badge">{STAGE_LABEL[sceneStage]}</div>}
               {sparkles.map((s) => (
                 <span key={s.id} className="kk-sparkle" style={{ left: s.left + "%", animationDelay: s.delay + "s", animationDuration: s.dur + "s", fontSize: s.size + "px" }}>★</span>
               ))}
               <div className="kk-witch-stage"><DressedCharacter character={charKey} mood={phase === "right" ? "happy" : phase === "wrong" ? "oops" : "idle"} size={120} equipped={myEquipped} /></div>
+              {evRun && ev.id === "villain" && (
+                <>
+                  <div className={"kk-ev-villain" + (phase === "right" ? " kk-ev-hit" : "")} key={"v" + ev.idx}><VillainGhost size={58} /></div>
+                  {phase === "right" && <span className="kk-ev-bolt" key={"b" + ev.idx}>✦</span>}
+                </>
+              )}
               {streak >= 2 && phase === "ask" && <div className="kk-combo">れんぞく {streak}！🔥</div>}
+              {evRun ? <EventHud cfg={EVENT_MODES[ev.id]} ev={ev} now={evNow} /> : (
               <div className="kk-progress" aria-label="つぎのとびらまで">
                 <div className="kk-progress-fill" style={{ width: (100 - stardustToNext / PULL_COST * 100) + "%" }} />
                 <span className="kk-progress-label">つぎのとびらまで ★{stardustToNext}</span>
-              </div>
+              </div>)}
             </div>
 
             {phase === "ask" && (() => {
@@ -1604,7 +1803,17 @@ export default function App() {
               );
             })()}
 
-            {phase !== "ask" && (() => {
+            {evRun && phase === "right" && (() => {
+              const fb = feedbackTextFor(q);
+              return (
+                <div className="kk-feedback kk-fb-right kk-ev-fb">
+                  <div className="kk-fb-big">{ev.id === "villain" ? "まほうが あたった！✨" : fb.big}</div>
+                  <div className="kk-fb-echo">{fb.echo}</div>
+                  <div className="kk-fb-msg">★{rewardForGameType(q.gameType, streak)}</div>
+                </div>
+              );
+            })()}
+            {phase !== "ask" && !(evRun && phase === "right") && (() => {
               const fb = feedbackTextFor(q);
               return (
                 <div className={"kk-feedback " + (phase === "right" ? "kk-fb-right" : "kk-fb-wrong")}>
@@ -1629,11 +1838,67 @@ export default function App() {
               );
             })()}
 
+            {!evRun && (
             <button className="kk-text-btn kk-coll-link" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>
               あつめた おしゃれ（{collectedCount}/{myItems.length}）
-            </button>
+            </button>)}
           </div>
         )}
+
+        {/* ---------- EVENT(イベントモードの ちょうせんまえ・けっか) ---------- */}
+        {screen === "event" && ev && ev.stage !== "run" && (() => {
+          const cfg = EVENT_MODES[ev.id];
+          const rec = (eventRecords[charKey] || {})[ev.id];
+          const r = ev.result;
+          const result = ev.stage === "result" && r;
+          return (
+            <div className="kk-ev-screen">
+              <EventScene id={ev.id} kind={result ? (r.success ? "success" : "fail") : "scene"} character={charKey} equipped={myEquipped}>
+                <div className="kk-ev-title">{result ? (r.success ? cfg.win : cfg.lose) : `${cfg.icon} ${cfg.title}`}</div>
+              </EventScene>
+              {!result ? (
+                <>
+                  <div className="kk-ev-card">
+                    <div className="kk-ev-intro">{cfg.intro}</div>
+                    <div className="kk-ev-rule">{cfg.n}もんを {fmtTime(cfg.limit)}で こたえよう。<br />{eventNeed(cfg)}もん いじょう 1かいで せいかいなら せいこう！</div>
+                    <div className="kk-ev-reward">せいこう ★{cfg.bonus}・しっぱいでも ★{cfg.failBonus}</div>
+                    {rec && <div className="kk-ev-rec">さいこう きろく {rec.best} / {cfg.n}もん{rec.bestMs ? `・${fmtMs(rec.bestMs)}で クリア` : ""}{rec.clears ? `・👑×${rec.clears}` : ""}</div>}
+                  </div>
+                  {cfg.mix ? (
+                    <button className="kk-big-btn" onClick={() => startEvent(null)}>パレード スタート！</button>
+                  ) : (
+                    <>
+                      <div className="kk-ev-pick">どの けいさんで ちょうせんする？</div>
+                      <div className="kk-gametype-grid">
+                        {Object.entries(GAMETYPE_INFO).map(([key, info]) => (
+                          <button key={key} className="kk-gametype-card" style={{ borderColor: info.accent }} onClick={() => startEvent(key)}>
+                            <span className="kk-gt-icon">{info.icon}</span>
+                            <span className="kk-gt-text"><b>{info.label}</b><small>{info.sub}</small></span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="kk-ev-card">
+                    <div className="kk-ev-score">1かいで せいかい <b>{r.firstTry}</b> / {cfg.n}もん</div>
+                    {r.timeUp && <div className="kk-ev-note">じかん ぎれ！（{r.answered}もんめ まで できたよ）</div>}
+                    {r.success && <div className="kk-ev-note">クリア タイム {fmtMs(r.elapsed)}</div>}
+                    {!r.success && !r.timeUp && <div className="kk-ev-note">あと {r.need - r.firstTry}もんで せいこう！</div>}
+                    <div className="kk-ev-reward">★{r.bonus} ゲット！</div>
+                    {r.newBest && <div className="kk-ev-best">🎉 さいこう きろく こうしん！</div>}
+                  </div>
+                  {pulls > 0 && <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setPulls((p) => p - 1); doPull(); }}>✨ まほうのとびらが ひらく！</button>}
+                  <button className="kk-big-btn kk-retry-btn" onClick={() => startEvent(ev.gt)}>もう いちど ちょうせん</button>
+                  {!cfg.mix && <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setEv({ id: ev.id, gt: ev.gt, stage: "pre" }); }}>べつの けいさんで ちょうせん</button>}
+                  <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setEv(null); setScreen("mode"); }}>イベントを おわる</button>
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ---------- COLLECTION ---------- */}
         {screen === "collection" && (
@@ -1855,6 +2120,56 @@ function Style() {
 }
 .kk-gametype-card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(201,168,240,.45);}
 .kk-gt-icon{font-size:30px;}
+/* ---- イベントモード ---- */
+.kk-ev-list{width:100%; max-width:400px; margin:4px 0 6px; display:flex; flex-direction:column; gap:8px;}
+.kk-ev-list-title{font-family:'Mochiy Pop One'; font-size:16px; color:var(--night); text-align:left; margin-left:4px;}
+.kk-ev-item{display:flex; align-items:center; gap:10px; background:linear-gradient(135deg,#FFF6D9,#FFE7F4); border:3px solid var(--gold); border-radius:18px; padding:10px 14px; cursor:pointer; text-align:left; font-family:inherit; color:var(--plum); box-shadow:0 4px 0 rgba(242,169,59,.4);}
+.kk-ev-item:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(242,169,59,.4);}
+.kk-ev-item-icon{font-size:26px;}
+.kk-ev-item-text{flex:1; display:flex; flex-direction:column; gap:2px;}
+.kk-ev-item-text b{font-family:'Mochiy Pop One'; font-size:15px; color:var(--night);}
+.kk-ev-item-text small{font-family:'Yomogi'; font-size:12px; font-weight:700;}
+.kk-ev-item-crown{font-size:20px;}
+.kk-ev-locked{background:#F3EEF8; border-color:#DCCDEB; box-shadow:none; cursor:default; opacity:.85;}
+.kk-ev-locked .kk-ev-item-icon{filter:grayscale(.3);}
+.kk-ev-screen{display:flex; flex-direction:column; align-items:center; text-align:center; width:100%;}
+.kk-ev-scene{position:relative; width:100%; max-width:380px; aspect-ratio:1/1; border-radius:26px; overflow:hidden; box-shadow:0 8px 20px rgba(74,45,107,.25); background:#F3DEFB; margin-bottom:12px;}
+.kk-ev-bg{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
+.kk-ev-svg-mark{position:absolute; top:22%; right:10%; font-size:44px;}
+.kk-ev-char{position:absolute; left:50%; bottom:3%; transform:translateX(-50%); filter:drop-shadow(0 6px 8px rgba(74,45,107,.3));}
+.kk-ev-success .kk-ev-char{animation:kk-ev-jump 1.1s ease-in-out infinite;}
+@keyframes kk-ev-jump{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-10px)}}
+.kk-ev-title{position:absolute; top:12px; left:50%; transform:translateX(-50%); max-width:90%; font-family:'Mochiy Pop One'; font-size:21px; color:var(--night); background:rgba(255,255,255,.88); padding:8px 18px; border-radius:999px; box-shadow:0 4px 0 rgba(201,168,240,.6); white-space:nowrap;}
+.kk-ev-success .kk-ev-title{color:var(--rose-deep); animation:kk-pop .4s ease;}
+.kk-ev-card{width:100%; max-width:380px; background:#fff; border-radius:22px; padding:14px 16px; margin-bottom:10px; box-shadow:0 6px 0 rgba(201,168,240,.5);}
+.kk-ev-intro{font-weight:700; font-size:15px; line-height:1.7; margin-bottom:6px;}
+.kk-ev-rule{font-family:'Yomogi'; font-weight:700; font-size:13.5px; line-height:1.7;}
+.kk-ev-reward{font-family:'Mochiy Pop One'; color:#F2A93B; font-size:15px; margin-top:6px;}
+.kk-ev-rec{font-family:'Yomogi'; font-size:12.5px; margin-top:6px; color:var(--plum-soft,#7A5C98);}
+.kk-ev-pick{font-family:'Mochiy Pop One'; font-size:15px; color:var(--night); margin:4px 0 10px;}
+.kk-ev-score{font-weight:700; font-size:15px;}
+.kk-ev-score b{font-family:'Mochiy Pop One'; font-size:28px; color:var(--rose-deep); margin:0 4px;}
+.kk-ev-note{font-family:'Yomogi'; font-weight:700; font-size:13.5px; margin-top:4px;}
+.kk-ev-best{font-family:'Mochiy Pop One'; font-size:14px; color:var(--rose-deep); margin-top:6px;}
+.kk-ev-hud{position:relative; z-index:2; margin-top:10px;}
+.kk-ev-time{display:flex; align-items:center; gap:8px;}
+.kk-ev-glass{font-size:20px; animation:kk-ev-flip 4s ease-in-out infinite;}
+@keyframes kk-ev-flip{0%,85%{transform:rotate(0)}95%,100%{transform:rotate(180deg)}}
+.kk-ev-bar{flex:1; height:14px; border-radius:999px; background:rgba(255,255,255,.18); overflow:hidden;}
+.kk-ev-bar-fill{height:100%; border-radius:999px; background:linear-gradient(90deg,#7DE0C8,#9CC4FF); transition:width .2s linear;}
+.kk-ev-hurry .kk-ev-bar-fill{background:linear-gradient(90deg,#FFC94D,#FF8FC4);}
+.kk-ev-track{position:relative; height:30px; margin-top:8px;}
+.kk-ev-road{position:absolute; left:4px; right:28px; top:50%; height:4px; margin-top:-2px; border-radius:2px; background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 8px,transparent 8px 14px);}
+.kk-ev-runner{position:absolute; top:0; font-size:22px; transition:left .5s ease; transform:scaleX(-1);}
+.kk-ev-goal{position:absolute; right:0; top:0; font-size:22px;}
+.kk-ev-count{position:absolute; right:30px; top:-14px; font-family:'Mochiy Pop One'; font-size:11px; color:rgba(255,255,255,.8);}
+.kk-ev-villain{position:absolute; right:14px; top:44px; z-index:2; animation:kk-ev-float 2.4s ease-in-out infinite;}
+.kk-ev-hit{animation:kk-ev-shake .5s ease 2;}
+@keyframes kk-ev-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes kk-ev-shake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-6px) rotate(-8deg)}75%{transform:translateX(6px) rotate(8deg)}}
+.kk-ev-bolt{position:absolute; z-index:3; top:96px; left:40%; font-size:30px; color:var(--gold); text-shadow:0 0 10px var(--gold),0 0 20px #fff; animation:kk-ev-zap .55s ease-out forwards; pointer-events:none;}
+@keyframes kk-ev-zap{0%{transform:translate(0,0) scale(.6); opacity:1}80%{opacity:1}100%{transform:translate(150px,-40px) scale(1.6); opacity:0}}
+.kk-ev-fb{padding:14px 18px;}
 .kk-gt-text{display:flex; flex-direction:column; gap:3px;}
 .kk-gt-text b{font-family:'Mochiy Pop One'; font-size:14px; color:var(--night); line-height:1.3;}
 .kk-gt-text small{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,#7A5C98); line-height:1.3;}

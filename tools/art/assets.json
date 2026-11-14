@@ -7,7 +7,8 @@
  "no_face": "No face, no character.",
  "sizes": {
   "chars": 640,
-  "items": 320
+  "items": 320,
+  "scenes": 1024
  },
  "chars": [
   {
@@ -396,6 +397,91 @@
    "subject": "A pair of small white feathered angel wings joined by a small gold jewel in the middle",
    "wearable": true,
    "lilac": true
+  }
+ ],
+ "scene_rules": {
+  "_comment": "scenes/ の一枚絵(イベントモード)。背景は抜かない。キャラはアプリで重ねるので、下の真ん中を空ける。文字はアプリで重ねる。",
+  "composition": "Full-bleed illustrated background filling the whole square picture, no frame, no border. Leave open empty space in the lower center for a character to stand: the lower center is plain open ground or floor with nothing on top.",
+  "mood": "Bright, cheerful, gentle and soft mood. Never dark, never sad, never scary.",
+  "no_people": "No people, no characters, no text, no letters.",
+  "villain_only": "No people and no other characters besides the little purple ghost. No text, no letters.",
+  "villain": "a tiny round chubby cute purple ghost mascot with big round sparkly eyes, a small pointed purple hat, rosy cheeks and a playful little grin, fluffy and soft, clearly not scary"
+ },
+ "scenes": [
+  {
+   "key": "scenes/castle_scene",
+   "name": "おしろへ:場面",
+   "mode": "generate",
+   "subject": "A fairy-tale scene: a winding path lined with colorful flowers leading up to a pastel pink castle on a far hill, an empty pumpkin carriage waiting at the side of the path, bright blue sky with fluffy clouds"
+  },
+  {
+   "key": "scenes/castle_success",
+   "name": "おしろへ:成功",
+   "mode": "generate",
+   "subject": "A fairy-tale scene: the grand open gate of a pastel pink castle in the early evening, colorful fireworks bursting in the sky over the towers, flower garlands and glowing lanterns on the gate"
+  },
+  {
+   "key": "scenes/castle_fail",
+   "name": "おしろへ:失敗",
+   "mode": "generate",
+   "subject": "A gentle fairy-tale scene: a road through soft green hills under a warm orange and pink sunset sky, an empty pumpkin carriage at the side of the road with one wheel stuck in a small shallow puddle, tilted a little, comical and calm, the pink castle small and far away"
+  },
+  {
+   "key": "scenes/ball_scene",
+   "name": "ぶとうかい:場面",
+   "mode": "generate",
+   "subject": "A fairy-tale scene: the inside of a completely empty grand palace ballroom with nobody in the room, no guests and no dancers, sparkling crystal chandeliers, a shiny pastel marble dance floor, tall arched windows and soft pink curtains"
+  },
+  {
+   "key": "scenes/ball_success",
+   "name": "ぶとうかい:成功",
+   "mode": "generate",
+   "subject": "A fairy-tale scene: the inside of a completely empty grand palace ballroom with nobody in the room, no guests and no dancers, colorful confetti and glittering sparkles falling through the air, crystal chandeliers shining brightly, shiny pastel marble dance floor"
+  },
+  {
+   "key": "scenes/ball_fail",
+   "name": "ぶとうかい:失敗",
+   "mode": "generate",
+   "subject": "A gentle fairy-tale scene: the inside of a grand palace ballroom with crystal chandeliers, a single sparkling glass slipper lying sideways on the shiny pastel marble dance floor off to one side, calm and soft"
+  },
+  {
+   "key": "scenes/villain_scene",
+   "name": "さいごのたたかい:場面",
+   "mode": "generate",
+   "subject": "A fairy-tale night scene: the flat rooftop terrace of a castle under a starry purple and blue night sky with a big friendly glowing moon, and {villain} floating in the upper right part of the sky",
+   "villain": true
+  },
+  {
+   "key": "scenes/villain_success",
+   "name": "さいごのたたかい:成功",
+   "mode": "generate",
+   "subject": "A fairy-tale night scene: the flat rooftop terrace of a castle under a starry night sky with a big glowing moon, and {villain} in the upper part of the sky bursting into many tiny glittering stardust stars and fading away with a dizzy smile, bright sparkles everywhere",
+   "villain": true
+  },
+  {
+   "key": "scenes/villain_fail",
+   "name": "さいごのたたかい:失敗",
+   "mode": "generate",
+   "subject": "A fairy-tale night scene: the flat rooftop terrace of a castle under a starry night sky with a big glowing moon, and {villain} flying away high up into the sky toward the moon while playfully sticking out a tongue, comical and cute",
+   "villain": true
+  },
+  {
+   "key": "scenes/complete_scene",
+   "name": "かんせい:場面",
+   "mode": "generate",
+   "subject": "A festive fairy-tale scene: a wide parade boulevard leading straight to a grand golden palace far away, colorful flags, balloons, bunting and flower petals along both sides of the road"
+  },
+  {
+   "key": "scenes/complete_success",
+   "name": "かんせい:成功",
+   "mode": "generate",
+   "subject": "A festive fairy-tale scene: a shining golden crown resting on a plush red velvet cushion on a tall pedestal in the upper center, surrounded by falling colorful confetti and sparkles, a golden palace hall behind"
+  },
+  {
+   "key": "scenes/complete_fail",
+   "name": "かんせい:失敗",
+   "mode": "generate",
+   "subject": "A festive fairy-tale scene: a wide parade boulevard with flags and balloons on both sides, and far away at the very end of the road a small pedestal with a tiny golden crown on top, bright cheerful daytime"
   }
  ]
 }

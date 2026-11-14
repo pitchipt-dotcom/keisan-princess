@@ -110,6 +110,11 @@ def build_prompt(spec, entry):
     """subject + 絵柄 + (着るもの) + (顔なし) + 背景。"""
     if entry["mode"] == "edit":
         prompt = entry["prompt"]
+    elif entry["key"].startswith("scenes/"):  # イベントの一枚絵。背景つき、下の真ん中を空ける
+        rules = spec["scene_rules"]
+        subject = entry["subject"].replace("{villain}", rules["villain"]).rstrip(".,")
+        prompt = " ".join([subject + ", " + spec["style"], rules["mood"],
+                           rules["villain_only"] if entry.get("villain") else rules["no_people"], rules["composition"]])
     else:
         is_char = entry["key"].startswith("chars/")
         noun = "character" if is_char else "animal" if entry.get("creature") else "object"
@@ -186,7 +191,7 @@ def main():
 
     spec = json.loads((HERE / "assets.json").read_text())
     # idle → アイテム → 表情の順。MOSS と Klein の入れかえが 1 回ですむ。
-    entries = ([e for e in spec["chars"] if e["mode"] == "generate"] + spec["items"]
+    entries = ([e for e in spec["chars"] if e["mode"] == "generate"] + spec["items"] + spec.get("scenes", [])
                + [e for e in spec["chars"] if e["mode"] == "edit"])
     by_key = {e["key"]: e for e in entries}
     if args.dry_run:
@@ -233,7 +238,7 @@ def main():
         if (RAW / f"{key}.png").exists():
             skipped.append(key)
             continue
-        size = spec["sizes"]["chars" if key.startswith("chars/") else "items"]
+        size = spec["sizes"][key.split("/", 1)[0]]
         started = time.time()
         try:
             prompt = build_prompt(spec, entry)
