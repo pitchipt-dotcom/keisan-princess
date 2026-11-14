@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
 import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
 import { DragonScreen } from "./DragonMode.jsx";
+import { ParentReport } from "./ParentReport.jsx";
 import { normalizeDaily, chooseEgg, setTodayOverride } from "./dragon.js";
 
 // 開発時だけ：?today=YYYY-MM-DD か window.__setToday("YYYY-MM-DD") で「きょう」を さしかえて テストできる
@@ -1538,6 +1539,7 @@ export default function App() {
             <button className="kk-tiny-btn" onClick={() => { SFX.tap(sound); setShowDan((v) => !v); }}>{showDan ? "とじる" : "おうちのひとメニュー"}</button>
             {showDan && (
               <div className="kk-dan-wrap">
+                <button className="pr-open-btn" onClick={() => { SFX.tap(sound); setScreen("report"); }}>📊 がんばりレポートを 見る</button>
                 <div className="kk-dan-note">九九の れんしゅうする だんを えらべます（ふだんは「おまかせ」で にがてを じどうで おおめに）</div>
                 <div className="kk-dan-grid">
                   {[1,2,3,4,5,6,7,8,9].map((d) => (
@@ -1600,6 +1602,11 @@ export default function App() {
             onPickEgg={pickEgg}
             onExit={() => { SFX.tap(sound); exitDaily(); }}
           />
+        )}
+
+        {/* ---------- おうちのひとレポート ---------- */}
+        {screen === "report" && (
+          <ParentReport daily={daily} mastery={mastery} onExit={() => { SFX.tap(sound); setScreen("mode"); }} />
         )}
 
         {/* ---------- ドラゴン ---------- */}
