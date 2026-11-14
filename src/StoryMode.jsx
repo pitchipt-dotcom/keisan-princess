@@ -937,3 +937,6 @@ function StoryStyle() {
 `}</style>
   );
 }
+
+// テスト(tests/story.test.jsx)から もんだいの 生成を たしかめるため
+export { CHAPTERS, fracOptions };
