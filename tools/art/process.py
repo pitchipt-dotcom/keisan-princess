@@ -3,6 +3,7 @@
 
   art-raw/items/*.png (320px) → src/art/items/*.webp
   art-raw/chars/*.png (640px) → src/art/chars/*.webp
+  art-raw/scenes/*.png        → src/art/scenes/*.webp (イベントの一枚絵。背景は抜かず、はば 1024・quality 85)
 
 - 背景は、画像のふちから塗りつぶして求める(ふちの中央値の色との距離で判定)。
 - 色つき外わく+白い角丸タイルになった絵は、タイルの白も抜く。
@@ -28,6 +29,8 @@ BG_NEAR = 26.0      # この距離までは背景とみなす(囲まれた穴は
 EDGE_FULL = 70.0    # ふち 2px で、これ以上はなれた色は完全に不透明
 MARGIN = 0.06       # 仕上がりの余白(1 辺あたり)
 WEBP_QUALITY = 90
+SCENE_WIDTH = 1024
+SCENE_QUALITY = 85
 
 
 def flood_from_border(candidate):
@@ -155,6 +158,41 @@ def contact_sheet(results, path):
     sheet.save(path)
 
 
+def scenes(svg_only):
+    """一枚絵は そのまま(背景を抜かない)はば 1024 の WebP にする。"""
+    folder = OUT / "scenes"
+    folder.mkdir(parents=True, exist_ok=True)
+    done, wanted = [], set()
+    for source in sorted((RAW / "scenes").glob("*.png")):
+        key = f"scenes/{source.stem}"
+        if key in svg_only:
+            print(f"svg  {key} (SVG のまま残す)")
+            continue
+        try:
+            image = Image.open(source).convert("RGB")
+        except OSError:
+            print(f"skip {key} (読めない)")
+            continue
+        image = image.resize((SCENE_WIDTH, round(image.height * SCENE_WIDTH / image.width)), Image.Resampling.LANCZOS)
+        image.save(folder / f"{source.stem}.webp", "WEBP", quality=SCENE_QUALITY, method=6)
+        wanted.add(f"{source.stem}.webp")
+        done.append((key, image))
+        print(f"ok   {key}")
+    for stale in folder.glob("*.webp"):
+        if stale.name not in wanted:
+            stale.unlink()
+    if done:  # 一覧(3 れつ)
+        cell = 340
+        sheet = Image.new("RGB", (3 * cell, ((len(done) + 2) // 3) * (cell + 22)), "#FFF6FB")
+        draw = ImageDraw.Draw(sheet)
+        for i, (key, image) in enumerate(done):
+            x, y = i % 3 * cell, i // 3 * (cell + 22)
+            sheet.paste(image.resize((cell - 8, round((cell - 8) * image.height / image.width))), (x + 4, y + 4))
+            draw.text((x + 6, y + cell + 2), key.split("/", 1)[1], fill="#4A2D6B")
+        sheet.save(RAW / "_contact_scenes.png")
+    return len(done)
+
+
 def main():
     results, redo = [], {}
     try:  # 3 回作り直してもだめだった絵は src/art に出さない(SVG のまま)
@@ -185,11 +223,12 @@ def main():
         for stale in (OUT / folder).glob("*.webp"):  # 元が無くなった絵は消す
             if stale.name not in wanted:
                 stale.unlink()
+    scene_count = scenes(svg_only) if (RAW / "scenes").is_dir() else 0
     if not results:
         sys.exit("art-raw/ に PNG がありません。先に generate.py を実行してください。")
     contact_sheet(results, RAW / "_contact.png")
     (RAW / "_redo.json").write_text(json.dumps({"redo": redo}, ensure_ascii=False, indent=1))
-    print(f"\n{len(results)} 点を src/art/ に出力。作り直し候補 {len(redo)} 点 → art-raw/_redo.json / 一覧 → art-raw/_contact.png")
+    print(f"\n{len(results)} 点と 一枚絵 {scene_count} 点を src/art/ に出力。作り直し候補 {len(redo)} 点 → art-raw/_redo.json / 一覧 → art-raw/_contact.png")
 
 
 if __name__ == "__main__":
