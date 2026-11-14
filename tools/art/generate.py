@@ -41,6 +41,10 @@ ORIG = RAW / "_orig"          # 生成されたままの大きさ(編集の元�
 STATE = RAW / "_state.json"   # 会話 ID と作り直し回数
 REDO = RAW / "_redo.json"
 MAX_REDO = 3
+# Pitch-chat は 1 つの会話に 100 枚までしか画像を置けない(backend/app/image_assets.py の
+# conversation_image_limit)。超えると、絵はできても保存で落ち、ジョブが RECOVERY_REQUIRED のまま残る。
+# MOSS で作った絵も 1 枚、編集は 元画像のアップロードと できた絵で 2 枚。余裕をみて 80 枚で会話を替える。
+CONVERSATION_IMAGE_LIMIT = 80
 POLL_SECONDS = 3
 JOB_TIMEOUT = 30 * 60
 
@@ -148,17 +152,30 @@ def save_raw(key, png, size):
     partial.replace(target)
 
 
-def conversation(api, state):
-    if not state.get("conversation_id"):
+def conversation(api, state, adding):
+    """これから adding 枚の画像を置く会話の ID。入りきらなければ 新しい会話にする。"""
+    # 数え方を直すまえの state("attachments" は編集の分しか数えていなかった)は、
+    # 枚数が分からないので 新しい会話から始める。
+    if "conversation_images" not in state:
+        state.pop("conversation_id", None)
+        state.pop("attachments", None)
+    if not state.get("conversation_id") or state["conversation_images"] + adding > CONVERSATION_IMAGE_LIMIT:
         state["conversation_id"] = api.call("POST", "/api/images/conversations")["conversation_id"]
-        state["attachments"] = 0
+        state["conversation_images"] = 0
     return state["conversation_id"]
 
 
+def count_images(state, n):
+    """会話に置いた(置こうとした)画像を数える。失敗したジョブも、保存まで行ったかもしれないので数える。"""
+    state["conversation_images"] = state.get("conversation_images", 0) + n
+
+
 def generate(api, state, prompt):
+    cid = conversation(api, state, 1)
     job = api.call("POST", "/api/media/jobs", body={
         "prompt": prompt, "kind": "image", "backend": "moss-image", "aspect_ratio": "1:1",
-        "prompt_mode": "direct", "preview_only": False, "conversation_id": conversation(api, state)})
+        "prompt_mode": "direct", "preview_only": False, "conversation_id": cid})
+    count_images(state, 1)  # できた絵が 会話に 1 枚 入る
     return api.result_png(job["job_id"])
 
 
@@ -166,18 +183,16 @@ def edit(api, state, prompt, source_key):
     source = ORIG / f"{source_key}.png"
     if not source.exists() or source.stat().st_mtime < (RAW / f"{source_key}.png").stat().st_mtime - 5:
         source = RAW / f"{source_key}.png"  # 自分で置いた絵は art-raw のものを元にする
-    # 1 つの会話に置ける画像は 100 枚まで。多くなったら新しい会話にする。
-    if state.get("attachments", 0) >= 80:
-        state.pop("conversation_id", None)
-    cid = conversation(api, state)
+    cid = conversation(api, state, 2)  # 元画像のアップロードと、できた絵
     buffer = io.BytesIO()
     Image.open(source).convert("RGB").save(buffer, "PNG")
     image = api.call("POST", f"/api/images/attachments?conversation_id={cid}",
                      body=buffer.getvalue(), content_type="image/png")
-    state["attachments"] = state.get("attachments", 0) + 2  # 元画像と、できた画像
+    count_images(state, 1)
     job = api.call("POST", "/api/media/jobs", body={
         "prompt": prompt, "kind": "image", "backend": "flux-klein", "prompt_mode": "direct",
         "conversation_id": cid, "reference_image_id": image["id"], "preview_only": False})
+    count_images(state, 1)
     return api.result_png(job["job_id"])
 
 
