@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import StoryMode from "./StoryMode.jsx";
 
 /* =========================================================================
    けいさんプリンセス  —  まじょ・にんぎょ・プリンセスと あそぶ さんすうゲーム
@@ -1215,6 +1216,8 @@ export default function App() {
   const [evNow, setEvNow] = useState(0);
   const evRef = useRef(null);
   evRef.current = ev;
+  const [storyProgress, setStoryProgress] = useState({}); // おはなしモード { chapterId: { cleared, clears, best, noHint } }
+  const [storyOpen, setStoryOpen] = useState(false);     // おはなしモードを とちゅうで コーデ・図かんへ いっても、つづきから もどれるように
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1235,6 +1238,7 @@ export default function App() {
             setSeenMilestones(d.seenMilestones || {});
             if (d.character) setCharacterId(d.character);
             setEventRecords(d.eventRecords || {});
+            setStoryProgress(d.storyProgress || {});
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1246,9 +1250,9 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, eventRecords, ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, eventRecords, storyProgress, ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, eventRecords]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, eventRecords, storyProgress]);
 
   /* ---- 現在の主人公に応じた データ ---- */
   const charKey = characterId || "witch";
@@ -1393,6 +1397,7 @@ export default function App() {
     }
     if (pulls > 0) { setPulls((p) => p - 1); doPull(); return; }
     if (screen === "event") return;   // イベントの けっか画面なら そのまま
+    if (screen === "story") return;   // おはなしモードの とちゅうなら、そのまま おはなしに もどる
     nextQuestion();
   };
   const goDressUp = () => {
@@ -1413,7 +1418,7 @@ export default function App() {
     afterMilestoneRef.current = null;
     if (after === "dressup") { setScreen("dressup"); return; }
     if (pulls > 0) { setPulls((p) => p - 1); doPull(); return; }
-    if (screen === "event") return;
+    if (screen === "event" || screen === "story") return;
     nextQuestion();
   };
 
@@ -1500,9 +1505,27 @@ export default function App() {
     };
   });
 
+  /* ---- おはなしモード:★を ふやす(とびらの PULL_COST と つなげる)と、しんちょくの きろく ---- */
+  const storyReward = (amount, progressPatch) => {
+    const nv = stardust + amount;
+    const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
+    const np = progressPatch ? { ...storyProgress, ...progressPatch } : storyProgress;
+    if (amount) setStardust(nv);
+    if (owed > 0) setPulls((p) => p + owed);
+    if (progressPatch) setStoryProgress(np);
+    persist({ stardust: nv, storyProgress: np });
+  };
+  const storyAdvance = () => {
+    if (pulls > 0) { setPulls((p) => p - 1); doPull(); return true; }
+    return false;
+  };
+  useEffect(() => {
+    if (!["story", "dressup", "collection"].includes(screen)) setStoryOpen(false);
+  }, [screen]);
+
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones, eventRecords,
+    character: characterId, seenMilestones, eventRecords, storyProgress,
   });
 
   const applySnapshot = (d) => {
@@ -1515,6 +1538,7 @@ export default function App() {
     setSeenMilestones(d.seenMilestones || {});
     if (d.character) setCharacterId(d.character);
     setEventRecords(d.eventRecords || {});
+    setStoryProgress(d.storyProgress || {});
   };
 
   const resetAll = () => {
@@ -1522,7 +1546,7 @@ export default function App() {
     if (typeof window !== "undefined" && storage) {
       try { storage.set(RESET_BACKUP_KEY, JSON.stringify(buildSnapshot())); } catch (e) {}
     }
-    setStardust(0); setCollection({}); setMastery({}); setEquipped({}); setSeenMilestones({}); setEventRecords({});
+    setStardust(0); setCollection({}); setMastery({}); setEquipped({}); setSeenMilestones({}); setEventRecords({}); setStoryProgress({});
     setStats({ correct: 0, total: 0, best: 0, shines: 0 });
     if (typeof window !== "undefined" && storage) { try { storage.delete(SAVE_KEY); } catch (e) {} }
   };
@@ -1588,7 +1612,7 @@ export default function App() {
         {/* ---------- TOP BAR ---------- */}
         {screen !== "title" && (
           <div className="kk-bar">
-            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "play" && evRun) { abortEvent(); return; } if (screen === "event") { setEv(null); setScreen("mode"); return; } if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
+            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "play" && evRun) { abortEvent(); return; } if (screen === "event") { setEv(null); setScreen("mode"); return; } if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(storyOpen ? "story" : q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
             <div className="kk-bar-mid">
               <span className="kk-dust">★ {stardust}</span>
             </div>
@@ -1641,6 +1665,11 @@ export default function App() {
           <div className="kk-mode-screen">
             <div className="kk-witch-mini"><DressedCharacter character={charKey} mood="idle" size={108} equipped={myEquipped} /></div>
             <h2 className="kk-h2">今日は どれを れんしゅうする？</h2>
+
+            <button className="kk-story-btn" onClick={() => { if (ac()) ac().resume && ac().resume(); SFX.tap(sound); setStoryOpen(true); setScreen("story"); }}>
+              <span className="kk-gt-icon">📖</span>
+              <span><b>おはなしで わかる さんすう</b><small>ルナと マリンの おはなしで、たしざん〜ぶんすうの いみが わかる</small></span>
+            </button>
 
             <div className="kk-gametype-grid">
               {Object.entries(GAMETYPE_INFO).map(([key, info]) => (
@@ -1899,6 +1928,17 @@ export default function App() {
             </div>
           );
         })()}
+        {/* ---------- STORY(おはなしモード) ---------- */}
+        {storyOpen && (
+          <div style={{ display: screen === "story" ? "block" : "none" }}>
+            <StoryMode
+              Witch={CHARACTERS[0].Comp} Mermaid={CHARACTERS[1].Comp} Princess={CHARACTERS[2].Comp} MiniItem={MiniItem}
+              progress={storyProgress} pulls={pulls}
+              sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
+              onReward={storyReward} onAdvance={storyAdvance}
+            />
+          </div>
+        )}
 
         {/* ---------- COLLECTION ---------- */}
         {screen === "collection" && (
@@ -1940,7 +1980,7 @@ export default function App() {
             {collectedCount > 0 && (
               <button className="kk-big-btn kk-retry-btn kk-dress-link-btn" onClick={() => { SFX.tap(sound); setScreen("dressup"); }}>👗 {CHARACTERS.find(c=>c.id===charKey).charaName}の コーデを する</button>
             )}
-            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(mode && q ? "play" : "mode"); }}>つづける ♪</button>
+            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(storyOpen ? "story" : mode && q ? "play" : "mode"); }}>つづける ♪</button>
             <button className="kk-text-btn kk-reset" onClick={resetAll}>さいしょから にする</button>
           </div>
         )}
@@ -1972,8 +2012,8 @@ export default function App() {
               })}
             </div>
             <div className="kk-dress-hint">あつめた アイテムを タップして、すきな コーデに しよう♪</div>
-            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(q ? "play" : "mode"); }}>
-              ✨ {CHARACTERS.find(c=>c.id===charKey).charaName}の おてつだいを する →
+            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(storyOpen ? "story" : q ? "play" : "mode"); }}>
+              {storyOpen ? "📖 おはなしに もどる →" : <>✨ {CHARACTERS.find(c=>c.id===charKey).charaName}の おてつだいを する →</>}
             </button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>図かんに もどる</button>
           </div>
@@ -2170,6 +2210,13 @@ function Style() {
 .kk-ev-bolt{position:absolute; z-index:3; top:96px; left:40%; font-size:30px; color:var(--gold); text-shadow:0 0 10px var(--gold),0 0 20px #fff; animation:kk-ev-zap .55s ease-out forwards; pointer-events:none;}
 @keyframes kk-ev-zap{0%{transform:translate(0,0) scale(.6); opacity:1}80%{opacity:1}100%{transform:translate(150px,-40px) scale(1.6); opacity:0}}
 .kk-ev-fb{padding:14px 18px;}
+/* おはなしモードの 入口 */
+.kk-story-btn{display:flex; align-items:center; gap:12px; width:100%; max-width:400px; margin-bottom:12px; padding:14px 16px; border:3px solid var(--gold); border-radius:20px; cursor:pointer; text-align:left; font-family:inherit; color:var(--plum);
+  background:linear-gradient(135deg,#FFF6D9,#FFE7F4); box-shadow:0 5px 0 rgba(242,169,59,.45);}
+.kk-story-btn:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(242,169,59,.45);}
+.kk-story-btn .kk-gt-icon{font-size:32px;}
+.kk-story-btn b{font-family:'Mochiy Pop One'; font-size:16px; color:var(--night);}
+.kk-story-btn small{display:block; font-family:'Yomogi'; font-size:12px; margin-top:2px;}
 .kk-gt-text{display:flex; flex-direction:column; gap:3px;}
 .kk-gt-text b{font-family:'Mochiy Pop One'; font-size:14px; color:var(--night); line-height:1.3;}
 .kk-gt-text small{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,#7A5C98); line-height:1.3;}
