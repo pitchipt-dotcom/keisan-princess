@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
+import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
 
 /* =========================================================================
    けいさんプリンセス  —  まじょ・にんぎょ・プリンセスと あそぶ さんすうゲーム
@@ -308,6 +309,7 @@ const TAIL_BY_GAMETYPE = {
 };
 
 const GAMETYPE_INFO = {
+  daily:    { label: "まいにち けいさん",     sub: "1日10もん・2年生の けいさん", icon: "📅", accent: "#FFC94D" },
   kuku:     { label: "九九",                 sub: "かけざんの れんしゅう", icon: "✖️", accent: "#C9A8F0" },
   addCarry: { label: "くりあがりの たしざん", sub: "10を こえる たしざん",   icon: "➕", accent: "#FFC9A0" },
   subBorrow:{ label: "くりさがりの ひきざん", sub: "かりてくる ひきざん",     icon: "➖", accent: "#9CC4FF" },
@@ -1141,6 +1143,7 @@ export default function App() {
   const [importCode, setImportCode] = useState("");
   const [backupMsg, setBackupMsg] = useState("");
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
+  const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1160,6 +1163,7 @@ export default function App() {
             setEquipped(d.equipped || {});
             setSeenMilestones(d.seenMilestones || {});
             if (d.character) setCharacterId(d.character);
+            if (d.daily) setDaily({ ...EMPTY_DAILY, ...d.daily });
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1171,9 +1175,9 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily]);
 
   /* ---- 現在の主人公に応じた データ ---- */
   const charKey = characterId || "witch";
@@ -1351,7 +1355,7 @@ export default function App() {
 
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones,
+    character: characterId, seenMilestones, daily,
   });
 
   const applySnapshot = (d) => {
@@ -1363,6 +1367,7 @@ export default function App() {
     setEquipped(d.equipped || {});
     setSeenMilestones(d.seenMilestones || {});
     if (d.character) setCharacterId(d.character);
+    setDaily(d.daily ? { ...EMPTY_DAILY, ...d.daily } : EMPTY_DAILY);
   };
 
   const resetAll = () => {
@@ -1496,7 +1501,7 @@ export default function App() {
                   key={key}
                   className="kk-gametype-card"
                   style={{ borderColor: info.accent }}
-                  onClick={() => startGame(key, key === "kuku" ? "mix" : undefined)}
+                  onClick={() => { if (key === "daily") { SFX.tap(sound); setScreen("daily"); return; } startGame(key, key === "kuku" ? "mix" : undefined); }}
                 >
                   <span className="kk-gt-icon">{info.icon}</span>
                   <span className="kk-gt-text"><b>{info.label}</b><small>{info.sub}</small></span>
@@ -1552,6 +1557,29 @@ export default function App() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ---------- まいにち けいさん ---------- */}
+        {screen === "daily" && (
+          <DailyPlay
+            daily={daily}
+            character={(mood, size = 104) => <DressedCharacter character={charKey} mood={mood} size={size} equipped={myEquipped} />}
+            sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
+            onComplete={(nd, gain) => {
+              // きろくと 星のかけらを いっしょに 保存（べつべつに 保存すると 古い方で 上書きされるため）
+              const nv = stardust + gain;
+              const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
+              if (owed > 0) setPulls((p) => p + owed);
+              setDaily(nd);
+              setStardust(nv);
+              persist({ daily: nd, stardust: nv });
+            }}
+            onExit={() => {
+              SFX.tap(sound);
+              setScreen("mode");
+              if (pulls > 0) { setPulls((p) => p - 1); doPull(); }
+            }}
+          />
         )}
 
         {/* ---------- PLAY ---------- */}
