@@ -9,6 +9,10 @@
    ===================================================================== */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./dailyMode.css";
+import { todayStr, addDays, EMPTY_DAILY, applyCompletion, needsEgg, currentStreak } from "./dragon.js";
+import { DragonMini, EggPicker, StageUpCelebration, DRAGONS } from "./DragonMode.jsx";
+
+export { todayStr, EMPTY_DAILY };
 
 export const DAILY_COUNT = 10;          // 1日の もんだい数
 const REVIEW_MAX = 4;                   // 1日に まぜる ノートの おさらい（さいだい）
@@ -18,17 +22,7 @@ const STAR_DAILY_BONUS = 30;            // その日 はじめて 10もん や�
 
 const rnd = (lo, hi) => lo + ((Math.random() * (hi - lo + 1)) | 0);
 
-/* ---- 日付（端末の ローカル時間で YYYY-MM-DD） ---- */
-export function todayStr(d = new Date()) {
-  const p = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-function addDays(dateStr, n) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return todayStr(new Date(y, m - 1, d + n));
-}
-
-export const EMPTY_DAILY = { lastDate: null, streakDays: 0, bestSec: null, history: [], notebook: {} };
+/* 日付（todayStr／addDays）と セーブの 初期値は dragon.js に まとめてある */
 
 /* ======================= 2年生の もんだい ============================== */
 // それぞれ { a, b, op, ans }
@@ -156,7 +150,7 @@ function Keypad({ onKey, disabled }) {
 const fmtSec = (s) => (s >= 60 ? `${Math.floor(s / 60)}ふん ${s % 60}びょう` : `${s}びょう`);
 
 /* ============================== 本体 ================================== */
-export function DailyPlay({ daily, character, sfx, onComplete, onExit }) {
+export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit }) {
   const [stage, setStage] = useState("intro");           // intro | play | done
   const [set, setSet] = useState([]);
   const [idx, setIdx] = useState(0);
@@ -195,22 +189,21 @@ export function DailyPlay({ daily, character, sfx, onComplete, onExit }) {
     const total = Math.floor((Date.now() - startRef.current) / 1000);
     const correct = res.filter((r) => r.right).length;
     const hints = res.filter((r) => r.hint).length;
-    const firstToday = daily.lastDate !== today;
-    let streakDays = daily.streakDays || 0;
-    if (firstToday) streakDays = daily.lastDate === addDays(today, -1) ? streakDays + 1 : 1;
+    // れんぞく日数・おやすみチケット・ドラゴンの そだちポイント（その日 はじめての ときだけ）
+    const { daily: base, report } = applyCompletion(daily, { correct, hints, total: DAILY_COUNT }, today);
+    const firstToday = report.firstToday;
+    const streakDays = base.streakDays || 0;
     const prevBest = daily.bestSec;
     const isBest = correct === DAILY_COUNT && (prevBest == null || total < prevBest);
     const stars = correct * STAR_PER_RIGHT + (firstToday ? STAR_DAILY_BONUS : 0);
     const nd = {
-      ...daily,
-      lastDate: today,
-      streakDays,
+      ...base,
       bestSec: isBest ? total : prevBest,
       notebook: nbRef.current,
       history: [...(daily.history || []), { date: today, correct, total: DAILY_COUNT, sec: total, hints }].slice(-60),
     };
     onComplete(nd, stars);
-    setSummary({ correct, hints, total, streakDays, isBest, prevBest, stars, firstToday, noteCount: Object.keys(nd.notebook).length });
+    setSummary({ correct, hints, total, streakDays, isBest, prevBest, stars, firstToday, noteCount: Object.keys(nd.notebook).length, dragon: report, dragonNow: nd.dragon });
     setStage("done");
   };
 
@@ -261,15 +254,22 @@ export function DailyPlay({ daily, character, sfx, onComplete, onExit }) {
         <div className="dm-card">
           <div className="dm-intro-line">きょうの もんだい <b>{DAILY_COUNT}もん</b>（2年生）</div>
           <div className="dm-intro-line">じかんは はかるけど、<b>あわてなくて だいじょうぶ</b>。<br />まずは まちがえない ことが いちばん！</div>
+          {!needsEgg(daily) && <DragonMini daily={daily} />}
           {dueCount > 0 && <div className="dm-intro-line dm-intro-review">📒 まちがいノートの おさらいが <b>{Math.min(dueCount, REVIEW_MAX)}もん</b> まざってるよ</div>}
           <div className="dm-badges">
-            <div><b>{daily.streakDays || 0}</b><small>れんぞく 日</small></div>
+            <div><b>{currentStreak(daily, today)}</b><small>れんぞく 日</small></div>
             <div><b>{daily.bestSec != null ? fmtSec(daily.bestSec) : "—"}</b><small>ぜんもん せいかいの<br />さいこう タイム</small></div>
             <div><b>{noteCount}</b><small>ノートの もんだい</small></div>
           </div>
           {doneToday && <div className="dm-intro-done">きょうの ぶんは もう できたよ！ もういちど やっても いいよ♪</div>}
         </div>
-        <button className="kk-big-btn" onClick={start}>はじめる ♪</button>
+        {needsEgg(daily) ? (
+          <div className="dm-card">
+            {daily.dragon && <div className="dm-intro-line">🐉 {DRAGONS[daily.dragon.element].name}ドラゴンが おとなに なったよ！</div>}
+            <EggPicker dex={daily.dragonDex} sfx={sfx} onPick={onPickEgg}
+              title={daily.dragon ? "つぎの たまごを えらんでから はじめよう" : "まいにち けいさん で そだてる たまごを えらんでね"} />
+          </div>
+        ) : <button className="kk-big-btn" onClick={start}>はじめる ♪</button>}
         <button className="kk-text-btn" onClick={onExit}>ほかの れんしゅうに もどる</button>
       </div>
     );
@@ -283,10 +283,18 @@ export function DailyPlay({ daily, character, sfx, onComplete, onExit }) {
       <div className="dm-wrap">
         <div className="dm-chara">{character(perfect ? "happy" : "idle")}</div>
         <h2 className="kk-h2">{perfect ? "ぜんもん せいかい！🎉" : "きょうの ぶん おしまい！"}</h2>
+        {s.dragon.stageTo && s.dragonNow && (
+          <div className="dm-card">
+            <StageUpCelebration element={s.dragonNow.element} from={s.dragon.stageFrom} to={s.dragon.stageTo} />
+            {s.dragon.dexAdded && <div className="dr-dex-msg">📖 ドラゴンずかんに とうろく！</div>}
+            {s.dragon.becameMaster && <div className="dr-title-badge">👑 しょうごう「ドラゴンマスター」！</div>}
+          </div>
+        )}
         <div className="dm-card">
           <div className="dm-score"><b>{s.correct}</b> / {DAILY_COUNT} もん</div>
           <div className="dm-intro-line">タイム：<b>{fmtSec(s.total)}</b>{s.isBest && <span className="dm-best"> さいこう きろく！</span>}</div>
           {s.firstToday && <div className="dm-intro-line">🔥 <b>{s.streakDays}日</b> れんぞく！</div>}
+          {s.dragon.ticketUsed && <div className="dr-ticket">🌙 おやすみチケットで れんぞく キープ！</div>}
           <div className="dm-comment">
             {s.hints > 0
               ? "ヒントを つかって さいごまで できたね。つぎは ヒントなしで ちょうせん してみよう！"
@@ -295,6 +303,13 @@ export function DailyPlay({ daily, character, sfx, onComplete, onExit }) {
                 : "ヒントを つかわずに さいごまで がんばったね！まちがえた もんだいは ノートで おさらい しよう。"}
           </div>
           <div className="dm-intro-line">📒 まちがいノート：<b>{s.noteCount}もん</b>{s.noteCount > 0 ? "（また こんど 出るよ）" : ""}</div>
+          {s.dragon.gains.length > 0 && (
+            <div className="dr-gains">
+              <div className="dr-gains-title">🐉 ドラゴンの そだちポイント +{s.dragon.gained}</div>
+              {s.dragon.gains.map((g, i) => <div key={i} className="dr-gain"><span>{g.icon} {g.label}</span><b>+{g.pt}</b></div>)}
+            </div>
+          )}
+          {!s.firstToday && <div className="dm-intro-line" style={{ fontSize: 12 }}>そだちポイントは 1日1かい。また あしたね！</div>}
           <div className="dm-stars">星のかけら ★{s.stars} ゲット！{s.firstToday && <small>（きょうの ボーナス ★{STAR_DAILY_BONUS} こみ）</small>}</div>
         </div>
         <button className="kk-big-btn" onClick={onExit}>もどる</button>

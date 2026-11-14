@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
 import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
+import { DragonScreen } from "./DragonMode.jsx";
+import { normalizeDaily, chooseEgg, setTodayOverride } from "./dragon.js";
+
+// 開発時だけ：?today=YYYY-MM-DD か window.__setToday("YYYY-MM-DD") で「きょう」を さしかえて テストできる
+if (import.meta.env.DEV && typeof window !== "undefined") {
+  const t = new URLSearchParams(window.location.search).get("today");
+  if (t) setTodayOverride(t);
+  window.__setToday = setTodayOverride;
+}
 
 /* =========================================================================
    けいさんプリンセス  —  まじょ・にんぎょ・プリンセスと あそぶ さんすうゲーム
@@ -1163,7 +1172,7 @@ export default function App() {
             setEquipped(d.equipped || {});
             setSeenMilestones(d.seenMilestones || {});
             if (d.character) setCharacterId(d.character);
-            if (d.daily) setDaily({ ...EMPTY_DAILY, ...d.daily });
+            if (d.daily) setDaily(normalizeDaily(d.daily));
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1359,6 +1368,13 @@ export default function App() {
     if (pulls > 0) { setPulls((p) => p - 1); doPull(); }
   };
 
+  // たまごを えらぶ（daily だけ かわる。persist は ほかの いまの 値と いっしょに 保存）
+  const pickEgg = (element) => {
+    const nd = chooseEgg(daily, element);
+    setDaily(nd);
+    persist({ daily: nd });
+  };
+
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
     character: characterId, seenMilestones, daily,
@@ -1373,7 +1389,7 @@ export default function App() {
     setEquipped(d.equipped || {});
     setSeenMilestones(d.seenMilestones || {});
     if (d.character) setCharacterId(d.character);
-    setDaily(d.daily ? { ...EMPTY_DAILY, ...d.daily } : EMPTY_DAILY);
+    setDaily(normalizeDaily(d.daily));
   };
 
   const resetAll = () => {
@@ -1515,6 +1531,7 @@ export default function App() {
               ))}
             </div>
 
+            <button className="dr-mode-btn" onClick={() => { SFX.tap(sound); setScreen("dragon"); }}>🐉 ドラゴン</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>あつめた おしゃれを 見る →</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("select"); }}>ほかの こで あそぶ</button>
             <div className="kk-parentmenu-hint">九九の だんの せってい・バックアップが できます</div>
@@ -1580,7 +1597,18 @@ export default function App() {
               setStardust(nv);
               persist({ daily: nd, stardust: nv });
             }}
+            onPickEgg={pickEgg}
             onExit={() => { SFX.tap(sound); exitDaily(); }}
+          />
+        )}
+
+        {/* ---------- ドラゴン ---------- */}
+        {screen === "dragon" && (
+          <DragonScreen
+            daily={daily}
+            sfx={{ tap: () => SFX.tap(sound) }}
+            onPickEgg={pickEgg}
+            onExit={() => { SFX.tap(sound); setScreen("mode"); }}
           />
         )}
 
