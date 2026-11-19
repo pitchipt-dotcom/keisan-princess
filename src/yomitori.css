@@ -6,6 +6,13 @@
   padding:0 4px; margin:2px 2px; cursor:pointer; text-align:left; line-height:1.6; touch-action:manipulation;}
 .yt-seg:disabled{cursor:default; color:#3A2A6B; border-color:transparent; background:transparent;}
 .yt-seg-ask, .yt-seg-ask:disabled{background:linear-gradient(transparent 45%, #FFE58A 45%); border-color:transparent;}
+/* せいかい したら その 式で つかった ところに マーカー（①＝水色・②＝ピンク。きかれている ところの 黄色と 見分ける）
+   左から 右へ のびる（2行に わたる ときも 1本の 線として じゅんに のびる） */
+.yt-mk{background-repeat:no-repeat; background-position:0 0; background-size:100% 100%; animation:yt-mk-draw .6s ease-out both;}
+.yt-mk1{background-image:linear-gradient(transparent 45%, #8FD6FF 45%);}
+.yt-mk2{background-image:linear-gradient(transparent 45%, #FFA3CF 45%);}
+@keyframes yt-mk-draw{from{background-size:0% 100%;} to{background-size:100% 100%;}}
+@media (prefers-reduced-motion: reduce){.yt-mk{animation:none;}}
 .yt-guide{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#4A7BD0; background:#EEF5FF; border-radius:12px; padding:4px 10px;}
 .yt-small{font-size:14px;}
 

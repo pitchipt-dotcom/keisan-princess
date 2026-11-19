@@ -117,6 +117,7 @@ export function YomitoriQuestion({ q, sfx, Keypad, isLast, onFinish }) {
   const [usedHint, setUsedHint] = useState(false);
   const [allFirst, setAllFirst] = useState(true);
   const [done, setDone] = useState([]);               // おわった だんかいの こたえ（2だんかい用）
+  const [marked, setMarked] = useState([]);           // せいかい した だんかい → その 式で つかった ところに マーカー
 
   const st = q.steps[stepIdx];
   const lastStep = stepIdx + 1 >= q.steps.length;
@@ -134,7 +135,7 @@ export function YomitoriQuestion({ q, sfx, Keypad, isLast, onFinish }) {
   const submit = () => {
     const empty = inputs.findIndex((v) => v === "");
     if (empty >= 0) { setActive(empty); return; }
-    if (stepCorrect(st, inputs)) { sfx.correct(); setPhase("right"); return; }
+    if (stepCorrect(st, inputs)) { sfx.correct(); setPhase("right"); setMarked((m) => [...m, stepIdx]); return; }
     sfx.wrong();
     if (phase === "ask") {
       setAllFirst(false);
@@ -169,7 +170,10 @@ export function YomitoriQuestion({ q, sfx, Keypad, isLast, onFinish }) {
         {q.scenes && <YomitoriScenes scenes={q.scenes} />}
         <div className="yt-text">
           {q.segs.map((s, i) => (
-            <button key={i} className={"yt-seg" + (found && s.ask ? " yt-seg-ask" : "")} disabled={found} onClick={() => tapSeg(s)}>{s.t}</button>
+            <button key={i} className={"yt-seg" + (found && s.ask ? " yt-seg-ask" : "")} disabled={found} onClick={() => tapSeg(s)}>
+              {s.parts ? s.parts.map((p, j) => (p.mk != null && marked.includes(p.mk)
+                ? <span key={j} className={"yt-mk yt-mk" + (p.mk + 1)}>{p.t}</span> : <React.Fragment key={j}>{p.t}</React.Fragment>)) : s.t}
+            </button>
           ))}
         </div>
         {!found && <div className="yt-guide">🔍 なにを きかれているかな？ その ところを タップしてね</div>}
