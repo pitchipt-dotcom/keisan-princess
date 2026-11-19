@@ -6,11 +6,15 @@
    - ヒント（ひっさんで みる）は つかっても ポイントは かわらない。
      おわりに ヒントなしなら ほめる／ありなら「つぎは ヒントなしで」と ひとこと
    - いまは 2年生セット。GRADE_SETS に 学年を ふやして いける
+   - 2年生は 10もんの うち 3もんが「よみとりチェック」（ぶんしょうだい。yomitori.js）
+     ※ よみとりチェックは まちがいノートには 入れない（ノートは しきの もんだいだけ）
    ===================================================================== */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./dailyMode.css";
 import { todayStr, addDays, EMPTY_DAILY, applyCompletion, needsEgg, currentStreak } from "./dragon.js";
 import { DragonMini, EggPicker, StageUpCelebration, DRAGONS } from "./DragonMode.jsx";
+import { buildYomitoriSet } from "./yomitori.js";
+import { YomitoriQuestion } from "./YomitoriQuestion.jsx";
 
 export { todayStr, EMPTY_DAILY };
 
@@ -52,7 +56,7 @@ const G2 = [
   { id: "kuku", w: 3, make() { return { a: rnd(2, 9), b: rnd(1, 9), op: "×" }; } },
 ];
 
-export const GRADE_SETS = { 2: { label: "2年生", kinds: G2 } };
+export const GRADE_SETS = { 2: { label: "2年生", kinds: G2, yomitori: 3 } };
 
 function calc(a, b, op) { return op === "+" ? a + b : op === "-" ? a - b : a * b; }
 export const qKey = (q) => `${q.a}${q.op}${q.b}`;
@@ -69,7 +73,7 @@ function makeOne(kinds) {
   return { a: 2, b: 3, op: "×", ans: 6, kind: "kuku" };
 }
 
-/* きょうの 10もんを つくる：ノートの おさらい（きょうが きじつ）→ のこりは あたらしい もんだい */
+/* きょうの 10もんを つくる：ノートの おさらい（きょうが きじつ）→ よみとりチェック → のこりは あたらしい もんだい */
 export function buildDailySet(daily, grade = 2) {
   const today = todayStr();
   const due = Object.values(daily.notebook || {})
@@ -78,8 +82,9 @@ export function buildDailySet(daily, grade = 2) {
     .slice(0, REVIEW_MAX)
     .map((n) => ({ ...n.q, review: true }));
   const used = new Set(due.map(qKey));
-  const out = [...due];
-  const kinds = (GRADE_SETS[grade] || GRADE_SETS[2]).kinds;
+  const gs = GRADE_SETS[grade] || GRADE_SETS[2];
+  const out = [...due, ...(gs.yomitori ? buildYomitoriSet(gs.yomitori) : [])];
+  const kinds = gs.kinds;
   let guard = 0;
   while (out.length < DAILY_COUNT && guard++ < 500) {
     const q = makeOne(kinds);
@@ -179,7 +184,9 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
   const start = () => {
     sfx.tap();
     nbRef.current = daily.notebook || {};
-    setSet(buildDailySet(daily, 2));
+    const ns = buildDailySet(daily, 2);
+    if (import.meta.env.DEV) window.__dailySet = ns;      // ブラウザ テスト用（本番には 入らない）
+    setSet(ns);
     setIdx(0); setInput(""); setPhase("ask"); setShowHint(false); setResults([]);
     setSec(0); startRef.current = Date.now();
     setStage("play");
@@ -203,7 +210,8 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
       history: [...(daily.history || []), { date: today, correct, total: DAILY_COUNT, sec: total, hints }].slice(-60),
     };
     onComplete(nd, stars);
-    setSummary({ correct, hints, total, streakDays, isBest, prevBest, stars, firstToday, noteCount: Object.keys(nd.notebook).length, dragon: report, dragonNow: nd.dragon });
+    const wp = res.filter((r) => r.wp);
+    setSummary({ wpCount: wp.length, wpRight: wp.filter((r) => r.right).length, wpHints: wp.filter((r) => r.hint).length, correct, hints, total, streakDays, isBest, prevBest, stars, firstToday, noteCount: Object.keys(nd.notebook).length, dragon: report, dragonNow: nd.dragon });
     setStage("done");
   };
 
@@ -255,6 +263,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
           <div className="dm-intro-line">きょうの もんだい <b>{DAILY_COUNT}もん</b>（2年生）</div>
           <div className="dm-intro-line">じかんは はかるけど、<b>あわてなくて だいじょうぶ</b>。<br />まずは まちがえない ことが いちばん！</div>
           {!needsEgg(daily) && <DragonMini daily={daily} />}
+          {GRADE_SETS[2].yomitori > 0 && <div className="dm-intro-line">📖 <b>よみとりチェック</b>が {GRADE_SETS[2].yomitori}もん。<br />もんだいぶんを さいごまで よもうね</div>}
           {dueCount > 0 && <div className="dm-intro-line dm-intro-review">📒 まちがいノートの おさらいが <b>{Math.min(dueCount, REVIEW_MAX)}もん</b> まざってるよ</div>}
           <div className="dm-badges">
             <div><b>{currentStreak(daily, today)}</b><small>れんぞく 日</small></div>
@@ -302,6 +311,10 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
                 ? "ヒントなしで ぜんぶ じぶんの ちからで できたね！すごい！"
                 : "ヒントを つかわずに さいごまで がんばったね！まちがえた もんだいは ノートで おさらい しよう。"}
           </div>
+          {s.wpCount > 0 && (
+            <div className="dm-intro-line">📖 よみとりチェック：<b>{s.wpRight} / {s.wpCount}もん</b>
+              {s.wpHints === 0 ? "（もんだいぶんを さいごまで よめたね！）" : "（つぎは ヒントなしで よんでみよう）"}</div>
+          )}
           <div className="dm-intro-line">📒 まちがいノート：<b>{s.noteCount}もん</b>{s.noteCount > 0 ? "（また こんど 出るよ）" : ""}</div>
           {s.dragon.gains.length > 0 && (
             <div className="dr-gains">
@@ -319,14 +332,28 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
 
   /* ---------------- play ---------------- */
   if (!q) return null;
-  return (
-    <div className="dm-wrap">
+  const top = (
+    <>
       <div className="dm-top">
         <span className="dm-count">{idx + 1} / {set.length}</span>
         {q.review && <span className="dm-review-tag">📒 おさらい</span>}
         <span className="dm-timer">⏱ {fmtSec(sec)}</span>
       </div>
       <div className="dm-progress"><div className="dm-progress-fill" style={{ width: (idx / set.length) * 100 + "%" }} /></div>
+    </>
+  );
+  if (q.wp) {
+    return (
+      <div className="dm-wrap">
+        {top}
+        <YomitoriQuestion key={q.id} q={q} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
+          onFinish={(r) => { const res = [...results, { ...r, wp: true }]; setResults(res); goNext(res); }} />
+      </div>
+    );
+  }
+  return (
+    <div className="dm-wrap">
+      {top}
 
       <div className="dm-mini-chara">{character(phase === "right" ? "happy" : phase === "ask" ? "idle" : "oops", 72)}</div>
       <div className="dm-card dm-qcard">
