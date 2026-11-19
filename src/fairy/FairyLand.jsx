@@ -1,12 +1,13 @@
 /* =====================================================================
    妖精の国 たんけん — 地図 → エリア → だんかい
    App から React.lazy で 読みこむ（Three.js は ここから 先だけ。ほかの モードの 起動は おそく ならない）
-   エリアごとに 案内役の 妖精が いる（つみきの森＝ミント、ジュースの泉＝ラムネ）。なかよし度は 妖精ごと
+   エリアごとに 案内役の 妖精が いる（つみきの森＝ミント、ジュースの泉＝ラムネ、ますめの花畑＝ポピー）。なかよし度は 妖精ごと
    ごほうびは「妖精と なかよしに なる」（ドラゴンの そだちポイント・星のかけらとは 別）
    ===================================================================== */
 import React, { useState } from "react";
 import { TsumikiForest, FairyGuide, STAGES } from "./TsumikiForest.jsx";
 import { JuiceSpring, JSTAGES, JUICE_FAIRY } from "./JuiceSpring.jsx";
+import { MasumeGarden, MSTAGES, MASUME_FAIRY } from "./MasumeGarden.jsx";
 import { AREAS, FAIRIES, GUIDE_FAIRY, normalizeFairy, addFriendship, markCleared, friendHearts, FRIEND_LEVEL, clearKey, cuboidOpen } from "./fairy.js";
 import { KINDS } from "./tsumiki.js";
 import { PoseIcon } from "./TopGrid.jsx";
@@ -39,6 +40,36 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   const gainJuice = (n) => onFairy((cur) => addFriendship(cur, JUICE_FAIRY, n));
   const clearJuice = (no) => onFairy((cur) => markCleared(cur, "juice", no, todayStr()));
 
+  const gainMasume = (n) => onFairy((cur) => addFriendship(cur, MASUME_FAIRY, n));
+  const clearMasume = (no) => onFairy((cur) => markCleared(cur, "masume", no, todayStr()));
+
+  if (area === "masume" && stage) {
+    return (
+      <div className="fl-wrap">
+        <MasumeGarden key={playKey} stage={stage} sfx={sfx} onGain={gainMasume} onClearStage={clearMasume} />
+        <button className="kk-text-btn fl-back" onClick={() => { sfx.tap(); setStage(null); }}>だんかいを えらびなおす</button>
+      </div>
+    );
+  }
+  if (area === "masume") {
+    return (
+      <div className="fl-wrap">
+        <h2 className="kk-h2">🌷 ますめの花畑</h2>
+        <FairyGuide fairy={MASUME_FAIRY} text="わたしは ポピー！ 花だんの 広さを、切ったり うごかしたり して「何ます分」か しらべよう！" />
+        <Friendship n={f.friendship[MASUME_FAIRY] || 0} fairy={MASUME_FAIRY} />
+        <div className="fl-stages">
+          {MSTAGES.map((st) => (
+            <button key={st.no} className="fl-stage ms-fl-stage" onClick={() => { sfx.tap(); setPlayKey((k) => k + 1); setStage(st.no); }}>
+              <span className="fl-stage-icon">{st.icon}</span>
+              <span className="fl-stage-text"><b>{st.no}. {st.name}</b><small>{st.desc}</small></span>
+              {f.cleared[`masume:${st.no}`] && <span className="fl-stage-ok" aria-label="クリア">✓</span>}
+            </button>
+          ))}
+        </div>
+        <button className="kk-text-btn" onClick={() => { sfx.tap(); setArea(null); }}>ちずに もどる</button>
+      </div>
+    );
+  }
   if (area === "juice" && stage) {
     return (
       <div className="fl-wrap">

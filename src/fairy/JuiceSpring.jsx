@@ -25,8 +25,8 @@ const PRAISE = ["ぴったり！ じょうずに はかれたね！", "すごい
 const HOWTO = "入れ物を おさえて、そそぐ 入れ物の ほうへ うごかしてね。そのまま ゆびを 下へ うごかすと かたむいて そそげるよ";
 
 /* こたえの 入力（L・dL ／ mL） */
-function AmountPad({ units, value, active, onActive, onChange, onSubmit, submitLabel = "こたえる" }) {
-  const maxLen = { L: 1, dL: 1, mL: 4 };
+export function AmountPad({ units, value, active, onActive, onChange, onSubmit, submitLabel = "こたえる" }) {
+  const maxLen = { L: 1, dL: 1, mL: 4, "ます分": 2 };
   const press = (d) => {
     const cur = value[active] || "";
     const nx = cur.length >= maxLen[active] ? (maxLen[active] === 1 ? String(d) : cur) : (cur === "0" ? String(d) : cur + d);
