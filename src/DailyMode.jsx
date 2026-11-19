@@ -8,12 +8,13 @@
    - いまは 2年生セット。GRADE_SETS に 学年を ふやして いける
    - 2年生は 10もんの うち 3もんが「よみとりチェック」（ぶんしょうだい。yomitori.js）
      ※ よみとりチェックは まちがいノートには 入れない（ノートは しきの もんだいだけ）
+     ※ たんいの もんだいの だんかいは daily.yomitori = { cm:{level,streak}, L:{level,streak} }（ない セーブは 1から）
    ===================================================================== */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./dailyMode.css";
 import { todayStr, addDays, EMPTY_DAILY, applyCompletion, needsEgg, currentStreak } from "./dragon.js";
 import { DragonMini, EggPicker, StageUpCelebration, DRAGONS } from "./DragonMode.jsx";
-import { buildYomitoriSet } from "./yomitori.js";
+import { buildYomitoriSet, normalizeUnitProgress, applyUnitResults } from "./yomitori.js";
 import { YomitoriQuestion } from "./YomitoriQuestion.jsx";
 
 export { todayStr, EMPTY_DAILY };
@@ -83,7 +84,7 @@ export function buildDailySet(daily, grade = 2) {
     .map((n) => ({ ...n.q, review: true }));
   const used = new Set(due.map(qKey));
   const gs = GRADE_SETS[grade] || GRADE_SETS[2];
-  const out = [...due, ...(gs.yomitori ? buildYomitoriSet(gs.yomitori) : [])];
+  const out = [...due, ...(gs.yomitori ? buildYomitoriSet(gs.yomitori, normalizeUnitProgress(daily.yomitori)) : [])];
   const kinds = gs.kinds;
   let guard = 0;
   while (out.length < DAILY_COUNT && guard++ < 500) {
@@ -207,6 +208,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
       ...base,
       bestSec: isBest ? total : prevBest,
       notebook: nbRef.current,
+      yomitori: applyUnitResults(daily.yomitori, res),     // たんいの もんだいの だんかい（無い セーブでも 1から）
       history: [...(daily.history || []), { date: today, correct, total: DAILY_COUNT, sec: total, hints }].slice(-60),
     };
     onComplete(nd, stars);

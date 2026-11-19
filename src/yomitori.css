@@ -51,3 +51,16 @@
 .yt-keys .yt-wide-keys .dm-key{font-size:22px; padding:8px 0; border-radius:14px;}
 .yt-keys .yt-wide-keys .dm-key-del{font-size:13px;}
 .yt-keys .yt-wide-keys .dm-key-ok{font-size:11px; letter-spacing:-.5px;}
+.yt-level{font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px;}
+
+/* たんいの ヒント図 */
+.uh-wrap{width:100%; background:#FBF7FF; border:2px dashed #C9A8F0; border-radius:14px; padding:6px 6px 8px; display:flex; flex-direction:column; gap:4px;}
+.uh-svg{width:100%; height:auto; display:block;}
+.uh-tabs{display:flex; gap:6px;}
+.uh-tabs button{flex:1; font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#7A5C98; background:#fff; border:2px solid #E7D2F7; border-radius:10px; padding:4px 2px; cursor:pointer;}
+.uh-tabs .uh-tab-on{color:#fff; background:#B48CE8; border-color:#B48CE8;}
+.uh-legend{display:flex; flex-wrap:wrap; justify-content:center; gap:4px 12px; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#3A2A6B;}
+.uh-legend i{display:inline-block; width:12px; height:12px; border:1px solid #3A2A6B; border-radius:3px; margin-right:3px; vertical-align:-1px;}
+.uh-break{font-family:'Zen Maru Gothic'; font-weight:700; font-size:14px; color:#3A2A6B; text-align:center;}
+.uh-break b{color:#E85FA3;}
+.uh-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; line-height:1.5; color:#7A5C98; text-align:left;}

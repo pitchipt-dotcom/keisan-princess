@@ -8,7 +8,8 @@
            hint  … タップを まちがえた／じぶんで ヒントを ひらいた
    ===================================================================== */
 import React, { useState } from "react";
-import { stepCorrect } from "./yomitori.js";
+import { stepCorrect, UNIT_SYS, UNIT_LEVELS } from "./yomitori.js";
+import { UnitHint } from "./UnitHint.jsx";
 import "./yomitori.css";
 
 /* ---- 本だな（タップした じゅんに 1, 2, 3… と 番号が つく） ---- */
@@ -163,7 +164,7 @@ export function YomitoriQuestion({ q, sfx, Keypad, isLast, onFinish }) {
   return (
     <>
       <div className="dm-card dm-qcard yt-card">
-        <div className="yt-tag">📖 よみとり チェック</div>
+        <div className="yt-tag">📖 よみとり チェック{q.unit && <span className="yt-level">　📏 {UNIT_SYS[q.unit.sys].name} ステップ {q.unit.level}/{UNIT_LEVELS}</span>}</div>
         <div className="yt-text">
           {q.segs.map((s, i) => (
             <button key={i} className={"yt-seg" + (found && s.ask ? " yt-seg-ask" : "")} disabled={found} onClick={() => tapSeg(s)}>{s.t}</button>
@@ -185,16 +186,16 @@ export function YomitoriQuestion({ q, sfx, Keypad, isLast, onFinish }) {
             {phase === "wrong1" && <div className="dm-msg dm-msg-ng yt-small">おしい！ ヒントを 見て もういちど やってみよう</div>}
             {phase === "reveal" && <div className="dm-msg dm-msg-ng yt-small">こたえは <b>{st.slots.map((s) => s.ans + s.unit).join("")}</b> だよ。{lastStep ? "また こんど ちょうせん しよう！" : "まだ つづきが あるよ！"}</div>}
             {answering && (showHint
-              ? <div className="dm-hint-kuku yt-hint">{st.hint}</div>
+              ? (q.unit ? <UnitHint u={q.unit} text={st.hint} /> : <div className="dm-hint-kuku yt-hint">{st.hint}</div>)
               : <button className="kk-hint-btn" onClick={() => { sfx.tap(); setShowHint(true); setUsedHint(true); }}>？ ヒント</button>)}
           </div>
         )}
       </div>
 
       {!found ? null
-        : answering ? <div className="yt-keys">{q.pic ? <WideKeypad onKey={onKey} /> : <Keypad onKey={onKey} />}</div>
+        : answering ? <div className="yt-keys">{q.pic || q.unit ? <WideKeypad onKey={onKey} /> : <Keypad onKey={onKey} />}</div>
           : !lastStep ? <button className="kk-big-btn" onClick={nextStep}>つぎの しきへ →</button>
-            : <button className="kk-big-btn" onClick={() => { sfx.tap(); onFinish({ right: allFirst && phase === "right", hint: usedHint }); }}>
+            : <button className="kk-big-btn" onClick={() => { sfx.tap(); onFinish({ right: allFirst && phase === "right", hint: usedHint, unit: q.unit ? q.unit.sys : undefined }); }}>
               {isLast ? "けっかを 見る →" : "つぎへ →"}</button>}
     </>
   );
