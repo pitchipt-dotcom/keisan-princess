@@ -1606,7 +1606,14 @@ export default function App() {
 
         {/* ---------- おうちのひとレポート ---------- */}
         {screen === "report" && (
-          <ParentReport daily={daily} mastery={mastery} onExit={() => { SFX.tap(sound); setScreen("mode"); }} />
+          <ParentReport daily={daily} mastery={mastery} onExit={() => { SFX.tap(sound); setScreen("mode"); }}
+            onSetReadStage={(stage) => {
+              // よみとりチェックの 手つだいの 段階を 戻す（daily の yomiRead だけ かえる）
+              SFX.tap(sound);
+              const nd = { ...daily, yomiRead: { stage, streak: 0 } };
+              setDaily(nd);
+              persist({ daily: nd });
+            }} />
         )}
 
         {/* ---------- ドラゴン ---------- */}

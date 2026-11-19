@@ -343,3 +343,36 @@ export function buildYomitoriSet(n = YOMITORI_PER_DAY, progress) {
 
 /* こたえあわせ：inputs は slot ごとの 文字列 */
 export const stepCorrect = (st, inputs) => st.slots.every((s, i) => Number(inputs[i]) === s.ans && inputs[i] !== "");
+
+/* ---------------- 読み方の 手つだいを 少しずつ へらす（3だんかい） ----------------
+   A … アプリが「きかれている ところ」を えらばせ、せいかい したら アプリが マーカーを ひく
+   B … 「きかれている ところ」は えらばせる。せいかい したら つかった 数を 子どもが タップして マーカーを ひく
+   C … 「きかれている ところ」の タップは しなくて よい。じぶんで タップすれば マーカーが ひける
+   「きかれている ところ」を いっぱつで 見つける 回が 3かい つづいたら つぎへ。じどうで 下げる ことは しない
+   セーブ：daily.yomiRead = { stage:"A"|"B"|"C", streak }（無い／こわれた セーブは A から） */
+export const READ_STAGES = ["A", "B", "C"];
+export const READ_STREAK_UP = 3;
+export function normalizeReadProgress(p) {
+  const stage = p && READ_STAGES.includes(p.stage) ? p.stage : "A";
+  const streak = p && Number.isInteger(p.streak) ? Math.min(READ_STREAK_UP - 1, Math.max(0, p.streak)) : 0;
+  return { stage, streak };
+}
+/* results の oneShot（true／false。C の ときは null で かぞえない）で すすめる */
+export function applyReadResults(p, results) {
+  let { stage, streak } = normalizeReadProgress(p);
+  for (const r of results || []) {
+    if (!r || typeof r.oneShot !== "boolean" || stage === "C") continue;
+    if (!r.oneShot) { streak = 0; continue; }
+    streak += 1;
+    if (streak >= READ_STREAK_UP) { stage = READ_STAGES[READ_STAGES.indexOf(stage) + 1]; streak = 0; }
+  }
+  return { stage, streak };
+}
+
+/* ほめる ことば（毎回 おなじに ならないように えらぶ） */
+export const PRAISE = {
+  oneShot: ["いっぱつで みつけたね！", "よく よめたね！ そこが きかれている ところ！", "さいごまで よめたね！ ばっちり！", "めいたんてい みたい！ いっぱつ！"],
+  through: ["とちゅうで とまらずに ②まで できたね！", "「まだ つづきが ある」に きづけたね！", "さいごの しつもんまで たどりついたね！"],
+  selfMark: ["じぶんで マーカーを ひけたね！", "つかう 数を じぶんで 見つけたね！", "マーカーの つかいかた、ばっちり！"],
+};
+export const pickPraise = (kind) => pick(PRAISE[kind]);

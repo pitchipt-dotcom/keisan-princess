@@ -9,12 +9,14 @@
    - 2年生は 10もんの うち 3もんが「よみとりチェック」（ぶんしょうだい。yomitori.js）
      ※ よみとりチェックは まちがいノートには 入れない（ノートは しきの もんだいだけ）
      ※ たんいの もんだいの だんかいは daily.yomitori = { cm:{level,streak}, L:{level,streak} }（ない セーブは 1から）
+     ※ 読み方の 手つだいの だんかいは daily.yomiRead = { stage:"A"|"B"|"C", streak }（ない セーブは A から）
+     ※ よみとりチェックの もんだいの あいだは タイマーを 見せない（時間は 中で はかりつづける）
    ===================================================================== */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./dailyMode.css";
 import { todayStr, addDays, EMPTY_DAILY, applyCompletion, needsEgg, currentStreak } from "./dragon.js";
 import { DragonMini, EggPicker, StageUpCelebration, DRAGONS } from "./DragonMode.jsx";
-import { buildYomitoriSet, normalizeUnitProgress, applyUnitResults } from "./yomitori.js";
+import { buildYomitoriSet, normalizeUnitProgress, applyUnitResults, normalizeReadProgress, applyReadResults, READ_STREAK_UP, pickPraise } from "./yomitori.js";
 import { YomitoriQuestion } from "./YomitoriQuestion.jsx";
 
 export { todayStr, EMPTY_DAILY };
@@ -155,6 +157,23 @@ function Keypad({ onKey, disabled }) {
 
 const fmtSec = (s) => (s >= 60 ? `${Math.floor(s / 60)}ふん ${s % 60}びょう` : `${s}びょう`);
 
+/* 終わりの 画面：正解数とは べつに「よみとりの わざ」（読み方の 手順）を ほめる */
+const STAGE_NAME = { A: "レベル1", B: "レベル2", C: "レベル3" };
+function ReadSkill({ r }) {
+  const left = READ_STREAK_UP - r.after.streak;
+  return (
+    <div className="dm-readskill">
+      <div className="dm-readskill-title">🔍 よみとりの わざ <small>（{STAGE_NAME[r.stage]}）</small></div>
+      {r.oneShotOf > 0 && <div>「きかれている ところ」を いっぱつで みつけた：<b>{r.oneShot}かい</b></div>}
+      {r.through > 0 && <div>とちゅうで とまらずに ②まで できた：<b>{r.through}かい</b></div>}
+      {r.selfMark > 0 && <div>じぶんから マーカーを ひいた：<b>{r.selfMark}もん</b></div>}
+      {r.praise && <div className="dm-readskill-praise">🌟 {r.praise}</div>}
+      {r.up ? <div className="dm-readskill-up">🎉 {STAGE_NAME[r.after.stage]}へ すすんだよ！ {r.after.stage === "B" ? "つぎは マーカーを じぶんで ひいてみよう" : "つぎは じぶんの ちからで よんでみよう"}</div>
+        : r.after.stage !== "C" && <div className="dm-readskill-next">あと {left}かい つづけて いっぱつで みつけると、つぎの レベルへ！</div>}
+    </div>
+  );
+}
+
 /* ============================== 本体 ================================== */
 export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit }) {
   const [stage, setStage] = useState("intro");           // intro | play | done
@@ -168,6 +187,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
   const [summary, setSummary] = useState(null);
   const startRef = useRef(0);
   const nbRef = useRef(daily.notebook || {});
+  const [readStage, setReadStage] = useState("A");       // きょうの 読み方の だんかい（はじめる ときに きめる）
 
   const today = todayStr();
   const dueCount = useMemo(() => Object.values(daily.notebook || {}).filter((n) => n.due <= today).length, [daily, today]);
@@ -188,6 +208,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
     const ns = buildDailySet(daily, 2);
     if (import.meta.env.DEV) window.__dailySet = ns;      // ブラウザ テスト用（本番には 入らない）
     setSet(ns);
+    setReadStage(normalizeReadProgress(daily.yomiRead).stage);
     setIdx(0); setInput(""); setPhase("ask"); setShowHint(false); setResults([]);
     setSec(0); startRef.current = Date.now();
     setStage("play");
@@ -204,16 +225,25 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
     const prevBest = daily.bestSec;
     const isBest = correct === DAILY_COUNT && (prevBest == null || total < prevBest);
     const stars = correct * STAR_PER_RIGHT + (firstToday ? STAR_DAILY_BONUS : 0);
+    const readBefore = normalizeReadProgress(daily.yomiRead);
+    const readAfter = applyReadResults(daily.yomiRead, res.filter((r) => r.wp));
     const nd = {
       ...base,
       bestSec: isBest ? total : prevBest,
       notebook: nbRef.current,
       yomitori: applyUnitResults(daily.yomitori, res),     // たんいの もんだいの だんかい（無い セーブでも 1から）
+      yomiRead: readAfter,                                 // 読み方の だんかい（無い セーブでも A から）
       history: [...(daily.history || []), { date: today, correct, total: DAILY_COUNT, sec: total, hints }].slice(-60),
     };
     onComplete(nd, stars);
     const wp = res.filter((r) => r.wp);
-    setSummary({ wpCount: wp.length, wpRight: wp.filter((r) => r.right).length, wpHints: wp.filter((r) => r.hint).length, correct, hints, total, streakDays, isBest, prevBest, stars, firstToday, noteCount: Object.keys(nd.notebook).length, dragon: report, dragonNow: nd.dragon });
+    const read = {
+      stage: readBefore.stage, after: readAfter, up: readAfter.stage !== readBefore.stage,
+      oneShot: wp.filter((r) => r.oneShot === true).length, oneShotOf: wp.filter((r) => typeof r.oneShot === "boolean").length,
+      through: wp.filter((r) => r.through).length, selfMark: wp.filter((r) => r.selfMark).length,
+    };
+    read.praise = read.selfMark > 0 ? pickPraise("selfMark") : read.oneShot > 0 ? pickPraise("oneShot") : null;
+    setSummary({ read, wpCount: wp.length, wpRight: wp.filter((r) => r.right).length, wpHints: wp.filter((r) => r.hint).length, correct, hints, total, streakDays, isBest, prevBest, stars, firstToday, noteCount: Object.keys(nd.notebook).length, dragon: report, dragonNow: nd.dragon });
     setStage("done");
   };
 
@@ -317,6 +347,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
             <div className="dm-intro-line">📖 よみとりチェック：<b>{s.wpRight} / {s.wpCount}もん</b>
               {s.wpHints === 0 ? "（もんだいぶんを さいごまで よめたね！）" : "（つぎは ヒントなしで よんでみよう）"}</div>
           )}
+          {s.wpCount > 0 && <ReadSkill r={s.read} />}
           <div className="dm-intro-line">📒 まちがいノート：<b>{s.noteCount}もん</b>{s.noteCount > 0 ? "（また こんど 出るよ）" : ""}</div>
           {s.dragon.gains.length > 0 && (
             <div className="dr-gains">
@@ -339,7 +370,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
       <div className="dm-top">
         <span className="dm-count">{idx + 1} / {set.length}</span>
         {q.review && <span className="dm-review-tag">📒 おさらい</span>}
-        <span className="dm-timer">⏱ {fmtSec(sec)}</span>
+        {!q.wp && <span className="dm-timer">⏱ {fmtSec(sec)}</span>}
       </div>
       <div className="dm-progress"><div className="dm-progress-fill" style={{ width: (idx / set.length) * 100 + "%" }} /></div>
     </>
@@ -348,7 +379,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
     return (
       <div className="dm-wrap">
         {top}
-        <YomitoriQuestion key={q.id} q={q} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
+        <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
           onFinish={(r) => { const res = [...results, { ...r, wp: true }]; setResults(res); goNext(res); }} />
       </div>
     );
