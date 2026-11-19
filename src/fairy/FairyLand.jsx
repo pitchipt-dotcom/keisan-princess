@@ -12,6 +12,7 @@ import { HakoWorkshop, HSTAGES, HAKO_FAIRY, NetDex } from "./HakoWorkshop.jsx";
 import { AREAS, FAIRIES, GUIDE_FAIRY, normalizeFairy, addFriendship, markCleared, friendHearts, FRIEND_LEVEL, clearKey, cuboidOpen, addHakoDex, hakoCuboidOpen } from "./fairy.js";
 import { KINDS } from "./tsumiki.js";
 import { PoseIcon } from "./TopGrid.jsx";
+import { fairyArt } from "../assets/fairy/index.js";
 import "./fairy.css";
 
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -61,7 +62,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
     return (
       <div className="fl-wrap">
         <h2 className="kk-h2">📦 はこの工房</h2>
-        <FairyGuide fairy={HAKO_FAIRY} text={hkCuboid ? "直方体の はこも つくれるように なったよ！ 長い 面と みじかい 面が あるね" : "わたしは ペタ！ はこを きって ひらいたり、おって くみたてたり しよう！"} />
+        <FairyGuide full fairy={HAKO_FAIRY} text={hkCuboid ? "直方体の はこも つくれるように なったよ！ 長い 面と みじかい 面が あるね" : "わたしは ペタ！ はこを きって ひらいたり、おって くみたてたり しよう！"} />
         <Friendship n={f.friendship[HAKO_FAIRY] || 0} fairy={HAKO_FAIRY} />
         <div className="fl-kinds" role="radiogroup" aria-label="はこを えらぶ">
           {["cube", "cuboid"].map((k) => {
@@ -106,7 +107,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
     return (
       <div className="fl-wrap">
         <h2 className="kk-h2">🌷 ますめの花畑</h2>
-        <FairyGuide fairy={MASUME_FAIRY} text="わたしは ポピー！ 花だんの 広さを、切ったり うごかしたり して「何ます分」か しらべよう！" />
+        <FairyGuide full fairy={MASUME_FAIRY} text="わたしは ポピー！ 花だんの 広さを、切ったり うごかしたり して「何ます分」か しらべよう！" />
         <Friendship n={f.friendship[MASUME_FAIRY] || 0} fairy={MASUME_FAIRY} />
         <div className="fl-stages">
           {MSTAGES.map((st) => (
@@ -133,7 +134,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
     return (
       <div className="fl-wrap">
         <h2 className="kk-h2">🧃 ジュースの泉</h2>
-        <FairyGuide fairy={JUICE_FAIRY} text="わたしは ラムネ！ ジュースを そそいで、L・dL・mL の かさを はかってみよう！" />
+        <FairyGuide full fairy={JUICE_FAIRY} text="わたしは ラムネ！ ジュースを そそいで、L・dL・mL の かさを はかってみよう！" />
         <Friendship n={f.friendship[JUICE_FAIRY] || 0} fairy={JUICE_FAIRY} />
         <div className="fl-stages">
           {JSTAGES.map((st) => (
@@ -163,7 +164,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
     return (
       <div className="fl-wrap">
         <h2 className="kk-h2">🧊 つみきの森</h2>
-        <FairyGuide text={canCuboid ? "2こ つなげた つみきも ころがせるように なったよ！ たったり ねたり するよ" : "つみきを ころがすと、紙に ついた マスに 色が つくよ。いっしょに やってみよう！"} />
+        <FairyGuide full text={canCuboid ? "2こ つなげた つみきも ころがせるように なったよ！ たったり ねたり するよ" : "つみきを ころがすと、紙に ついた マスに 色が つくよ。いっしょに やってみよう！"} />
         <Friendship n={f.friendship[GUIDE_FAIRY] || 0} />
         <div className="fl-kinds" role="radiogroup" aria-label="つみきを えらぶ">
           {["cube", "cuboid"].map((k) => {
@@ -194,7 +195,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   return (
     <div className="fl-wrap">
       <h2 className="kk-h2">🧚 ようせいの くに たんけん</h2>
-      <FairyGuide text="ようこそ！ わたしは ミント。ようせいの くにを いっしょに たんけん しよう！" />
+      <FairyGuide full text="ようこそ！ わたしは ミント。ようせいの くにを いっしょに たんけん しよう！" />
       <div className="fl-friends">
         {AREAS.filter((a) => a.ready).map((a) => <Friendship key={a.fairy} n={f.friendship[a.fairy] || 0} fairy={a.fairy} />)}
       </div>
@@ -203,7 +204,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
           const open = a.ready && f.map.includes(a.id);
           return (
             <button key={a.id} className={"fl-area" + (open ? "" : " fl-area-lock")} disabled={!open} onClick={() => { sfx.tap(); setStage(null); setArea(a.id); }}>
-              <span className="fl-area-icon">{open ? a.icon : "🔒"}</span>
+              <span className="fl-area-icon">{!open ? "🔒" : fairyArt("fairy-" + a.fairy + "-face") ? <img className="fl-area-face" src={fairyArt("fairy-" + a.fairy + "-face")} alt={FAIRIES[a.fairy].name} /> : a.icon}</span>
               <b>{a.name}</b><small>{a.desc}</small>
             </button>
           );
