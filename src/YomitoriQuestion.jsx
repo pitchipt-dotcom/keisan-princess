@@ -10,6 +10,7 @@
 import React, { useState } from "react";
 import { stepCorrect, UNIT_SYS, UNIT_LEVELS } from "./yomitori.js";
 import { UnitHint } from "./UnitHint.jsx";
+import { YomitoriScenes } from "./YomitoriScenes.jsx";
 import "./yomitori.css";
 
 /* ---- 本だな（タップした じゅんに 1, 2, 3… と 番号が つく） ---- */
@@ -165,6 +166,7 @@ export function YomitoriQuestion({ q, sfx, Keypad, isLast, onFinish }) {
     <>
       <div className="dm-card dm-qcard yt-card">
         <div className="yt-tag">📖 よみとり チェック{q.unit && <span className="yt-level">　📏 {UNIT_SYS[q.unit.sys].name} ステップ {q.unit.level}/{UNIT_LEVELS}</span>}</div>
+        {q.scenes && <YomitoriScenes scenes={q.scenes} />}
         <div className="yt-text">
           {q.segs.map((s, i) => (
             <button key={i} className={"yt-seg" + (found && s.ask ? " yt-seg-ask" : "")} disabled={found} onClick={() => tapSeg(s)}>{s.t}</button>
@@ -193,7 +195,7 @@ export function YomitoriQuestion({ q, sfx, Keypad, isLast, onFinish }) {
       </div>
 
       {!found ? null
-        : answering ? <div className="yt-keys">{q.pic || q.unit ? <WideKeypad onKey={onKey} /> : <Keypad onKey={onKey} />}</div>
+        : answering ? <div className="yt-keys">{q.pic || q.unit || q.scenes ? <WideKeypad onKey={onKey} /> : <Keypad onKey={onKey} />}</div>
           : !lastStep ? <button className="kk-big-btn" onClick={nextStep}>つぎの しきへ →</button>
             : <button className="kk-big-btn" onClick={() => { sfx.tap(); onFinish({ right: allFirst && phase === "right", hint: usedHint, unit: q.unit ? q.unit.sys : undefined }); }}>
               {isLast ? "けっかを 見る →" : "つぎへ →"}</button>}

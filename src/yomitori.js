@@ -12,6 +12,7 @@
      { wp:true, kind, id, segs:[{ t, ask?, near? }], steps:[{ label, slots:[{ ans, unit }], hint }], pic? }
        segs … もんだいぶんを タップできる まとまりに 分けたもの。ask が「きかれている ところ」
                near は ask の すぐ まえ（「おしい！」と 声を かける）
+       scenes … 1つの 式の もんだいだけ。場面の 絵（くわしくは ONE の 上）
        unit … たんいの もんだいだけ { sys:"cm"|"L", level, op, a, b, borrow }（ヒントの 図に つかう）
        pic  … { type:"books", n, marks:{ 位置:"pink"|"blue" } }
                { type:"cal", month, first(1日の 曜日 0=日), days, marks:{ 日:"pink" } }
@@ -23,47 +24,80 @@ const NAMES = ["ゆい", "はな", "りこ", "さき", "めい", "あおい", "�
 
 // 1つの こたえ（1つの たんい）の だんかい
 const step = (label, ans, unit, hint) => ({ label, slots: [{ ans, unit }], hint });
+const near = (t) => ({ t, near: true }), ask = (t) => ({ t, ask: true });
 
 /* ------------------------------ one ------------------------------ */
+/* 1つの 式で とける もんだいには、お話の じゅんに 場面の 絵（scenes）を つける
+     { kind:"have", who?, obj, n, cap }            … だれかが n こ もっている（who が 無ければ モノだけ）
+     { kind:"move", from, to, obj, n, cap }         … from から to へ n こ うごく（やじるし）
+     { kind:"ask",  who?, cap }                     … さいごの 場面。こたえは 絵に 出さず「？」
+   人物・モノは src/assets/yomitori/ の 名前で よぶ */
 const ONE = [
   () => {
-    const a = rnd(25, 68), b = rnd(12, a - 8);
+    const a = rnd(12, 45), b = rnd(6, 19);
     return {
-      segs: [{ t: `赤い ビーズが ${a}こ、` }, { t: `青い ビーズが ${b}こ あります。` },
-        { t: "赤い ビーズは 青い ビーズより", near: true }, { t: "何こ おおいですか。", ask: true }],
-      steps: [step(null, a - b, "こ", `「何こ おおい」は ちがいを きいているよ。${a} − ${b} を けいさん しよう`)],
+      segs: [{ t: `わたしは シールを ${a}まい もっています。` }, { t: `おねえさんから ${b}まい もらいました。` },
+        near("シールは ぜんぶで"), ask("何まいに なりましたか。")],
+      steps: [step(null, a + b, "まい", `もらうと ふえるね。${a} ＋ ${b} だよ`)],
+      scenes: [{ kind: "have", who: "me", obj: "sticker", n: a, cap: "もっている" },
+        { kind: "move", from: "sister", to: "me", obj: "sticker", n: b, cap: "もらう" },
+        { kind: "ask", who: "me", cap: "ぜんぶで 何まい？" }],
     };
   },
   () => {
-    const a = rnd(21, 45), b = rnd(6, a - 9);
+    const a = rnd(24, 58), b = rnd(6, a - 9);
     return {
-      segs: [{ t: `こうえんで 子どもが ${a}人 あそんでいます。` }, { t: `${b}人 かえりました。` },
-        { t: "まだ あそんでいる 子どもは", near: true }, { t: "何人ですか。", ask: true }],
-      steps: [step(null, a - b, "人", `かえった 人は いなくなるから ひきざん。${a} − ${b} だよ`)],
+      segs: [{ t: `わたしは あめを ${a}こ もっています。` }, { t: `ともだちに ${b}こ あげました。` },
+        near("のこりの あめは"), ask("何こですか。")],
+      steps: [step(null, a - b, "こ", `あげると へるね。${a} − ${b} だよ`)],
+      scenes: [{ kind: "have", who: "me", obj: "candy", n: a, cap: "もっている" },
+        { kind: "move", from: "me", to: "friend", obj: "candy", n: b, cap: "あげる" },
+        { kind: "ask", who: "me", cap: "のこりは 何こ？" }],
     };
   },
   () => {
-    const a = rnd(13, 48), b = rnd(12, 39), c = rnd(5, 19);
+    const a = rnd(8, 30), b = rnd(12, 30);
+    return {
+      segs: [{ t: `はこに えんぴつが ${a}本 あります。` }, { t: `おかあさんが ${b}本 かってきて くれました。` },
+        near("えんぴつは ぜんぶで"), ask("何本に なりましたか。")],
+      steps: [step(null, a + b, "本", `ふえたから たしざん。${a} ＋ ${b} だよ`)],
+      scenes: [{ kind: "have", obj: "pencil", n: a, cap: "はこに ある" },
+        { kind: "move", from: "mom", to: "me", obj: "pencil", n: b, cap: "かってきた" },
+        { kind: "ask", cap: "ぜんぶで 何本？" }],
+    };
+  },
+  () => {
+    const a = rnd(20, 45), b = rnd(8, a - 6);
+    return {
+      segs: [{ t: `わたしは 本を ${a}さつ よみました。` }, { t: `ともだちは ${b}さつ よみました。` },
+        near("わたしは ともだちより"), ask("何さつ おおく よみましたか。")],
+      steps: [step(null, a - b, "さつ", `「何さつ おおい」は ちがいを きいているよ。${a} − ${b} を けいさん しよう`)],
+      scenes: [{ kind: "have", who: "me", obj: "book", n: a, cap: "よんだ" },
+        { kind: "have", who: "friend", obj: "book", n: b, cap: "よんだ" },
+        { kind: "ask", cap: "ちがいは 何さつ？" }],
+    };
+  },
+  () => {
+    const a = rnd(13, 38), b = rnd(12, 35), c = rnd(5, 19);
     return {
       segs: [{ t: `花だんに 赤い 花が ${a}本、` }, { t: `白い 花が ${b}本、` }, { t: `きいろい 花が ${c}本 さいています。` },
-        { t: "赤い 花と 白い 花は", near: true }, { t: "あわせて 何本ですか。", ask: true }],
+        near("赤い 花と 白い 花は"), ask("あわせて 何本ですか。")],
       steps: [step(null, a + b, "本", `きかれているのは 赤と 白だけ。きいろは 入れないよ。${a} ＋ ${b} だね`)],
+      scenes: [{ kind: "have", obj: "flower-red", n: a, cap: "赤い 花" },
+        { kind: "have", obj: "flower-white", n: b, cap: "白い 花" },
+        { kind: "have", obj: "flower-yellow", n: c, cap: "きいろい 花" },
+        { kind: "ask", cap: "赤と 白で 何本？" }],
     };
   },
   () => {
-    const a = rnd(18, 40), b = rnd(a + 6, a + 35);
+    const a = rnd(16, 47), b = rnd(14, 38);
     return {
-      segs: [{ t: `なわとびを きのうは ${a}かい、` }, { t: `きょうは ${b}かい とびました。` },
-        { t: "きょうは きのうより", near: true }, { t: "何かい おおく とびましたか。", ask: true }],
-      steps: [step(null, b - a, "かい", `ちがいを きいているよ。おおい ほうから すくない ほうを ひこう：${b} − ${a}`)],
-    };
-  },
-  () => {
-    const name = pick(NAMES), a = rnd(16, 57), b = rnd(14, 38);
-    return {
-      segs: [{ t: `${name}さんは どんぐりを ${a}こ ひろいました。` }, { t: `おにいさんは ${b}こ ひろいました。` },
-        { t: "2人 あわせて", near: true }, { t: "何こ ひろいましたか。", ask: true }],
+      segs: [{ t: `わたしは どんぐりを ${a}こ ひろいました。` }, { t: `おにいさんは ${b}こ ひろいました。` },
+        near("2人 あわせて"), ask("何こ ひろいましたか。")],
       steps: [step(null, a + b, "こ", `「あわせて」は たしざん。${a} ＋ ${b} だよ`)],
+      scenes: [{ kind: "have", who: "me", obj: "acorn", n: a, cap: "ひろった" },
+        { kind: "have", who: "brother", obj: "acorn", n: b, cap: "ひろった" },
+        { kind: "ask", cap: "あわせて 何こ？" }],
     };
   },
 ];
@@ -197,7 +231,6 @@ function unitNumbers(sys, level) {
 }
 
 // ばめん。short=true は 2文まで
-const near = (t) => ({ t, near: true }), ask = (t) => ({ t, ask: true });
 const SCENES = {
   "cm-": [
     (a, b, sh) => sh ? [{ t: `${a}の リボンから ${b} 切りました。` }, near("のこりの リボンは"), ask("何cm何mmですか。")]

@@ -64,3 +64,11 @@
 .uh-break{font-family:'Zen Maru Gothic'; font-weight:700; font-size:14px; color:#3A2A6B; text-align:center;}
 .uh-break b{color:#E85FA3;}
 .uh-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; line-height:1.5; color:#7A5C98; text-align:left;}
+
+/* 場面の 絵（1つの 式の もんだい） */
+.ys-wrap{width:100%;}
+.ys-strip{display:flex; gap:4px; width:100%;}
+.ys-panel{flex:1 1 0; min-width:0; height:auto; display:block;}
+.ys-scroll{overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:2px;}
+.ys-scroll .ys-panel{flex:0 0 31%; scroll-snap-align:start;}
+.ys-more{font-family:'Zen Maru Gothic'; font-weight:700; font-size:11px; color:#7A5C98; text-align:right; margin-top:2px;}
