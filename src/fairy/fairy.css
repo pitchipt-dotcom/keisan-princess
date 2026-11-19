@@ -1,0 +1,90 @@
+/* ===== 妖精の国 たんけん（地図・つみきの森） ===== */
+.fl-wrap{display:flex; flex-direction:column; align-items:center; width:100%; min-width:0; max-width:100%; gap:8px; padding-bottom:12px;}
+.fl-wrap .kk-h2{margin:0;}
+.fl-friend{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; justify-content:center; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B;
+  background:#fff; border-radius:999px; padding:4px 12px; box-shadow:0 3px 0 rgba(201,168,240,.45);}
+.fl-friend b{color:#E85FA3; font-size:16px;}
+.fl-friend-bar{display:inline-flex; gap:3px;}
+.fl-friend-bar i{width:10px; height:10px; border-radius:50%; background:#F3E6FA; border:1px solid #E7C6E6;}
+.fl-friend-bar i.on{background:#FF8FC4; border-color:#E85FA3;}
+.fl-map, .fl-stages{display:flex; flex-direction:column; gap:10px; width:100%;}
+.fl-area, .fl-stage{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:#fff; border:3px solid #9EE6B8; border-radius:20px;
+  padding:10px 14px; cursor:pointer; box-shadow:0 4px 0 rgba(158,230,184,.6); font-family:'Zen Maru Gothic'; color:#3A2A6B; touch-action:manipulation;}
+.fl-area{flex-wrap:wrap;}
+.fl-area b, .fl-stage b{font-family:'Mochiy Pop One'; font-weight:400; font-size:16px;}
+.fl-area small, .fl-stage small{display:block; font-size:12px; font-weight:700; color:#7A5C98;}
+.fl-area-icon, .fl-stage-icon{font-size:28px;}
+.fl-area-lock{border-color:#E3DAEE; box-shadow:none; background:#F7F3FB; filter:grayscale(1); opacity:.7; cursor:default;}
+.fl-stage-text{flex:1;}
+.fl-stage-ok{font-size:20px; color:#2FAF8E; font-weight:900;}
+.fl-back{margin-top:-4px;}
+
+.ts-wrap{display:flex; flex-direction:column; gap:6px; width:100%; min-width:0; max-width:100%;}
+.ts-head{display:flex; align-items:center; gap:8px; min-height:24px; position:relative;}
+.ts-stage-tag{font-family:'Mochiy Pop One'; font-size:12px; color:#fff; background:#5FC79A; border-radius:999px; padding:3px 10px;}
+.ts-gain{margin-left:auto; font-family:'Mochiy Pop One'; font-size:15px; color:#E85FA3; animation:ts-gain 1.6s ease-out both;}
+@keyframes ts-gain{0%{transform:translateY(8px) scale(.7); opacity:0;} 20%{transform:translateY(0) scale(1.15); opacity:1;} 80%{opacity:1;} 100%{transform:translateY(-6px); opacity:.85;}}
+.ts-pose{display:inline-flex; align-items:center; gap:3px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px; color:#3A2A6B; background:#FFF1D2; border-radius:999px; padding:1px 8px;}
+
+.ts-fairy{display:flex; align-items:center; gap:6px; width:100%;}
+.ts-fairy-pic{flex:0 0 54px; width:54px; height:54px; display:flex; align-items:center; justify-content:center; font-size:36px; animation:ts-float 3s ease-in-out infinite;}
+.ts-fairy-pic img{width:100%; height:100%; object-fit:contain;}
+.ts-fairy-happy{animation:ts-hop .5s ease-out 2, ts-float 3s ease-in-out 1s infinite;}
+@keyframes ts-float{0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);}}
+@keyframes ts-hop{0%,100%{transform:translateY(0);} 40%{transform:translateY(-10px);}}
+.ts-bubble{position:relative; flex:1; background:#fff; border:2px solid #CFF5EA; border-radius:14px; padding:5px 10px; min-height:44px;
+  font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; line-height:1.5; color:#3A2A6B; animation:ts-pop .25s ease-out both;}
+.ts-bubble b{display:block; font-size:10px; color:#2FAF8E;}
+.ts-bubble::before{content:""; position:absolute; left:-8px; top:18px; border:6px solid transparent; border-right-color:#CFF5EA;}
+@keyframes ts-pop{from{transform:scale(.96); opacity:.4;} to{transform:scale(1); opacity:1;}}
+
+.ts-views{display:flex; gap:8px; align-items:flex-start; width:100%; min-width:0;}
+.ts-view{position:relative; background:#fff; border-radius:16px; box-shadow:0 4px 0 rgba(201,168,240,.45); overflow:hidden; touch-action:none;}
+.ts-big{flex:1 1 auto; min-width:0; order:0;}
+.ts-small{flex:0 0 108px; order:1; cursor:pointer;}
+.ts-nogl .ts-big{flex-basis:100%;}
+.ts-3d{position:relative; overflow:hidden; width:100%; height:238px;}
+.ts-small .ts-3d{height:100px;}
+.ts-3d canvas{display:block; position:absolute; left:0; top:0;}   /* canvas の はばで 画面が ひろがらない ように */
+.ts-top{display:block; width:100%; height:auto;}
+.ts-big .ts-top{max-height:238px;}
+.ts-view-cap{position:absolute; left:6px; top:4px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:10px; color:#7A5C98; background:rgba(255,255,255,.85); border-radius:8px; padding:0 5px; pointer-events:none;}
+.ts-view-cap small{display:block; font-size:9px; color:#B48CE8;}
+.ts-small .ts-view-cap{top:auto; bottom:3px; left:50%; transform:translateX(-50%); white-space:nowrap; text-align:center;}
+.ts-note{font-family:'Zen Maru Gothic'; font-size:12px; color:#7A5C98; text-align:center;}
+
+.ts-orders{display:flex; flex-wrap:wrap; align-items:center; gap:4px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B;}
+.ts-orders-title{font-size:11px; color:#7A5C98; margin-right:2px;}
+.ts-order{background:#fff; border:2px solid #C9A8F0; border-radius:10px; padding:1px 7px;}
+.ts-order-now{border-color:#E85FA3; background:#FFE9F3; animation:ts-pop .6s ease-in-out infinite alternate;}
+.ts-order-done{opacity:.45;}
+.ts-order-empty{color:#C9A8F0; border-style:dashed;}
+.ts-orders-answer .ts-order{border-color:#5FC79A; background:#EAFBF5;}
+
+.ts-ctrl{display:flex; gap:8px; align-items:stretch; width:100%; min-width:0;}
+.ts-pad{display:grid; grid-template-columns:repeat(3, 62px); grid-template-rows:repeat(2, 50px); gap:5px; flex:0 0 auto;}
+.ts-dir{font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#3A2A6B; background:#fff; border:2px solid #C9A8F0; border-radius:14px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; cursor:pointer; box-shadow:0 3px 0 rgba(201,168,240,.6); touch-action:manipulation;}
+.ts-dir:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(201,168,240,.6);}
+.ts-dir:disabled{opacity:.45; cursor:default;}
+.ts-dir-arrow{font-size:20px; font-weight:900; color:#E85FA3;}
+.ts-dir-oku{grid-column:2; grid-row:1;} .ts-dir-hidari{grid-column:1; grid-row:2;} .ts-dir-temae{grid-column:2; grid-row:2;} .ts-dir-migi{grid-column:3; grid-row:2;}
+.ts-dir-hi{border-color:#E85FA3; background:#FFE9F3;}
+.ts-actions{flex:1; display:flex; flex-direction:column; gap:5px; justify-content:center; min-width:0;}
+.ts-act{font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; line-height:1.25; color:#3A2A6B; background:#fff; border:2px solid #C9A8F0; border-radius:12px;
+  padding:5px 6px; cursor:pointer; touch-action:manipulation;}
+.ts-act:disabled{opacity:.45; cursor:default;}
+.ts-act-main{color:#fff; background:linear-gradient(180deg,#FF9BCB,#F06AAE); border-color:#E85FA3; font-size:13px; box-shadow:0 3px 0 #C0568A;}
+.ts-act-back{border-color:#5FC79A; color:#2C8A66; background:#EAFBF5;}
+
+.ts-log{width:100%; min-width:0; box-sizing:border-box; overflow:hidden; background:#fff; border-radius:14px; padding:4px 8px; box-shadow:0 3px 0 rgba(201,168,240,.35);}
+.ts-log-title{font-family:'Zen Maru Gothic'; font-weight:900; font-size:10px; color:#7A5C98;}
+.ts-log-row{display:flex; align-items:center; gap:2px; width:0; min-width:100%; overflow-x:auto; white-space:nowrap; padding-bottom:2px; scrollbar-width:thin;}
+.ts-log-chip{flex:0 0 auto; font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:#3A2A6B; border-radius:8px; padding:0 5px; line-height:1.4;}
+.ts-log-arrow{flex:0 0 auto; font-family:'Zen Maru Gothic'; font-weight:700; font-size:10px; color:#7A5C98;}
+
+.ts-card{background:#fff; border-radius:22px; padding:14px; box-shadow:0 5px 0 rgba(201,168,240,.5); font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#3A2A6B; line-height:1.8; text-align:center;}
+.ts-card b{color:#E85FA3;}
+.ts-done-title{font-family:'Mochiy Pop One'; font-size:18px; color:#2C8A66;}
+.ts-done-gain{font-size:17px;}
+@media (prefers-reduced-motion: reduce){.ts-fairy-pic, .ts-fairy-happy, .ts-order-now, .ts-gain, .ts-bubble{animation:none;}}

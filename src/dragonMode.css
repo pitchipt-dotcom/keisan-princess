@@ -63,3 +63,4 @@
 .dr-dex-msg{font-family:'Mochiy Pop One'; font-size:15px; color:#F2A93B;}
 .dr-mode-btn{font-family:'Mochiy Pop One'; font-size:18px; color:#3A2A6B; background:#fff; border:3px solid #FFB38A; border-radius:999px; padding:10px 28px; margin:0 0 10px; cursor:pointer; box-shadow:0 5px 0 rgba(255,179,138,.6); touch-action:manipulation;}
 .dr-mode-btn:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(255,179,138,.6);}
+.fl-mode-btn{border-color:#9EE6B8; box-shadow:0 5px 0 rgba(158,230,184,.6);}
