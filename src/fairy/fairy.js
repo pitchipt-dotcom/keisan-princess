@@ -9,12 +9,14 @@ export const FAIRIES = {
   mint: { name: "ミント", desc: "つみきの森に すむ 妖精" },
   ramune: { name: "ラムネ", desc: "ジュースの泉に すむ 妖精" },
   poppy: { name: "ポピー", desc: "ますめの花畑に すむ 妖精" },
+  peta: { name: "ペタ", desc: "はこの工房に すむ 妖精" },
 };
 export const GUIDE_FAIRY = "mint";
 export const AREAS = [
   { id: "tsumiki", name: "つみきの森", icon: "🧊", desc: "つみきを ころがして もようを つくろう", ready: true, fairy: "mint" },
   { id: "juice", name: "ジュースの泉", icon: "🧃", desc: "ジュースを そそいで かさを はかろう", ready: true, fairy: "ramune" },
   { id: "masume", name: "ますめの花畑", icon: "🌷", desc: "花だんの 広さを くらべよう", ready: true, fairy: "poppy" },
+  { id: "hako", name: "はこの工房", icon: "📦", desc: "はこを ひらいたり くみたてたり しよう", ready: true, fairy: "peta" },
 ];
 export const FRIEND_LEVEL = 5;      // なかよし度 5 ごとに ハートが 1つ ふえる（地図の マスを ひらく 目安。地図は まだ 作らない）
 
@@ -27,7 +29,8 @@ export function normalizeFairy(f) {
   if (!map.includes("tsumiki")) map.unshift("tsumiki");
   for (const a of AREAS) if (a.ready && !map.includes(a.id)) map.push(a.id);     // できあがった エリアは ひらく
   const cleared = f && f.cleared && typeof f.cleared === "object" ? { ...f.cleared } : {};
-  return { ...(f && typeof f === "object" ? f : {}), friendship, map, cleared };
+  const hakoDex = Array.isArray(f && f.hakoDex) ? f.hakoDex.filter((x) => typeof x === "string") : [];   // はこの工房：ひらいた 展開図（立方体 11しゅるい）
+  return { ...(f && typeof f === "object" ? f : {}), friendship, map, cleared, hakoDex };
 }
 export function addFriendship(f, id, n) {
   const nf = normalizeFairy(f);
@@ -42,3 +45,10 @@ export const friendHearts = (n) => Math.floor(n / FRIEND_LEVEL);
 /* 直方体（2こ つなげた つみき）は、立方体の だんかい3を 1かい クリアしたら 出る */
 export const clearKey = (kind, stage) => (kind === "cuboid" ? "tsumiki-cuboid" : "tsumiki") + ":" + stage;
 export const cuboidOpen = (f) => !!normalizeFairy(f).cleared["tsumiki:3"];
+
+/* はこの工房：ずかんに 展開図を 入れる（同じ ものは 1かい）。直方体は 立方体の 段階4 を クリアしたら */
+export function addHakoDex(f, id) {
+  const nf = normalizeFairy(f);
+  return nf.hakoDex.includes(id) ? nf : { ...nf, hakoDex: [...nf.hakoDex, id].sort((a, b) => Number(a.slice(1)) - Number(b.slice(1))) };
+}
+export const hakoCuboidOpen = (f) => !!normalizeFairy(f).cleared["hako:4"];
