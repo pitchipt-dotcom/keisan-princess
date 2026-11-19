@@ -5,7 +5,9 @@
    ===================================================================== */
 import React, { useState } from "react";
 import { TsumikiForest, FairyGuide, STAGES } from "./TsumikiForest.jsx";
-import { AREAS, FAIRIES, GUIDE_FAIRY, normalizeFairy, addFriendship, markCleared, friendHearts, FRIEND_LEVEL } from "./fairy.js";
+import { AREAS, FAIRIES, GUIDE_FAIRY, normalizeFairy, addFriendship, markCleared, friendHearts, FRIEND_LEVEL, clearKey, cuboidOpen } from "./fairy.js";
+import { KINDS } from "./tsumiki.js";
+import { PoseIcon } from "./TopGrid.jsx";
 import "./fairy.css";
 
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -28,14 +30,17 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   const [area, setArea] = useState(null);        // null = 地図
   const [stage, setStage] = useState(null);      // null = だんかい えらび
   const [playKey, setPlayKey] = useState(0);
+  const [kind, setKind] = useState("cube");      // cube（さいころ）／ cuboid（2こ つなげた）
+  const canCuboid = cuboidOpen(f);
 
   const gain = (n) => onFairy((cur) => addFriendship(cur, GUIDE_FAIRY, n));
-  const clearStage = (no) => onFairy((cur) => markCleared(cur, "tsumiki", no, todayStr()));
+  // クリアの しるし：立方体は tsumiki:N（まえと 同じ）、直方体は tsumiki-cuboid:N
+  const clearStage = (no) => onFairy((cur) => markCleared(cur, kind === "cuboid" ? "tsumiki-cuboid" : "tsumiki", no, todayStr()));
 
   if (area === "tsumiki" && stage) {
     return (
       <div className="fl-wrap">
-        <TsumikiForest key={playKey} stage={stage} sfx={sfx} onGain={gain} onClearStage={clearStage} onExit={() => { sfx.tap(); setStage(null); }} />
+        <TsumikiForest key={playKey} stage={stage} kind={kind} sfx={sfx} onGain={gain} onClearStage={clearStage} />
         <button className="kk-text-btn fl-back" onClick={() => { sfx.tap(); setStage(null); }}>だんかいを えらびなおす</button>
       </div>
     );
@@ -44,14 +49,27 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
     return (
       <div className="fl-wrap">
         <h2 className="kk-h2">🧊 つみきの森</h2>
-        <FairyGuide text="つみきを ころがすと、紙に ついた マスに 色が つくよ。いっしょに やってみよう！" />
+        <FairyGuide text={canCuboid ? "2こ つなげた つみきも ころがせるように なったよ！ たったり ねたり するよ" : "つみきを ころがすと、紙に ついた マスに 色が つくよ。いっしょに やってみよう！"} />
         <Friendship n={f.friendship[GUIDE_FAIRY] || 0} />
+        <div className="fl-kinds" role="radiogroup" aria-label="つみきを えらぶ">
+          {["cube", "cuboid"].map((k) => {
+            const locked = k === "cuboid" && !canCuboid;
+            return (
+              <button key={k} role="radio" aria-checked={kind === k} disabled={locked}
+                className={"fl-kind" + (kind === k ? " fl-kind-on" : "") + (locked ? " fl-kind-lock" : "")}
+                onClick={() => { sfx.tap(); setKind(k); }}>
+                <span className="fl-kind-icon">{locked ? "🔒" : k === "cube" ? "🧊" : <PoseIcon pose="stand" size={26} />}</span>
+                <b>{KINDS[k].name}</b><small>{locked ? "「3. もようから かんがえる」を クリアすると でてくるよ" : KINDS[k].sub}</small>
+              </button>
+            );
+          })}
+        </div>
         <div className="fl-stages">
           {STAGES.map((st) => (
             <button key={st.no} className="fl-stage" onClick={() => { sfx.tap(); setPlayKey((k) => k + 1); setStage(st.no); }}>
               <span className="fl-stage-icon">{st.icon}</span>
               <span className="fl-stage-text"><b>{st.no}. {st.name}</b><small>{st.desc}</small></span>
-              {f.cleared[`tsumiki:${st.no}`] && <span className="fl-stage-ok" aria-label="クリア">✓</span>}
+              {f.cleared[clearKey(kind, st.no)] && <span className="fl-stage-ok" aria-label="クリア">✓</span>}
             </button>
           ))}
         </div>

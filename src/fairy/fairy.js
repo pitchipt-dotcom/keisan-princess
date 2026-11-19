@@ -33,3 +33,7 @@ export function markCleared(f, area, stage, date) {
   return { ...nf, cleared: { ...nf.cleared, [`${area}:${stage}`]: date } };
 }
 export const friendHearts = (n) => Math.floor(n / FRIEND_LEVEL);
+
+/* 直方体（2こ つなげた つみき）は、立方体の だんかい3を 1かい クリアしたら 出る */
+export const clearKey = (kind, stage) => (kind === "cuboid" ? "tsumiki-cuboid" : "tsumiki") + ":" + stage;
+export const cuboidOpen = (f) => !!normalizeFairy(f).cleared["tsumiki:3"];

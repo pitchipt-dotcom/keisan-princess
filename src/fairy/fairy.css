@@ -1,5 +1,5 @@
 /* ===== 妖精の国 たんけん（地図・つみきの森） ===== */
-.fl-wrap{display:flex; flex-direction:column; align-items:center; width:100%; min-width:0; max-width:100%; gap:8px; padding-bottom:12px;}
+.fl-wrap{display:flex; flex-direction:column; align-items:center; width:100%; min-width:0; max-width:100%; gap:8px; padding-bottom:0;}
 .fl-wrap .kk-h2{margin:0;}
 .fl-friend{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; justify-content:center; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B;
   background:#fff; border-radius:999px; padding:4px 12px; box-shadow:0 3px 0 rgba(201,168,240,.45);}
@@ -18,13 +18,67 @@
 .fl-stage-text{flex:1;}
 .fl-stage-ok{font-size:20px; color:#2FAF8E; font-weight:900;}
 .fl-back{margin-top:-4px;}
+.fl-kinds{display:flex; gap:8px; width:100%;}
+.fl-kind{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px; background:#fff; border:3px solid #E3DAEE; border-radius:16px; padding:6px 6px;
+  font-family:'Zen Maru Gothic'; color:#3A2A6B; cursor:pointer; touch-action:manipulation; text-align:center;}
+.fl-kind b{font-size:13px; font-weight:900;}
+.fl-kind small{font-size:10px; font-weight:700; color:#7A5C98; line-height:1.3;}
+.fl-kind-icon{font-size:24px; height:28px; display:flex; align-items:center;}
+.fl-kind-on{border-color:#F2C94C; background:#FFF8D6; box-shadow:0 3px 0 rgba(242,201,76,.5);}
+.fl-kind-lock{background:#F7F3FB; cursor:default; opacity:.75;}
 
-.ts-wrap{display:flex; flex-direction:column; gap:6px; width:100%; min-width:0; max-width:100%;}
+.ts-wrap{display:flex; flex-direction:column; gap:5px; width:100%; min-width:0; max-width:100%;}
 .ts-head{display:flex; align-items:center; gap:8px; min-height:24px; position:relative;}
 .ts-stage-tag{font-family:'Mochiy Pop One'; font-size:12px; color:#fff; background:#5FC79A; border-radius:999px; padding:3px 10px;}
 .ts-gain{margin-left:auto; font-family:'Mochiy Pop One'; font-size:15px; color:#E85FA3; animation:ts-gain 1.6s ease-out both;}
 @keyframes ts-gain{0%{transform:translateY(8px) scale(.7); opacity:0;} 20%{transform:translateY(0) scale(1.15); opacity:1;} 80%{opacity:1;} 100%{transform:translateY(-6px); opacity:.85;}}
-.ts-pose{display:inline-flex; align-items:center; gap:3px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px; color:#3A2A6B; background:#FFF1D2; border-radius:999px; padding:1px 8px;}
+.ts-kind-tag{font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px; color:#7A5C98; background:#fff; border:1.5px solid #E3D3F3; border-radius:999px; padding:1px 8px;}
+/* 直方体の「たっている／ねている」：盤の すぐ 下に 1行 */
+.ts-pose{align-self:center; display:inline-flex; align-items:center; gap:4px; font-family:'Zen Maru Gothic'; color:#3A2A6B;
+  background:#FFF1D2; border:2px solid #E5C38A; border-radius:999px; padding:0 12px 0 6px; line-height:1.15;}
+.ts-pose b{font-size:14px; font-weight:900;}
+.ts-pose small{font-size:12px; font-weight:900; color:#8A6A3A;}
+.ts-pose-lie{border-color:#C89A5A; background:#FBE3B8;}
+
+/* ゴールの 帯（妖精の セリフとは 別） */
+.ts-goal{display:flex; align-items:center; gap:8px; width:100%; box-sizing:border-box; background:linear-gradient(90deg,#FFF3B8,#FFE38A); border:2px solid #F2C94C;
+  border-radius:14px; padding:3px 10px; box-shadow:0 3px 0 rgba(242,201,76,.45);}
+.ts-goal-icon{font-size:22px; flex:0 0 auto;}
+.ts-goal-text{flex:1; min-width:0; font-family:'Mochiy Pop One'; font-size:14px; line-height:1.3; color:#5A3A00;}
+.ts-goal-text small{display:block; font-family:'Zen Maru Gothic'; font-weight:900; font-size:10px; color:#A07400; letter-spacing:.1em;}
+.ts-goal-sub{flex:0 0 auto; font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#5A3A00; background:#fff; border-radius:999px; padding:2px 8px;}
+
+/* 手じゅんの ならび */
+.ts-steps{display:flex; flex-wrap:wrap; gap:2px 6px; list-style:none; margin:0; padding:0; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#3A2A6B;}
+.ts-step{display:inline-flex; align-items:center; gap:1px; border-radius:8px; padding:0 4px; transition:background .2s;}
+.ts-step-no{font-size:15px; margin-right:1px; color:#7A5C98;}
+.ts-step-arrow{color:#E85FA3; font-size:14px;}
+.ts-step-now{background:#FFE14D; box-shadow:0 0 0 3px #FFE14D, 0 0 12px 3px rgba(255,200,40,.75); animation:ts-glow .7s ease-in-out infinite alternate;}
+@keyframes ts-glow{from{box-shadow:0 0 0 3px #FFE14D, 0 0 6px 1px rgba(255,200,40,.5);} to{box-shadow:0 0 0 3px #FFE14D, 0 0 14px 5px rgba(255,200,40,.9);}}
+.ts-step-done{opacity:.4;}
+.ts-step-done::after{content:"✓"; color:#2FAF8E; margin-left:2px;}
+.ts-step-empty{color:#B9A6D6;}
+.ts-step-fail{background:rgba(255,143,196,.28); outline:2.5px dashed #E85FA3; outline-offset:0;}
+/* おてがみ（しじ）… ボタンと 見分けが つくように、紙の カード */
+.ts-letter{position:relative; width:100%; box-sizing:border-box; background:#FFFBEF; border-radius:6px; padding:9px 12px 6px;
+  border:1.5px solid #E8D9B5; box-shadow:0 2px 6px rgba(120,90,40,.15);
+  background-image:repeating-linear-gradient(135deg,#F28B9B 0 8px,#fff 8px 14px,#7FB2E8 14px 22px,#fff 22px 28px); background-size:100% 4px; background-repeat:no-repeat; background-position:top;}
+.ts-letter-head{font-family:'Mochiy Pop One'; font-size:13px; color:#8A5A20; margin-bottom:2px;}
+.ts-letter-head small{font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#3A2A6B; margin-left:4px;}
+.ts-count{margin-top:3px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B;}
+.ts-count b{font-size:17px; color:#4A7BD0;}
+.ts-count-note{font-size:11px; color:#7A5C98;}
+.ts-legend{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px;}
+.ts-legend span{border-radius:8px; padding:1px 7px; border:2.5px solid;}
+.lg-hit{color:#1E8A6C; border-color:#2FAF8E !important; background:rgba(95,199,154,.22);}
+.lg-miss{color:#C2387D; border-color:#E85FA3 !important; border-style:dashed !important; background:rgba(255,143,196,.2);}
+.lg-extra{color:#6E6084; border-color:#9A8BB0 !important; border-style:dotted !important; background:rgba(154,139,176,.15);}
+/* きみの じゅんばん（だんかい3） */
+.ts-mine{width:100%; box-sizing:border-box; background:#EEF6FF; border:2px dashed #8FB8EA; border-radius:12px; padding:5px 10px;}
+.ts-mine-head{font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#2F5E9E; margin-bottom:1px;}
+.ts-mine-head small{color:#5A7AA8; margin-left:4px;}
+.ts-mine-answer{background:#EAFBF5; border-color:#5FC79A;}
+.ts-mine-answer .ts-mine-head{color:#2C8A66;}
 
 .ts-fairy{display:flex; align-items:center; gap:6px; width:100%;}
 .ts-fairy-pic{flex:0 0 54px; width:54px; height:54px; display:flex; align-items:center; justify-content:center; font-size:36px; animation:ts-float 3s ease-in-out infinite;}
@@ -43,23 +97,17 @@
 .ts-big{flex:1 1 auto; min-width:0; order:0;}
 .ts-small{flex:0 0 108px; order:1; cursor:pointer;}
 .ts-nogl .ts-big{flex-basis:100%;}
-.ts-3d{position:relative; overflow:hidden; width:100%; height:238px;}
+.ts-3d{position:relative; overflow:hidden; width:100%; height:230px;}
 .ts-small .ts-3d{height:100px;}
 .ts-3d canvas{display:block; position:absolute; left:0; top:0;}   /* canvas の はばで 画面が ひろがらない ように */
 .ts-top{display:block; width:100%; height:auto;}
-.ts-big .ts-top{max-height:238px;}
+.ts-big .ts-top{max-height:230px;}
+.ts-small .ts-top{max-height:118px; padding-bottom:22px; box-sizing:content-box;}
 .ts-view-cap{position:absolute; left:6px; top:4px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:10px; color:#7A5C98; background:rgba(255,255,255,.85); border-radius:8px; padding:0 5px; pointer-events:none;}
 .ts-view-cap small{display:block; font-size:9px; color:#B48CE8;}
 .ts-small .ts-view-cap{top:auto; bottom:3px; left:50%; transform:translateX(-50%); white-space:nowrap; text-align:center;}
 .ts-note{font-family:'Zen Maru Gothic'; font-size:12px; color:#7A5C98; text-align:center;}
 
-.ts-orders{display:flex; flex-wrap:wrap; align-items:center; gap:4px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B;}
-.ts-orders-title{font-size:11px; color:#7A5C98; margin-right:2px;}
-.ts-order{background:#fff; border:2px solid #C9A8F0; border-radius:10px; padding:1px 7px;}
-.ts-order-now{border-color:#E85FA3; background:#FFE9F3; animation:ts-pop .6s ease-in-out infinite alternate;}
-.ts-order-done{opacity:.45;}
-.ts-order-empty{color:#C9A8F0; border-style:dashed;}
-.ts-orders-answer .ts-order{border-color:#5FC79A; background:#EAFBF5;}
 
 .ts-ctrl{display:flex; gap:8px; align-items:stretch; width:100%; min-width:0;}
 .ts-pad{display:grid; grid-template-columns:repeat(3, 62px); grid-template-rows:repeat(2, 50px); gap:5px; flex:0 0 auto;}
@@ -75,16 +123,18 @@
   padding:5px 6px; cursor:pointer; touch-action:manipulation;}
 .ts-act:disabled{opacity:.45; cursor:default;}
 .ts-act-main{color:#fff; background:linear-gradient(180deg,#FF9BCB,#F06AAE); border-color:#E85FA3; font-size:13px; box-shadow:0 3px 0 #C0568A;}
+.ts-act-wide{padding:10px 8px; font-size:14px;}
 .ts-act-back{border-color:#5FC79A; color:#2C8A66; background:#EAFBF5;}
 
 .ts-log{width:100%; min-width:0; box-sizing:border-box; overflow:hidden; background:#fff; border-radius:14px; padding:4px 8px; box-shadow:0 3px 0 rgba(201,168,240,.35);}
 .ts-log-title{font-family:'Zen Maru Gothic'; font-weight:900; font-size:10px; color:#7A5C98;}
 .ts-log-row{display:flex; align-items:center; gap:2px; width:0; min-width:100%; overflow-x:auto; white-space:nowrap; padding-bottom:2px; scrollbar-width:thin;}
-.ts-log-chip{flex:0 0 auto; font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:#3A2A6B; border-radius:8px; padding:0 5px; line-height:1.4;}
+.ts-log-chip{flex:0 0 auto; display:inline-flex; align-items:center; gap:1px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:#3A2A6B; border-radius:8px; padding:0 5px; line-height:1.4;}
 .ts-log-arrow{flex:0 0 auto; font-family:'Zen Maru Gothic'; font-weight:700; font-size:10px; color:#7A5C98;}
 
 .ts-card{background:#fff; border-radius:22px; padding:14px; box-shadow:0 5px 0 rgba(201,168,240,.5); font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#3A2A6B; line-height:1.8; text-align:center;}
 .ts-card b{color:#E85FA3;}
 .ts-done-title{font-family:'Mochiy Pop One'; font-size:18px; color:#2C8A66;}
 .ts-done-gain{font-size:17px;}
-@media (prefers-reduced-motion: reduce){.ts-fairy-pic, .ts-fairy-happy, .ts-order-now, .ts-gain, .ts-bubble{animation:none;}}
+.ts-done-kind{font-size:13px; color:#7A5C98;}
+@media (prefers-reduced-motion: reduce){.ts-fairy-pic, .ts-fairy-happy, .ts-step-now, .ts-gain, .ts-bubble{animation:none;}}
