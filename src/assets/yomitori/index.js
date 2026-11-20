@@ -30,4 +30,5 @@ export const OBJECTS = {
   "flower-red": { unit: "本", pack: "10本 たば" },
   "flower-white": { unit: "本", pack: "10本 たば" },
   "flower-yellow": { unit: "本", pack: "10本 たば" },
+  star: { unit: "こ", pack: "10こ びん" },          // ほしの かけら（おはなし もんだい）
 };

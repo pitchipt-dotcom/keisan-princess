@@ -120,6 +120,14 @@ export default function WriteBox({ result, onInk, mark = null, locked = false, r
     setFixOpen(false);
   };
 
+  // ブラウザ テスト用（本番には 入らない）：読みとりが ずれた ときに 数字を 入れる
+  useEffect(() => {
+    if (!import.meta.env.DEV || !label) return undefined;
+    window.__pen = window.__pen || {};
+    window.__pen[label] = (t) => onInk && onInk({ text: String(t), digits: String(t).split("").map((c) => ({ digit: Number(c) })), fixed: true });
+    return () => { if (window.__pen) delete window.__pen[label]; };
+  }, [label, onInk]);
+
   const text = reveal != null ? reveal : (result && result.text) || "";
   const canFix = !locked && result && result.digits && result.digits.length > 0;
 

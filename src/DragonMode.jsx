@@ -3,7 +3,7 @@
    ===================================================================== */
 import React, { useEffect, useState } from "react";
 import {
-  ELEMENTS, STAGES, nextStageInfo, selectableElements, isMaster, todayStr, addDays, currentStreak,
+  ELEMENTS, STAGES, nextStageInfo, selectableElements, isMaster, todayStr, addDays, currentStreak, pointSources, STORY_FOOD_PER_POINT,
 } from "./dragon.js";
 import "./dragonMode.css";
 
@@ -153,7 +153,14 @@ export function DragonScreen({ daily, onPickEgg, onExit, sfx }) {
               <div className="dr-gauge"><div className="dr-gauge-fill" style={{ width: nx.ratio * 100 + "%", background: DRAGONS[d.element].color }} /></div>
             </>
           ) : <div className="dr-next">おとなに なって ずかんに のったよ！</div>}
-          <div className="dr-howto">まいにち けいさん で そだつよ：やりきる +1／ヒントなし ぜんもん せいかい +1／3日・7日 れんぞく ボーナス</div>
+          {(() => { const ps = pointSources(d); return ps && (
+            <div className="dr-src" aria-label="ポイントの でどころ">
+              <span>📅 まいにち けいさん <b>{ps.daily}</b></span>
+              <span>📖 おはなし もんだい <b>{ps.story}</b></span>
+              <span>🍙 ごはん {ps.food}/{STORY_FOOD_PER_POINT}</span>
+            </div>); })()}
+          <div className="dr-howto">まいにち けいさん で そだつよ：やりきる +1／ヒントなし ぜんもん せいかい +1／3日・7日 れんぞく ボーナス<br />
+            おはなし もんだい（むずかしい）：5もん やりきる ごはん +1／ヒントなし ぜんもん せいかい +1（ごはん {STORY_FOOD_PER_POINT}つで +1。1日 4つまで）</div>
         </div>
       )}
 

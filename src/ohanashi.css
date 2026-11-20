@@ -1,0 +1,103 @@
+/* ===== おはなし もんだい「むずかしい」（よみとり れんしゅう） ===== */
+.oh-wrap{display:flex; flex-direction:column; align-items:center; width:100%; gap:6px;}
+.oh-pick{display:flex; flex-direction:column; gap:12px; width:100%; max-width:400px; margin:4px 0 14px;}
+.oh-pick-card{width:100%; text-align:left;}
+.oh-pick-hard{background:linear-gradient(180deg,#fff,#F7F0FF);}
+.oh-progress{display:flex; align-items:center; gap:8px; width:100%; font-family:'Mochiy Pop One'; font-size:13px; color:#3A2A6B;}
+.oh-progress-bar{flex:1; height:8px; border-radius:999px; background:#fff; overflow:hidden;}
+.oh-progress-bar i{display:block; height:100%; background:linear-gradient(90deg,#FFB3D6,#C9A8F0);}
+.oh-card{margin:4px 0 12px; padding:12px 12px 16px; gap:6px; align-items:stretch;}
+.oh-head{display:flex; align-items:center; gap:8px;}
+.oh-face{flex:0 0 44px; display:flex; justify-content:center;}
+.oh-tag{margin:0;}
+.oh-card .yt-text{margin:2px 0;}
+.oh-card .ys-wrap{margin:0;}
+.oh-answer{display:flex; flex-direction:column; align-items:stretch; width:100%;}
+.oh-answer .wm-row-label{margin:8px 0 4px;}
+.oh-eq{gap:4px;}
+.oh-eq .wm-slot{max-width:84px;}
+.oh-ops{flex-direction:column; gap:3px;}
+.oh-ops .wm-op{width:34px; height:30px; font-size:17px;}
+.oh-tag-ans{background:#E85FA3;}
+.oh-ans{justify-content:center;}
+.oh-ans .wm-slot{max-width:96px;}
+.oh-hints{display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:6px;}
+.oh-fig{width:100%; background:#FFFDF7; border:2px dashed #E3C8F5; border-radius:14px; padding:6px;}
+.oh-fig-svg{display:block; width:100%; height:auto;}
+.oh-fig-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#7A5C98; text-align:center;}
+.oh-explain{margin-top:8px; background:#F4FBFF; border:2px solid #9FD0FF; border-radius:16px; padding:8px 10px;
+  font-family:'Zen Maru Gothic'; font-weight:900; color:#3A2A6B; animation:oh-in .45s ease-out .55s both;}
+@keyframes oh-in{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+.oh-explain-title{font-size:13px; color:#2F5E9E; margin-bottom:4px;}
+.oh-explain-line{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 6px; font-size:14px; line-height:1.6; padding:2px 0;}
+.oh-explain-no{flex:0 0 auto; font-size:12px; border-radius:999px; padding:0 8px; color:#3A2A6B;}
+.oh-mk1{background:#BFE6FF;} .oh-mk2{background:#FFC7E3;}
+.oh-explain-head{font-size:13px;}
+.oh-explain-eq{font-family:'Mochiy Pop One'; font-weight:400; font-size:15px; color:#E85FA3; white-space:nowrap;}
+.oh-explain-ans{margin-top:4px; font-size:14px; text-align:right;}
+.oh-explain-ans b{font-family:'Mochiy Pop One'; font-weight:400; font-size:18px; color:#E85FA3;}
+.oh-intro, .oh-result, .oh-dragon{margin:4px 0; gap:6px; font-family:'Zen Maru Gothic'; font-weight:900; color:#3A2A6B;}
+.oh-intro-title{font-family:'Mochiy Pop One'; font-size:18px; color:#7A5C98;}
+.oh-intro-steps{margin:0; padding-left:1.4em; font-size:15px; line-height:1.8; text-align:left; align-self:stretch;}
+.oh-intro-line, .oh-intro-food{font-size:13px; color:#7A5C98;}
+.oh-intro-stage{font-size:13px; background:#FFF6D8; border-radius:12px; padding:6px 10px; text-align:center;}
+.oh-intro-stage small{display:block; font-size:11px; color:#7A5C98;}
+.oh-result-big{font-family:'Mochiy Pop One'; font-size:22px; color:#E85FA3;}
+.oh-result-line{font-size:15px;}
+.oh-result-line b{font-family:'Mochiy Pop One'; font-weight:400; font-size:20px; color:#E85FA3;}
+.oh-result-read{font-size:13px; color:#7A5C98;}
+.oh-dragon-title{font-family:'Mochiy Pop One'; font-size:16px; color:#3A2A6B;}
+.oh-dragon-line{font-size:14px; text-align:center;}
+.oh-dragon-line b{color:#E85FA3; font-size:18px;}
+.oh-dragon-up{color:#2C8A66;}
+.oh-food{display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:center;}
+.oh-food-dot{font-size:22px; opacity:.22; filter:grayscale(1);}
+.oh-food-dot.on{opacity:1; filter:none;}
+.oh-food small{flex-basis:100%; text-align:center; font-size:11px; color:#7A5C98;}
+.oh-full{font-size:14px; color:#2C8A66; background:#EAFBF5; border-radius:12px; padding:6px 10px; text-align:center;}
+@media (prefers-reduced-motion: reduce){.oh-explain{animation:none;}}
+
+/* 1画面に おさめる：見つけたら 場面の 絵を 小さく、ペンの わくを ひくく、「こたえ」は 欄の よこ */
+.oh-found .ys-strip{justify-content:center;}
+.oh-found .ys-panel{flex:0 0 auto; width:auto; height:74px;}
+.oh-found .ys-more{display:none;}
+.oh-card .wb-small .wb-pad{max-height:64px;}
+.oh-card .wb-head{margin-bottom:2px;}
+.oh-card .wb-read{height:22px; font-size:13px;}
+.oh-ans{align-items:center; gap:8px; margin-top:6px;}
+.oh-ans .oh-tag-ans{flex:0 0 auto;}
+.oh-card .yt-seg{font-size:17px;}
+.oh-card .yt-text{line-height:1.85;}
+.oh-card .wm-check{margin-top:10px;}
+/* はしの 数え方の 絵も、見つけた あとは ひくく（タップで かぞえるのは そのまま） */
+.oh-found .yt-pic{padding:4px 6px 2px;}
+.oh-found .yt-day{height:17px; font-size:11px; line-height:15px; border-radius:6px;}
+.oh-found .yt-cal{gap:1px;}
+.oh-found .yt-cal-title{font-size:12px; margin-bottom:0;}
+.oh-found .yt-cal-w{font-size:10px; line-height:12px;}
+.oh-found .yt-pic-foot{margin-top:1px; min-height:18px; font-size:11px;}
+.oh-found .yt-pic-foot b{font-size:13px;}
+.oh-found .oh-head{margin-bottom:-2px;}
+.oh-card .yt-guide-self{margin:0;}
+.oh-found .yt-spine{max-height:30px;}
+.oh-found .yt-tapno{font-size:9px; line-height:10px; min-height:10px;}
+.oh-found .yt-lr{font-size:10px; line-height:12px;}
+.oh-row-label{display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.oh-step{margin:0; font-size:13px; flex:1; min-width:0;}
+.oh-answer .yt-done{margin:0 0 2px;}
+.oh-found .yt-seg{font-size:16px;}
+.oh-found .yt-text{line-height:1.7;}
+.oh-found .oh-face{flex-basis:34px; height:34px; overflow:hidden;}
+.oh-found .oh-face > *{transform:scale(.78); transform-origin:top center;}
+.oh-tag .yt-level{font-size:11px;}
+.oh-done{font-size:14px;}
+/* もう すこし つめる（本だな・カレンダーの 2だんかいでも 1画面に） */
+.oh-card{padding:10px 10px 12px;}
+.oh-card .wb-small .wb-pad{max-height:58px;}
+.oh-answer .wm-row-label{margin:5px 0 2px;}
+.oh-ans{margin-top:4px;}
+.oh-card .wm-check{margin-top:8px;}
+.oh-found .yt-pic{margin:0;}
+.oh-found .yt-spine{max-height:24px;}
+.oh-found .yt-books{gap:1px;}
+.oh-found .yt-shelf{height:4px;}

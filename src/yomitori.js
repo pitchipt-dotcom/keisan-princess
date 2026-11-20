@@ -8,6 +8,7 @@
        edge … はしの かぞえかた（本だな／カレンダーの 絵を タップして かぞえる）
        unit … たんいの けいさん（cm・mm／L・dL。それぞれ 4だんかい）
    - もんだいぶんは すべて この アプリの オリジナル
+   - S・m1・m2・step・near・ask・unitNumbers などは おはなし もんだい「むずかしい」（ohanashiYomitori.js）でも つかう
    もんだいの かたち：
      { wp:true, kind, id, segs:[{ t, ask?, near?, parts? }], steps:[{ label, slots:[{ ans, unit }], hint }], pic? }
        segs … もんだいぶんを タップできる まとまりに 分けたもの。ask が「きかれている ところ」
@@ -18,20 +19,20 @@
                { type:"cal", month, first(1日の 曜日 0=日), days, marks:{ 日:"pink" } }
    ===================================================================== */
 
-const rnd = (lo, hi) => lo + ((Math.random() * (hi - lo + 1)) | 0);
-const pick = (arr) => arr[rnd(0, arr.length - 1)];
+export const rnd = (lo, hi) => lo + ((Math.random() * (hi - lo + 1)) | 0);
+export const pick = (arr) => arr[rnd(0, arr.length - 1)];
 const NAMES = ["ゆい", "はな", "りこ", "さき", "めい", "あおい", "つむぎ", "ひなた"];
 
 // 1つの こたえ（1つの たんい）の だんかい
-const step = (label, ans, unit, hint) => ({ label, slots: [{ ans, unit }], hint });
-const near = (t) => ({ t, near: true }), ask = (t) => ({ t, ask: true });
+export const step = (label, ans, unit, hint) => ({ label, slots: [{ ans, unit }], hint });
+export const near = (t) => ({ t, near: true }), ask = (t) => ({ t, ask: true });
 
 /* マーカー：せいかい したら「その 式で つかった ところ」に 色を つける
    m1(…) … ① の 式で つかう ところ（水色）  m2(…) … ② の 式で 新しく つかう ところ（ピンク）
    S`…` で 1つの まとまり（seg）を つくる → { t: ぜんぶの 文字, parts:[{ t, mk? }] }
    どこに マーカーを ひくかは ここで データとして もつ（画面では 文字を さがさない） */
-const m1 = (t) => ({ t: String(t), mk: 0 }), m2 = (t) => ({ t: String(t), mk: 1 });
-const S = (strs, ...vals) => {
+export const m1 = (t) => ({ t: String(t), mk: 0 }), m2 = (t) => ({ t: String(t), mk: 1 });
+export const S = (strs, ...vals) => {
   const parts = [];
   const add = (p) => { const last = parts[parts.length - 1]; if (last && last.mk == null && p.mk == null) last.t += p.t; else parts.push(p); };
   strs.forEach((str, i) => {
@@ -223,7 +224,7 @@ export const fmtUnit = (sys, x) => {
 const NOT15 = (lo, hi) => { for (;;) { const v = rnd(lo, hi); if (v !== 15) return v; } };   // テストの 形（15cm − …）に しない
 
 // 数を きめる（[a, b, op]。a・b は 小さい たんい）
-function unitNumbers(sys, level) {
+export function unitNumbers(sys, level) {
   const cm = sys === "cm";
   if (level === 1) {
     if (Math.random() < 0.5) {                                       // ひきざん（くりさがり なし）
@@ -280,7 +281,7 @@ const SCENES = {
   ],
 };
 
-function unitHintText(sys, level, a, b, op) {
+export function unitHintText(sys, level, a, b, op) {
   const u = UNIT_SYS[sys], A = Math.floor(a / 10), a2 = a % 10, b2 = b % 10;
   if (level === 1) return `${u.big}は ${u.big}どうし、${u.small}は ${u.small}どうし けいさん しよう`;
   if (level === 2) return `${u.small}を たすと ${a2 + b2}${u.small}。10${u.small}で 1${u.big}に なるよ`;

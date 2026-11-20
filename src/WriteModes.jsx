@@ -163,7 +163,7 @@ const storyHint = (q) => {
   return "「ちがい」は ひきざん。おおきい かず − ちいさい かず だよ";
 };
 
-function useAttempts() {
+export function useAttempts() {          // おはなし もんだい「むずかしい」（OhanashiHard.jsx）でも つかう
   const [res, setRes] = useState({});
   const [marks, setMarks] = useState({});
   const [resets, setResets] = useState({});
