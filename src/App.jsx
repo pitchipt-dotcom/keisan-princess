@@ -8,7 +8,10 @@ import { OhanashiHard } from "./OhanashiHard.jsx";
 import { MENU_GROUPS, EXTRA_ITEMS, MENU_SUB, ITEM_TARGET, groupById, normalizeGroup } from "./menu.js";
 import menuDragonArt from "./art/dragons/fire_child.webp";
 import menuFairyArt from "./assets/fairy/fairy-mint-bust.webp";
-const MENU_ART = { dragon: menuDragonArt, fairy: menuFairyArt };     // チャレンジの ボタンの 絵（いまの 素材）
+import menuDragonArtPrince from "./art/dragons/fire_child_prince.webp";
+import menuFairyArtPrince from "./assets/fairy/fairy-mint-bust_prince.webp";
+// チャレンジの ボタンの 絵（テーマごと）
+const MENU_ART_BY_THEME = { princess: { dragon: menuDragonArt, fairy: menuFairyArt }, prince: { dragon: menuDragonArtPrince, fairy: menuFairyArtPrince } };
 import "./menu.css";
 import { makeKazu, makeTashi10, ROUND_SIZE, KAZU_STAGES, TASHI_KINDS } from "./grade1.js";
 import { KazuPlay, OhajikiHint } from "./Grade1Modes.jsx";
@@ -1613,7 +1616,7 @@ export default function App() {
                 <button key={g.id} className={"mg-group mg-group-" + g.id + (g.id === menuGroup ? " mg-group-last" : "")}
                   style={{ "--mg-color": g.color, "--mg-bg": g.bg }} onClick={() => openGroup(g.id)}>
                   {g.art
-                    ? <span className="mg-art" aria-hidden="true"><img src={MENU_ART.dragon} alt="" className="mg-art-dragon" /><img src={MENU_ART.fairy} alt="" className="mg-art-fairy" /></span>
+                    ? <span className="mg-art" aria-hidden="true"><img src={MENU_ART_BY_THEME[themeId].dragon} alt="" className="mg-art-dragon" /><img src={MENU_ART_BY_THEME[themeId].fairy} alt="" className="mg-art-fairy" /></span>
                     : <span className="mg-icon" aria-hidden="true">{g.icon}</span>}
                   <span className="mg-text"><b>{g.label}</b><small>{g.sub}</small></span>
                   {g.id === menuGroup && <span className="mg-last-badge">まえに えらんだよ</span>}

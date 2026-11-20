@@ -10,17 +10,25 @@
 - 妖精：名前は 同じ。あいさつ 7文と ほめことば 15文を すこし いさましく。ヒント・せつめいは 共通
 - 勝ち負けの セリフ（勝てた！／こけちゃった…！）は `THEMES.prince.ballEvent` に 用意。イベントモード（event-modes ブランチ）が main に 入ったら つかう
 
-## 絵（まだ 無い ものは 共通の 絵が 出る）
+## 絵（`_prince` が 無い ものは 共通の 絵が 出る）
 
-名前：もとの 名前の すえに `_prince`（.webp）。
+名前：もとの 名前の すえに `_prince`（.webp）。生成は Pitch-chat 経由の MOSS-Image（`tools/art/moss_prince.py`。プロンプト・seed は art-raw の `_moss.json`・`_prince.json` に のこる）。
 
-| しゅるい | ファイル | 数 |
-|---|---|---|
-| ドラゴン（こども・おとな。たまご・あかちゃんは 共通） | `src/art/dragons/{fire,water,light}_{child,adult}_prince.webp` | 6 |
-| 主人公 | `src/art/chars/{witch,mermaid,princess}_{idle,happy,oops}_prince.webp` | 9 |
-| 妖精（全身から 上半身・顔を 切りだす） | `src/assets/fairy/fairy-{mint,ramune,poppy,peta}{,-bust,-face}_prince.webp` | 4（生成） |
-| そうび | `src/art/items/<id>_prince.webp` | 24 |
+| しゅるい | ファイル | 数 | 作り方 |
+|---|---|---|---|
+| ドラゴン（こども・おとな） | `src/art/dragons/{fire,water,light}_{child,adult}_prince.webp` | 6 | 元の プロンプト・seed ＋ 表情の 指定（水の おとなは 胸の ハートを negative で けした） |
+| 主人公 | `src/art/chars/{witch,mermaid,princess}_{idle,happy,oops}_prince.webp` | 9 | 立ち絵は 新しく 生成（seed 8101/8202/8303。カイは slightly で よわめた）、表情は flux-klein で 立ち絵から |
+| 妖精 | `src/assets/fairy/fairy-{mint,ramune,poppy,peta}{,-bust,-face}_prince.webp` | 4（＋切りだし 8） | ミント・ポピーは 元の プロンプト・seed ＋ 表情・マント。ラムネ・ペタは 元の 絵から flux-klein（顔と 色を のこすため） |
+| そうび | `src/art/items/<id>_prince.webp` | 24 | 今の アイテムと 同じ 絵がらで 新しく（seed 9001〜9024） |
+| チャレンジの ボタン | ドラゴン（fire_child_prince）・ミント（bust_prince） | － | 上の 絵を つかう |
 
-そうびで 新しく 絵を 作る もの（24）：ribbon, tiara, dress, socks, boots, wings, cat ／ m_shellclip, m_pearlband, m_scaledress, m_trident, m_shellbag ／ p_hairribbon, p_pearlpin, p_flowercrown, p_tiara, p_balldress, p_cape, p_lacesocks, p_glassshoes, p_wand, p_mirror, p_necklace, p_moon
+### まだ 共通の 絵の もの
+- ドラゴンの たまご・あかちゃん（共通に する きまり）
+- そうび 24こ（名前だけ かわる）：starpin, minihat, cape, wand, candy, flower, crystal, necklace, moon ／ m_starfishpin, m_coralcrown, m_pearlcape, m_finanklet, m_pearlanklet, m_seacandy, m_pearl, m_pearlnecklace, m_moonshell, m_dolphin, m_bubblewings ／ p_candy, p_rose, p_kitten, p_angelwings
+- ものがたりの たっせい イベントの 場面の 絵（おしろ・ぶとうかい・たたかい・かんせい。SVG）
+- 絵が 無い ときに 出る SVG の 主人公（ふだんは 出ない）
 
-生成：元の 絵と 同じ プロンプト・シードに `determined eyes, sharp eyebrows, confident smile, heroic pose, chest out, slightly cool and brave expression, same character design, same colors, cute, chibi` を たす（文字は 入れない）。じゅんばん：ドラゴン → 主人公 → 妖精 → そうび
+### 見なおし候補
+- p_moon_prince（つきの おまもり）：上の くさりが ふちで 切れている
+- m_shellbag_prince（かいがらの たて）：上の ふちに 切れこみ
+- p_lacesocks_prince（きしの すねあて）：かぶとの ように 見える
