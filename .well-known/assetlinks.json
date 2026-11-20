@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "jp.pitchpt.keisanprincess",
+      "sha256_cert_fingerprints": ["77:BE:90:AA:7D:7A:5A:49:65:6E:AF:0F:7A:0F:56:A1:D5:9F:FA:2C:7A:75:1A:75:91:5F:8C:B5:D3:85:CC:71"]
+    }
+  }
+]
