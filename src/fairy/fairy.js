@@ -8,12 +8,13 @@
 export const FAIRIES = {
   mint: { name: "ミント", desc: "つみきの森に すむ 妖精" },
   ramune: { name: "ラムネ", desc: "ジュースの泉に すむ 妖精" },
+  poppy: { name: "ポピー", desc: "ますめの花畑に すむ 妖精" },
 };
 export const GUIDE_FAIRY = "mint";
 export const AREAS = [
   { id: "tsumiki", name: "つみきの森", icon: "🧊", desc: "つみきを ころがして もようを つくろう", ready: true, fairy: "mint" },
   { id: "juice", name: "ジュースの泉", icon: "🧃", desc: "ジュースを そそいで かさを はかろう", ready: true, fairy: "ramune" },
-  { id: "masume", name: "ますめの花畑", icon: "🌷", desc: "じゅんびちゅう", ready: false },
+  { id: "masume", name: "ますめの花畑", icon: "🌷", desc: "花だんの 広さを くらべよう", ready: true, fairy: "poppy" },
 ];
 export const FRIEND_LEVEL = 5;      // なかよし度 5 ごとに ハートが 1つ ふえる（地図の マスを ひらく 目安。地図は まだ 作らない）
 

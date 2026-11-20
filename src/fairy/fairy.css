@@ -182,3 +182,26 @@
 .jc-borrow-line{margin-top:4px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#5A3A00;}
 .jc-borrow-again{font-size:12px; margin-top:2px;}
 @media (prefers-reduced-motion: reduce){.jc-stream, .jc-glow-line, .jc-hand, .jc-bd-new{animation:none;}}
+
+/* ===== ますめの花畑 ===== */
+.ms-fl-stage{border-color:#FFB3D6; box-shadow:0 4px 0 rgba(255,179,214,.6);}
+.ms-stage-tag{background:#F06AAE;}
+.ts-bubble-poppy{border-color:#FFD6E8;}
+.ts-bubble-poppy b{color:#D9488F;}
+.ts-bubble-poppy::before{border-right-color:#FFD6E8;}
+.ms-box{width:100%; background:#fff; border-radius:16px; box-shadow:0 4px 0 rgba(201,168,240,.45); padding:4px; box-sizing:border-box;}
+.ms-field{display:block; width:100%; height:auto; touch-action:none; user-select:none; -webkit-user-select:none;}
+.ms-dragging{filter:drop-shadow(0 6px 6px rgba(58,42,107,.3)); opacity:.92;}
+.ms-glow{animation:ms-glow .8s ease-in-out infinite alternate;}
+@keyframes ms-glow{from{filter:drop-shadow(0 0 2px #FFE14D);} to{filter:drop-shadow(0 0 9px #FFB800) drop-shadow(0 0 3px #fff);}}
+.ms-num{animation:jc-pop .25s ease-out both;}
+.ms-hint-on{background:#FFF6C8; border-color:#F2C94C; color:#8A6400;}
+.ms-cards{display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%;}
+.ms-cards-3 .ms-card:last-child{grid-column:1 / span 2; justify-self:center; width:calc(50% - 4px);}
+.ms-card{position:relative; background:#fff; border:3px solid #E3DAEE; border-radius:16px; padding:18px 6px 6px; cursor:pointer; touch-action:manipulation; display:flex; flex-direction:column; align-items:center; gap:2px;}
+.ms-card .ms-field-small{width:100%; max-height:130px;}
+.ms-card-on{border-color:#E85FA3; background:#FFF0F7; box-shadow:0 0 0 3px rgba(232,95,163,.2);}
+.ms-card-right{border-color:#2FAF8E; background:#EAFBF5;}
+.ms-card-letter{position:absolute; left:8px; top:2px; font-family:'Mochiy Pop One'; font-size:15px; color:#3A2A6B;}
+.ms-card-area{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#2C8A66;}
+@media (prefers-reduced-motion: reduce){.ms-glow, .ms-num{animation:none;}}
