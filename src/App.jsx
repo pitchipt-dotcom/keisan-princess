@@ -8,7 +8,10 @@ import { MENU_GROUPS, EXTRA_ITEMS, MENU_SUB, ITEM_TARGET, groupById, normalizeGr
 import menuDragonArt from "./art/dragons/fire_child.webp";
 import menuFairyArt from "./assets/fairy/fairy-mint-bust.webp";
 const MENU_ART = { dragon: menuDragonArt, fairy: menuFairyArt };     // チャレンジの ボタンの 絵（いまの 素材）
-import "./menu.css";      // まいにち けいさん より あとで 読む（よみとりの CSS の じゅんばんを かえない）
+import "./menu.css";
+import { makeKazu, makeTashi10, ROUND_SIZE, KAZU_STAGES, TASHI_KINDS } from "./grade1.js";
+import { KazuPlay, OhajikiHint } from "./Grade1Modes.jsx";
+const ROUND_GAMES = ["kazu", "tashi10"];                       // 1かい 10もんで くぎる モード（あたらしい 1ねんせいの 2つ）      // まいにち けいさん より あとで 読む（よみとりの CSS の じゅんばんを かえない）
 import { normalizeDaily, chooseEgg, setTodayOverride } from "./dragon.js";
 import { normalizeFairy } from "./fairy/fairy.js";
 // 妖精の国（Three.js を つかう）は 入った ときだけ 読みこむ
@@ -328,6 +331,8 @@ const TAIL_BY_GAMETYPE = {
 };
 
 const GAMETYPE_INFO = {
+  kazu:     { label: "かずと すうじ",         sub: "ものの かずと すうじを むすぼう", icon: "🍓", accent: "#FFB3C7" },
+  tashi10:  { label: "たしざん・ひきざん",    sub: "こたえが 10までの けいさん",   icon: "🧮", accent: "#FFE08A" },
   daily:    { label: "まいにち けいさん",     sub: "1日10もん・2年生の けいさん", icon: "📅", accent: "#FFC94D" },
   kuku:     { label: "九九",                 sub: "かけざんの れんしゅう", icon: "✖️", accent: "#C9A8F0" },
   addCarry: { label: "くりあがりの たしざん", sub: "10を こえる たしざん",   icon: "➕", accent: "#FFC9A0" },
@@ -338,6 +343,8 @@ const GAMETYPE_INFO = {
 };
 
 function generateQuestion(gameType, mode, mastery, lastWrongKey) {
+  if (gameType === "kazu") return makeKazu(mode || 1, mastery, lastWrongKey);
+  if (gameType === "tashi10") return makeTashi10(mode || "mix", mastery, lastWrongKey);
   if (gameType === "addCarry") return makeAddCarryQuestion(mastery, lastWrongKey);
   if (gameType === "subBorrow") return makeSubBorrowQuestion(mastery, lastWrongKey);
   if (gameType === "make10") return makeMake10Question(mastery, lastWrongKey);
@@ -356,6 +363,10 @@ const OP_JA = { "+": "＋", "-": "－", "×": "×" };
 function feedbackTextFor(q) {
   if (q.gameType === "story") return { big: "とけた〜！✨", total: <>こたえは <b>{q.ans}</b> {q.unit}！</>, echo: `${q.a} ${OP_JA[q.op]} ${q.b} ＝ ${q.ans}` };
   if (q.gameType === "write") return { big: "ひっさん できた〜！✨", total: <><b>{q.a} {OP_JA[q.op]} {q.b} ＝ {q.ans}</b></>, echo: "" };
+  if (q.gameType === "kazu") return q.stage === 3
+    ? { big: "あたり〜！✨", total: <><b>{Math.max(q.a, q.b)}</b> こ の ほうが おおいね！</>, echo: `${q.a} と ${q.b}` }
+    : { big: "できた〜！✨", total: <><b>{q.ans}</b> こ！</>, echo: q.stage === 4 ? `10 と ${q.ones} で ${q.ans}` : "" };
+  if (q.gameType === "tashi10") return { big: "できた〜！✨", total: <>{q.op === "+" ? "ぜんぶで" : "のこりは"} <b>{q.ans}</b> こ！</>, echo: `${q.a} ${OP_JA[q.op]} ${q.b} ＝ ${q.ans}` };
   if (q.gameType === "addCarry") return { big: "できた〜！✨", total: <>ぜんぶで <b>{q.ans}</b> こ！</>, echo: `${q.a} ＋ ${q.b} ＝ ${q.ans}` };
   if (q.gameType === "subBorrow") return { big: "できた〜！✨", total: <>のこりは <b>{q.ans}</b> こ！</>, echo: `${q.a} － ${q.b} ＝ ${q.ans}` };
   if (q.gameType === "make10") return { big: "10こ できた〜！✨", total: <>あと <b>{q.ans}</b> こで 10こ！</>, echo: `${q.a} ＋ ${q.ans} ＝ 10` };
@@ -1163,7 +1174,9 @@ export default function App() {
   const [backupMsg, setBackupMsg] = useState("");
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
   const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
-  const [menuGroup, setMenuGroup] = useState(null);     // 「どこから はじめよう？」で えらんだ グループ（セーブの menuGroup）
+  const [menuGroup, setMenuGroup] = useState(null);
+  const [round, setRound] = useState(null);              // 10もんで くぎる モードの すすみ { n:できた数, first:1かいめで せいかい, stars, miss }
+  const [g1Pick, setG1Pick] = useState(null);           // 段階・しゅるいを えらぶ 画面：kazu | tashi10     // 「どこから はじめよう？」で えらんだ グループ（セーブの menuGroup）
   const [ohanashi, setOhanashi] = useState({});          // おはなし もんだい「むずかしい」：{ yomiRead:{ stage, streak } }（まいにち けいさん とは べつ）
   const [fairy, setFairy] = useState(() => normalizeFairy());   // 妖精の国（なかよし度・ひらいた エリア）
   const fairyRef = useRef(fairy);
@@ -1230,19 +1243,21 @@ export default function App() {
   const sceneStage = myAchievedMilestones.length ? myAchievedMilestones[myAchievedMilestones.length - 1].scene : null;
 
   const nextQuestion = useCallback(() => {
+    if (round && round.n >= ROUND_SIZE) { setPhase("finish"); return; }
     setQ(generateQuestion(gameType, mode, mastery, lastWrong));
     setPicked(null);
     setShowHint(false);
     setShowColumnMemo(false);
     setPhase("ask");
-  }, [gameType, mode, mastery, lastWrong]);
+  }, [gameType, mode, mastery, lastWrong, round]);
 
   const startGame = (gt, m) => {
     if (ac()) ac().resume && ac().resume();
     SFX.tap(sound);
     setGameType(gt);
-    const useMode = gt === "kuku" ? (m || "mix") : null;
-    if (gt === "kuku") setMode(useMode);
+    const useMode = gt === "kuku" ? (m || "mix") : ROUND_GAMES.includes(gt) ? m : null;
+    if (gt === "kuku" || ROUND_GAMES.includes(gt)) setMode(useMode);
+    setRound(ROUND_GAMES.includes(gt) ? { n: 0, first: 0, stars: 0, miss: false } : null);
     setScreen("play");
     setStreak(0);
     setQ(generateQuestion(gt, useMode, mastery, lastWrong));
@@ -1256,7 +1271,7 @@ export default function App() {
   const openItem = (key) => {
     const t = ITEM_TARGET[key];
     if (!t) return;
-    if (t.screen) { SFX.tap(sound); setScreen(t.screen); return; }
+    if (t.screen) { SFX.tap(sound); if (t.pick) setG1Pick(t.pick); setScreen(t.screen); return; }
     startGame(t.game, t.mode);
   };
 
@@ -1337,6 +1352,7 @@ export default function App() {
       setStats((s) => ({ ...s, best: Math.max(s.best, ns) }));
       setMastery((m) => { const nm = { ...m, [q.key]: Math.min(3, (m[q.key] || 0) + 1) }; return nm; });
       const gain = rewardForGameType(q.gameType, ns);
+      if (round) setRound((r) => r && { ...r, n: r.n + 1, first: r.first + (r.miss ? 0 : 1), stars: r.stars + gain, miss: false });
       setStardust((v) => {
         const nv = v + gain;
         const owed = Math.floor(nv / PULL_COST) - Math.floor(v / PULL_COST);
@@ -1346,6 +1362,7 @@ export default function App() {
     } else {
       SFX.wrong(sound);
       setPhase("wrong");
+      if (round) setRound((r) => r && { ...r, miss: true });
       setStreak(0);
       setLastWrong(q.key);
       setMastery((m) => { const nm = { ...m, [q.key]: Math.max(-1, (m[q.key] || 0) - 1) }; return nm; });
@@ -1666,6 +1683,25 @@ export default function App() {
           />
         )}
 
+        {/* ---------- 1ねんせい：段階（かずと すうじ）・しゅるい（たしざん・ひきざん）を えらぶ ---------- */}
+        {screen === "g1Pick" && g1Pick && (
+          <div className="kk-mode-screen">
+            <div className="kk-witch-mini"><DressedCharacter character={charKey} mood="idle" size={96} equipped={myEquipped} /></div>
+            <h2 className="kk-h2">{GAMETYPE_INFO[g1Pick].icon} {GAMETYPE_INFO[g1Pick].label}</h2>
+            <div className="oh-pick">
+              {(g1Pick === "kazu" ? KAZU_STAGES.map((st) => ({ key: st.stage, label: `${st.stage}. ${st.name}`, sub: st.sub, icon: st.icon }))
+                : TASHI_KINDS.map((k) => ({ key: k.kind, label: k.name, sub: k.sub, icon: k.icon }))).map((it) => (
+                <button key={it.key} className="kk-gametype-card oh-pick-card" style={{ borderColor: GAMETYPE_INFO[g1Pick].accent }} data-pick={it.key}
+                  onClick={() => startGame(g1Pick, it.key)}>
+                  <span className="kk-gt-icon">{it.icon}</span>
+                  <span className="kk-gt-text"><b>{it.label}</b><small>{it.sub}{g1Pick === "tashi10" ? `（${ROUND_SIZE}もん）` : ""}</small></span>
+                </button>
+              ))}
+            </div>
+            <button className="kk-text-btn" onClick={() => { SFX.tap(sound); goMenu(); }}>もどる</button>
+          </div>
+        )}
+
         {/* ---------- おはなし もんだい：ふつう／むずかしい ---------- */}
         {screen === "storyPick" && (
           <div className="kk-mode-screen">
@@ -1754,11 +1790,16 @@ export default function App() {
                 onRight={() => judge(true)} onMiss={penMiss} onSkip={onNext} onTap={() => SFX.tap(sound)} />
             )}
 
-            {phase === "ask" && q.gameType !== "story" && q.gameType !== "write" && (() => {
+            {round && phase !== "finish" && <div className="g1-round">{Math.min(round.n + (phase === "right" ? 0 : 1), ROUND_SIZE)} / {ROUND_SIZE}</div>}
+            {phase === "ask" && q.gameType === "kazu" && (
+              <KazuPlay key={q.id + (q.options || []).join()} q={q} sfx={{ tap: () => SFX.tap(sound) }} onAnswer={(right) => { setPicked(right ? q.ans : null); judge(right); }} />
+            )}
+
+            {phase === "ask" && q.gameType !== "story" && q.gameType !== "write" && q.gameType !== "kazu" && (() => {
               const gt = q.gameType;
-              const tail = TAIL_BY_GAMETYPE[gt] || "ぜんぶで いくつ？";
+              const tail = q.tail || TAIL_BY_GAMETYPE[gt] || "ぜんぶで いくつ？";
               const m = mastery[q.key] || 0;
-              const recall = m >= 2;                              // 覚えてきたら絵を消す
+              const recall = m >= 2 || gt === "tashi10";          // 覚えてきたら絵を消す（10までの けいさんは さいしょから ヒントボタン）
               let scaffold;
               if (gt === "kuku") {
                 const view = (m <= 0 && q.a * q.b <= 25) ? "dots" : "badge";
@@ -1767,6 +1808,8 @@ export default function App() {
                 scaffold = <TwoClusterVisual a={q.a} b={q.b} scene={q.scene} />;
               } else if (gt === "subBorrow") {
                 scaffold = <CrossOutVisual a={q.a} b={q.b} scene={q.scene} />;
+              } else if (gt === "tashi10") {
+                scaffold = <OhajikiHint q={q} />;
               } else {
                 scaffold = <FillToTenVisual a={q.a} scene={q.scene} />;
               }
@@ -1774,7 +1817,7 @@ export default function App() {
               return (
                 <>
                   <div className="kk-scene">
-                    <div className="kk-scene-text">{q.scene.ask(q.a, q.b)}<br /><b>{tail}</b></div>
+                    <div className="kk-scene-text">{q.scene ? q.scene.ask(q.a, q.b) : q.text}<br /><b>{tail}</b></div>
                     {!recall && scaffold}
                     {recall && (showHint
                       ? scaffold
@@ -1807,7 +1850,16 @@ export default function App() {
               );
             })()}
 
-            {phase !== "ask" && (() => {
+            {phase === "finish" && round && (
+              <div className="kk-feedback kk-fb-right">
+                <div className="kk-fb-big">{ROUND_SIZE}もん できた！🎉</div>
+                <div className="g1-finish-line">1かいで せいかい <b>{round.first}</b> / {ROUND_SIZE}</div>
+                <div className="kk-fb-msg">星のかけら ★{round.stars} ゲット！</div>
+                <button className="kk-big-btn" onClick={() => startGame(gameType, mode)}>もういちど {ROUND_SIZE}もん</button>
+                <button className="kk-text-btn" onClick={() => { SFX.tap(sound); goMenu(); }}>ほかの れんしゅうを えらぶ</button>
+              </div>
+            )}
+            {(phase === "right" || phase === "wrong") && (() => {
               const fb = feedbackTextFor(q);
               return (
                 <div className={"kk-feedback " + (phase === "right" ? "kk-fb-right" : "kk-fb-wrong")}>

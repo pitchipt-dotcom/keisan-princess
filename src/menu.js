@@ -5,8 +5,9 @@
    - 前に えらんだ グループは セーブの menuGroup に のこす（つぎに ひらいた とき すこし 目立たせる）
    ===================================================================== */
 export const MENU_GROUPS = [
-  { id: "g1", label: "1ねんせい", sub: "10を つくろう・くりあがり・くりさがり", icon: "🌱", color: "#3FB37F", bg: "#E8FAF0",
-    items: ["make10", "addCarry", "subBorrow"] },
+  // 1ねんせいは 学ぶ じゅんばん：かずと すうじ → 10までの けいさん → 10を つくろう → くりあがり → くりさがり
+  { id: "g1", label: "1ねんせい", sub: "かずと すうじ・10までの けいさん・10を つくろう・くりあがり・くりさがり", icon: "🌱", color: "#3FB37F", bg: "#E8FAF0",
+    items: ["kazu", "tashi10", "make10", "addCarry", "subBorrow"] },
   { id: "g2", label: "2ねんせい", sub: "くりあがり・くりさがり・九九・ひっさん・おはなし", icon: "📘", color: "#4A86C5", bg: "#EAF3FF",
     items: ["addCarry", "subBorrow", "kuku", "write", "story"] },
   { id: "challenge", label: "チャレンジ", sub: "まいにち けいさん・ようせいの くに・ドラゴン", icon: "🏆", color: "#E8721C", bg: "#FFF3E6", art: true,
@@ -27,6 +28,8 @@ export const ITEM_TARGET = {
   fairy: { screen: "fairy" },
   dragon: { screen: "dragon" },
   story: { screen: "storyPick" },          // ふつう／むずかしい を えらぶ 画面
+  kazu: { screen: "g1Pick", pick: "kazu" },        // 段階 1〜4 を えらぶ 画面
+  tashi10: { screen: "g1Pick", pick: "tashi10" },  // たしざん／ひきざん／まぜて を えらぶ 画面
   kuku: { game: "kuku", mode: "mix" },
   addCarry: { game: "addCarry" },
   subBorrow: { game: "subBorrow" },
