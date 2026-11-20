@@ -5,11 +5,14 @@
    ※ 今回は 仮で、案内役の 妖精は 3人の プリンセス みんなで 1人（mint）。
      friendship は 妖精ごとに もつので、あとで 1人ずつに ふやしても セーブは そのまま つかえる
    ===================================================================== */
-export const FAIRIES = { mint: { name: "ミント", desc: "つみきの森に すむ 妖精" } };
+export const FAIRIES = {
+  mint: { name: "ミント", desc: "つみきの森に すむ 妖精" },
+  ramune: { name: "ラムネ", desc: "ジュースの泉に すむ 妖精" },
+};
 export const GUIDE_FAIRY = "mint";
 export const AREAS = [
-  { id: "tsumiki", name: "つみきの森", icon: "🧊", desc: "つみきを ころがして もようを つくろう", ready: true },
-  { id: "juice", name: "ジュースの泉", icon: "🧃", desc: "じゅんびちゅう", ready: false },
+  { id: "tsumiki", name: "つみきの森", icon: "🧊", desc: "つみきを ころがして もようを つくろう", ready: true, fairy: "mint" },
+  { id: "juice", name: "ジュースの泉", icon: "🧃", desc: "ジュースを そそいで かさを はかろう", ready: true, fairy: "ramune" },
   { id: "masume", name: "ますめの花畑", icon: "🌷", desc: "じゅんびちゅう", ready: false },
 ];
 export const FRIEND_LEVEL = 5;      // なかよし度 5 ごとに ハートが 1つ ふえる（地図の マスを ひらく 目安。地図は まだ 作らない）
@@ -21,6 +24,7 @@ export function normalizeFairy(f) {
   for (const [id, v] of Object.entries(fr)) if (!(id in friendship) && Number.isInteger(v) && v > 0) friendship[id] = v;   // 未来の 妖精を けさない
   const map = Array.isArray(f && f.map) ? f.map.filter((x) => typeof x === "string") : [];
   if (!map.includes("tsumiki")) map.unshift("tsumiki");
+  for (const a of AREAS) if (a.ready && !map.includes(a.id)) map.push(a.id);     // できあがった エリアは ひらく
   const cleared = f && f.cleared && typeof f.cleared === "object" ? { ...f.cleared } : {};
   return { ...(f && typeof f === "object" ? f : {}), friendship, map, cleared };
 }

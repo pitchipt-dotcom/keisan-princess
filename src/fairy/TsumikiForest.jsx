@@ -30,14 +30,14 @@ const PRAISE_OK = ["ぴったり！ よそうどおり だったね！", "すご
 const PRAISE_ORDER = ["点線の マスが ぜんぶ ぬれた！ じゅんばん 名人だね！", "できた！ もようと そっくり！", "すごい！ じゅんばんが 見えたんだね！"];
 
 /* ---- 案内役の 妖精（仮の SVG。src/assets/fairy/ の 絵を さしかえ できる） ---- */
-export function FairyGuide({ text, mood }) {
-  const art = fairyArt("fairy-" + GUIDE_FAIRY);
+export function FairyGuide({ text, mood, fairy = GUIDE_FAIRY }) {
+  const art = fairyArt("fairy-" + fairy);
   return (
     <div className="ts-fairy">
       <div className={"ts-fairy-pic" + (mood === "happy" ? " ts-fairy-happy" : "")}>
-        {art ? <img src={art} alt={FAIRIES[GUIDE_FAIRY].name} /> : <span aria-hidden="true">🧚</span>}
+        {art ? <img src={art} alt={FAIRIES[fairy].name} /> : <span aria-hidden="true">🧚</span>}
       </div>
-      <div className="ts-bubble" key={text}><b>{FAIRIES[GUIDE_FAIRY].name}</b>{text}</div>
+      <div className={"ts-bubble ts-bubble-" + fairy} key={text}><b>{FAIRIES[fairy].name}</b>{text}</div>
     </div>
   );
 }

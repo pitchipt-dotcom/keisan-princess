@@ -138,3 +138,47 @@
 .ts-done-gain{font-size:17px;}
 .ts-done-kind{font-size:13px; color:#7A5C98;}
 @media (prefers-reduced-motion: reduce){.ts-fairy-pic, .ts-fairy-happy, .ts-step-now, .ts-gain, .ts-bubble{animation:none;}}
+
+/* ===== ジュースの泉 ===== */
+.fl-friends{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.jc-fl-stage{border-color:#FFC98A; box-shadow:0 4px 0 rgba(255,201,138,.6);}
+.jc-stage-tag{background:#FF9F45;}
+.ts-bubble-ramune{border-color:#CFE6FF;}
+.ts-bubble-ramune b{color:#4A86C5;}
+.ts-bubble-ramune::before{border-right-color:#CFE6FF;}
+.jc-stage-box{position:relative; width:100%; background:#fff; border-radius:16px; box-shadow:0 4px 0 rgba(201,168,240,.45); overflow:hidden;}
+.jc-scene{display:block; width:100%; height:auto; touch-action:none; user-select:none; -webkit-user-select:none;}
+.jc-grab{filter:drop-shadow(0 6px 6px rgba(58,42,107,.25));}
+.jc-stream{stroke-dasharray:7 4; animation:jc-flow .35s linear infinite;}
+@keyframes jc-flow{to{stroke-dashoffset:-11;}}
+.jc-glow-line{filter:drop-shadow(0 0 4px #FFD34D) drop-shadow(0 0 8px #FFC21A); animation:jc-glow 0.8s ease-in-out infinite alternate;}
+@keyframes jc-glow{from{opacity:.75;} to{opacity:1;}}
+.jc-hand{animation:jc-hand 1.1s ease-in-out infinite;}
+@keyframes jc-hand{0%,100%{transform:translateY(0);} 50%{transform:translateY(5px);}}
+.jc-acts{display:flex; gap:8px; width:100%;}
+.jc-acts .ts-act{flex:1; padding:9px 6px; font-size:14px;}
+.jc-pad{display:flex; flex-direction:column; gap:5px; width:100%; background:#fff; border-radius:14px; padding:6px 8px; box-sizing:border-box; box-shadow:0 3px 0 rgba(201,168,240,.35);}
+.jc-fields{display:flex; align-items:center; justify-content:center; gap:4px; font-family:'Zen Maru Gothic'; font-weight:900; color:#3A2A6B;}
+.jc-fields-lead{font-size:12px; color:#7A5C98; margin-right:4px;}
+.jc-field{min-width:42px; height:38px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:22px; color:#3A2A6B; background:#FFFDF7; border:2.5px solid #C9A8F0; border-radius:10px; cursor:pointer;}
+.jc-field-wide{min-width:84px;}
+.jc-field-on{border-color:#E85FA3; background:#FFF0F7; box-shadow:0 0 0 3px rgba(232,95,163,.18);}
+.jc-field-empty{color:#D9C8EE;}
+.jc-unit{font-size:18px; margin-right:6px;}
+.jc-digits{display:grid; grid-template-columns:repeat(10, 1fr); gap:3px;}
+.jc-digit{height:38px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:#3A2A6B; background:#fff; border:2px solid #C9A8F0; border-radius:10px; cursor:pointer; touch-action:manipulation; padding:0;}
+.jc-digit:active{transform:translateY(1px);}
+.jc-pad-acts{display:flex; gap:8px;}
+.jc-pad-acts .ts-act{flex:1; padding:8px 6px; font-size:14px;}
+/* くり下がり：1Lますを 10dL に ばらす */
+.jc-borrow{width:100%; box-sizing:border-box; background:#FFF8E8; border:2px solid #FFC98A; border-radius:14px; padding:6px 8px; text-align:center;}
+.jc-borrow-blocks{display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-end; gap:3px; min-height:30px;}
+.jc-bL{display:inline-flex; align-items:center; justify-content:center; width:54px; height:28px; background:#FFA94D; border:3px solid #B98A52; border-radius:4px;
+  font-family:'Mochiy Pop One'; font-size:13px; color:#fff;}
+.jc-bd{display:inline-block; width:18px; height:18px; border:2px solid #B98A52; border-radius:3px; background:#FFA94D; transition:opacity .5s, transform .5s;}
+.jc-bd-new{background:#FFC27A; animation:jc-pop .35s ease-out both;}
+.jc-bd-gone{opacity:.18; transform:translateY(-6px) scale(.85);}
+@keyframes jc-pop{from{transform:scale(.3); opacity:0;} to{transform:scale(1); opacity:1;}}
+.jc-borrow-line{margin-top:4px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#5A3A00;}
+.jc-borrow-again{font-size:12px; margin-top:2px;}
+@media (prefers-reduced-motion: reduce){.jc-stream, .jc-glow-line, .jc-hand, .jc-bd-new{animation:none;}}
