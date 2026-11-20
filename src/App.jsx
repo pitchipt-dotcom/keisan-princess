@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
+import { THEMES, normalizeTheme, getTheme, setTheme, useThemeId, themedArtKey, themedChar, themedItem, themedMilestone, renameDeep } from "./theme.js";
 import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
 import { DragonScreen } from "./DragonMode.jsx";
 import { ParentReport } from "./ParentReport.jsx";
@@ -538,7 +539,9 @@ const ART = Object.fromEntries(
 );
 const brokenArt = new Set();      // 読みこみに失敗した絵（SVG に もどす）
 const artListeners = new Set();
-const artUrl = (key) => (ART[key] && !brokenArt.has(key) ? ART[key] : null);
+// テーマの 絵（key + "_prince"）が あれば それ、無ければ 共通の 絵。こわれた 絵は つかわない
+const resolveArt = (key) => themedArtKey((k) => !!ART[k] && !brokenArt.has(k), key, getTheme());
+const artUrl = (key) => { const k = resolveArt(key); return k ? ART[k] : null; };
 function markArtBroken(key) {
   if (brokenArt.has(key)) return;
   brokenArt.add(key);
@@ -546,13 +549,15 @@ function markArtBroken(key) {
 }
 // 画像の URL と onError を返す。失敗したら、その絵を使う ぜんぶの場所が SVG に もどる。
 function useArt(key) {
+  useThemeId();                     // テーマが かわったら 絵を かえる
   const [, bump] = useState(0);
   useEffect(() => {
     const fn = () => bump((n) => n + 1);
     artListeners.add(fn);
     return () => { artListeners.delete(fn); };
   }, []);
-  const onError = useCallback(() => markArtBroken(key), [key]);
+  const real = resolveArt(key);
+  const onError = useCallback(() => { if (real) markArtBroken(real); }, [real]);
   return [artUrl(key), onError];
 }
 // キャラの絵：その表情 → idle → 無し（SVG）
@@ -563,10 +568,11 @@ function charWithArt(id, SvgComp, ratio, label) {
     useArt(`chars/${id}_idle`);   // 失敗の知らせを 受けとるため
     const key = charArtKey(id, mood);
     if (!key) return <SvgComp mood={mood} size={size} />;
+    const tc = THEMES[getTheme()].chars[id];
     // SVG と同じ大きさの わくに、正方形の絵を まん中に置く
     return (
-      <div role="img" aria-label={label} style={{ width: size, height: size * ratio, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src={artUrl(key)} alt="" draggable={false} onError={() => markArtBroken(key)}
+      <div role="img" aria-label={tc ? tc.label + "の" + tc.charaName : label} style={{ width: size, height: size * ratio, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src={artUrl(key)} alt="" draggable={false} onError={() => markArtBroken(resolveArt(key) || key)}
           style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
       </div>
     );
@@ -969,6 +975,20 @@ function DressedCharacter({ character = "witch", mood = "idle", size = 150, equi
   );
 }
 
+/* ============ テーマ：プリンセス ／ プリンス（絵・名前・セリフだけ。しくみは 同じ） ============ */
+function ThemePicker({ value, onPick, compact = false }) {
+  return (
+    <div className={"kk-theme" + (compact ? " kk-theme-compact" : "")} role="radiogroup" aria-label="テーマ">
+      {["princess", "prince"].map((id) => (
+        <button key={id} role="radio" aria-checked={value === id} className={"kk-theme-btn kk-theme-" + id + (value === id ? " kk-theme-on" : "")}
+          onClick={() => onPick(id)}>
+          <span className="kk-theme-icon" aria-hidden="true">{THEMES[id].icon}</span>{THEMES[id].label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ============ ものがたりの たっせい イベント ============ */
 const STORY_MILESTONES = [
   { id: "castle",   count: 4,  scene: "castle",   title: "🏰 おしろへの しょうたい",
@@ -1118,9 +1138,11 @@ function PracticeBackdrop({ stage }) {
   );
 }
 
-function MilestoneModal({ milestone, character, equipped, onClose }) {
-  if (!milestone) return null;
-  const CHAR = CHARACTERS.find((c) => c.id === character) || CHARACTERS[0];
+function MilestoneModal({ milestone: ms0, character, equipped, onClose }) {
+  const themeId = useThemeId();
+  if (!ms0) return null;
+  const milestone = themedMilestone(ms0, themeId);
+  const CHAR = themedChar(CHARACTERS.find((c) => c.id === character) || CHARACTERS[0], themeId);
   return (
     <div className="kk-modal" onClick={onClose}>
       <div className="kk-milestone-card" onClick={(e) => e.stopPropagation()}>
@@ -1199,6 +1221,7 @@ export default function App() {
             setEquipped(d.equipped || {});
             setSeenMilestones(d.seenMilestones || {});
             if (d.character) setCharacterId(d.character);
+            setTheme(d.theme);          // 無い セーブは プリンセス
             if (d.daily) setDaily(normalizeDaily(d.daily));
             if (d.ohanashi && typeof d.ohanashi === "object") setOhanashi(d.ohanashi);
             setMenuGroup(normalizeGroup(d.menuGroup));
@@ -1214,7 +1237,7 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, theme: getTheme(), ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
   }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi, menuGroup]);
 
@@ -1233,7 +1256,14 @@ export default function App() {
 
   /* ---- 現在の主人公に応じた データ ---- */
   const charKey = characterId || "witch";
-  const myItems = ITEMS_BY_CHAR[charKey] || WITCH_ITEMS;
+  // テーマ：名前・ことばだけ さしかえる（id・しくみは 同じ）
+  const themeId = useThemeId();
+  const TH = THEMES[themeId];
+  const CHARS = CHARACTERS.map((c) => themedChar(c, themeId));
+  const myChar = CHARS.find((c) => c.id === charKey) || CHARS[0];
+  useEffect(() => { if (typeof document !== "undefined") document.title = TH.appTitle; }, [TH.appTitle]);
+  const changeTheme = (t) => { const n = normalizeTheme(t); if (n === themeId) return; SFX.tap(sound); setTheme(n); persist({ theme: n }); };
+  const myItems = (ITEMS_BY_CHAR[charKey] || WITCH_ITEMS).map((it) => themedItem(it, themeId));
   const mySlots = SLOT_DEFS_BY_CHAR[charKey] || SLOT_DEFS_BY_CHAR.witch;
   const myCollection = collection[charKey] || {};
   const myEquipped = equipped[charKey] || {};
@@ -1432,7 +1462,7 @@ export default function App() {
 
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup,
+    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, theme: getTheme(),
   });
 
   const applySnapshot = (d) => {
@@ -1444,6 +1474,7 @@ export default function App() {
     setEquipped(d.equipped || {});
     setSeenMilestones(d.seenMilestones || {});
     if (d.character) setCharacterId(d.character);
+    setTheme(d.theme);
     setDaily(normalizeDaily(d.daily));
     setOhanashi(d.ohanashi && typeof d.ohanashi === "object" ? d.ohanashi : {});
     setMenuGroup(normalizeGroup(d.menuGroup));
@@ -1533,14 +1564,14 @@ export default function App() {
         {screen === "title" && (
           <div className="kk-title-screen">
             <div className="kk-witch-float"><DressedCharacter character={charKey} mood="happy" size={170} equipped={myEquipped} /></div>
-            <h1 className="kk-logo">けいさんプリンセス</h1>
-            <p className="kk-sub">すきな こを えらんで、<br />すてきな おしゃれを あつめよう！</p>
+            <h1 className="kk-logo">{TH.appTitle}</h1>
+            <p className="kk-sub">{TH.words.titleSub[0]}<br />{TH.words.titleSub[1]}</p>
             <button className="kk-big-btn" onClick={() => { if (ac()) ac().resume && ac().resume(); SFX.tap(sound); setScreen(characterId ? "mode" : "select"); }}>あそぶ ♪</button>
             {characterId && (
               <>
                 <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>コレクションを 見る（{collectedCount}/{myItems.length}）</button>
                 {collectedCount > 0 && (
-                  <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("dressup"); }}>{CHARACTERS.find(c=>c.id===charKey).charaName}の コーデを する</button>
+                  <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("dressup"); }}>{myChar.charaName}の {TH.words.coord}を する</button>
                 )}
               </>
             )}
@@ -1551,8 +1582,9 @@ export default function App() {
         {screen === "select" && (
           <div className="kk-select-screen">
             <h2 className="kk-h2">だれで あそぶ？</h2>
+            <ThemePicker value={themeId} onPick={changeTheme} />
             <div className="kk-char-grid">
-              {CHARACTERS.map((c) => (
+              {CHARS.map((c) => (
                 <button
                   key={c.id}
                   className={"kk-char-card" + (characterId === c.id ? " kk-char-card-active" : "")}
@@ -1589,7 +1621,7 @@ export default function App() {
               ))}
             </div>
 
-            <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>あつめた おしゃれを 見る →</button>
+            <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>あつめた {TH.words.collection}を 見る →</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("select"); }}>ほかの こで あそぶ</button>
             <div className="kk-parentmenu-hint">九九の だんの せってい・バックアップが できます</div>
             <button className="kk-tiny-btn" onClick={() => { SFX.tap(sound); setShowDan((v) => !v); }}>{showDan ? "とじる" : "おうちのひとメニュー"}</button>
@@ -1601,6 +1633,12 @@ export default function App() {
                   {[1,2,3,4,5,6,7,8,9].map((d) => (
                     <button key={d} className="kk-dan-btn" onClick={() => startGame("kuku", d)}>{d}のだん</button>
                   ))}
+                </div>
+
+                <div className="kk-backup-section">
+                  <div className="kk-backup-title">🎨 テーマ</div>
+                  <div className="kk-dan-note">絵・なまえ・セリフが かわります。あつめた もの・ほし・きろくは そのまま です。</div>
+                  <ThemePicker value={themeId} onPick={changeTheme} compact />
                 </div>
 
                 <div className="kk-backup-section">
@@ -1721,7 +1759,7 @@ export default function App() {
           </div>
         )}
         {screen === "ohanashi" && (
-          <OhanashiHard ohanashi={ohanashi} daily={daily} characters={CHARACTERS}
+          <OhanashiHard ohanashi={ohanashi} daily={daily} characters={CHARS}
             sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
             onComplete={(nd, no, gain) => {
               // ドラゴンの ごはん（daily）・読み方の 段階（ohanashi）・★を いっしょに 保存
@@ -1769,7 +1807,7 @@ export default function App() {
           <div className="kk-play">
             <div className="kk-sky">
               <PracticeBackdrop stage={sceneStage} />
-              {sceneStage && <div className="kk-stage-badge">{STAGE_LABEL[sceneStage]}</div>}
+              {sceneStage && <div className="kk-stage-badge">{TH.stageLabel[sceneStage] || STAGE_LABEL[sceneStage]}</div>}
               {sparkles.map((s) => (
                 <span key={s.id} className="kk-sparkle" style={{ left: s.left + "%", animationDelay: s.delay + "s", animationDuration: s.dur + "s", fontSize: s.size + "px" }}>★</span>
               ))}
@@ -1782,7 +1820,7 @@ export default function App() {
             </div>
 
             {phase === "ask" && q.gameType === "story" && (
-              <StoryPlay key={q.id} q={q} characters={CHARACTERS} MiniItem={MiniItem}
+              <StoryPlay key={q.id} q={renameDeep(q, themeId)} characters={CHARS} MiniItem={MiniItem}
                 onRight={() => judge(true)} onMiss={penMiss} onSkip={onNext} onTap={() => SFX.tap(sound)} />
             )}
             {phase === "ask" && q.gameType === "write" && (
@@ -1885,7 +1923,7 @@ export default function App() {
             })()}
 
             <button className="kk-text-btn kk-coll-link" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>
-              あつめた おしゃれ（{collectedCount}/{myItems.length}）
+              あつめた {TH.words.collection}（{collectedCount}/{myItems.length}）
             </button>
           </div>
         )}
@@ -1893,7 +1931,7 @@ export default function App() {
         {/* ---------- COLLECTION ---------- */}
         {screen === "collection" && (
           <div className="kk-coll">
-            <h2 className="kk-h2">{CHARACTERS.find(c=>c.id===charKey).title} 図かん</h2>
+            <h2 className="kk-h2">{myChar.title} 図かん</h2>
             <div className="kk-coll-count">{collectedCount} / {myItems.length} こ あつめた{allDone && " 🎉 コンプリート！"}</div>
             <div className="kk-grid">
               {myItems.map((it) => {
@@ -1928,7 +1966,7 @@ export default function App() {
             </div>
 
             {collectedCount > 0 && (
-              <button className="kk-big-btn kk-retry-btn kk-dress-link-btn" onClick={() => { SFX.tap(sound); setScreen("dressup"); }}>👗 {CHARACTERS.find(c=>c.id===charKey).charaName}の コーデを する</button>
+              <button className="kk-big-btn kk-retry-btn kk-dress-link-btn" onClick={() => { SFX.tap(sound); setScreen("dressup"); }}>{TH.words.dressIcon} {myChar.charaName}の {TH.words.coord}を する</button>
             )}
             <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(mode && q ? "play" : menuScreen()); }}>つづける ♪</button>
             <button className="kk-text-btn kk-reset" onClick={resetAll}>さいしょから にする</button>
@@ -1938,7 +1976,7 @@ export default function App() {
         {/* ---------- DRESS UP ---------- */}
         {screen === "dressup" && (
           <div className="kk-dress-screen">
-            <h2 className="kk-h2">{CHARACTERS.find(c=>c.id===charKey).charaName}の コーデ</h2>
+            <h2 className="kk-h2">{myChar.charaName}の {TH.words.coord}</h2>
             <div className="kk-dress-stage">
               <DressedCharacter character={charKey} mood="happy" size={190} equipped={myEquipped} />
             </div>
@@ -1961,9 +1999,9 @@ export default function App() {
                 );
               })}
             </div>
-            <div className="kk-dress-hint">あつめた アイテムを タップして、すきな コーデに しよう♪</div>
+            <div className="kk-dress-hint">{TH.words.dressHint}</div>
             <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(q ? "play" : menuScreen()); }}>
-              ✨ {CHARACTERS.find(c=>c.id===charKey).charaName}の おてつだいを する →
+              ✨ {myChar.charaName}の おてつだいを する →
             </button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>図かんに もどる</button>
           </div>
@@ -2032,7 +2070,7 @@ export default function App() {
               ) : (
                 <>
                   <div className="kk-reveal-get">新しく ゲット！</div>
-                  <div className="kk-reveal-prompt">コーデの きせかえを 見てみる？</div>
+                  <div className="kk-reveal-prompt">{TH.words.revealPrompt}</div>
                   <div className="kk-reveal-btnrow">
                     <button className="kk-big-btn kk-retry-btn kk-reveal-btn-half" onClick={closeReveal}>あとで</button>
                     <button className="kk-big-btn kk-reveal-btn-half" onClick={goDressUp}>見てみる</button>
@@ -2174,6 +2212,16 @@ function Style() {
 .kk-tiny-btn{background:none; border:none; color:var(--plum-soft,#7A5C98); font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; cursor:pointer; margin-top:4px; opacity:.7; text-decoration:underline; text-underline-offset:3px;}
 .kk-dan-wrap{width:100%; max-width:380px; margin-top:10px;}
 .kk-dan-note{font-size:11.5px; color:var(--plum); font-weight:700; margin-bottom:10px; line-height:1.6;}
+
+/* ---- テーマ（プリンセス／プリンス） ---- */
+.kk-theme{display:flex; gap:10px; justify-content:center; margin:2px 0 12px;}
+.kk-theme-btn{display:flex; align-items:center; gap:6px; font-family:'Mochiy Pop One'; font-size:15px; color:var(--night); background:#fff; border:3px solid #E6D9F5; border-radius:18px; padding:8px 16px; cursor:pointer; box-shadow:0 3px 0 rgba(201,168,240,.5);}
+.kk-theme-icon{font-size:20px;}
+.kk-theme-princess.kk-theme-on{border-color:#F06AAE; background:#FFEAF4; box-shadow:0 3px 0 #E39BC1;}
+.kk-theme-prince.kk-theme-on{border-color:#4A86C5; background:#EAF3FF; box-shadow:0 3px 0 #8DB5E0;}
+.kk-theme-btn:active{transform:translateY(2px);}
+.kk-theme-compact{justify-content:flex-start; margin:6px 0 0;}
+.kk-theme-compact .kk-theme-btn{font-size:13px; padding:6px 12px;}
 
 /* ---- バックアップ ---- */
 .kk-backup-section{margin-top:20px; padding-top:16px; border-top:2px dashed rgba(201,168,240,.5); text-align:left;}
