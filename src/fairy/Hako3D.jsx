@@ -5,6 +5,9 @@
      面を つまんで うごかすと onFaceDrag（ひらく・おる）、タップで onTap({ type:"cell" })
    どちらも、何も ない ところを ドラッグすると はこが まわる（見る 向きが かわる）
    面の 色と マーク（styles）は はこの 面に ついた まま。ひらいても くみたてても おなじ
+   glow：{ type:"face"|"edge"|"vertex", id } … 1つだけ 金色に 光らせる（あそびかた・ことばの 見本）
+     onGlowPos({ x, y }) … 光って いる ものの 画面の いち（わくの 中の %）。指の アイコンを あわせる
+   onTurn(px) … 何も ない ところを ドラッグして まわした とき（うごいた ながさ）
    ===================================================================== */
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
@@ -41,10 +44,10 @@ function stick(a, b, r, color, opts = {}) {      // 2点を むすぶ ぼう（�
 /* はこの 面の 向き（plane は +z を むく） */
 const FACE_ROT = { U: [-Math.PI / 2, 0], D: [Math.PI / 2, 0], E: [0, Math.PI / 2], W: [0, -Math.PI / 2], S: [0, 0], N: [0, Math.PI] };
 
-export default function Hako3D({ mode, dims, layout, angles, styles = {}, wire = false, edgesOn, verticesOn, cuts = [], tappable = {}, onTap, onFaceDrag, spin = 0, openness = null, height = 270, onFail }) {
+export default function Hako3D({ mode, dims, layout, angles, styles = {}, wire = false, edgesOn, verticesOn, cuts = [], tappable = {}, onTap, onFaceDrag, spin = 0, openness = null, height = 270, onFail, glow = null, onGlowPos, onTurn }) {
   const wrapRef = useRef(null);
   const S = useRef(null);
-  const cb = useRef({}); cb.current = { onTap, onFaceDrag, tappable };
+  const cb = useRef({}); cb.current = { onTap, onFaceDrag, tappable, onGlowPos, onTurn };
 
   /* ---- はじめに 1かい：レンダラー ---- */
   useEffect(() => {
@@ -61,7 +64,16 @@ export default function Hako3D({ mode, dims, layout, angles, styles = {}, wire =
     table.rotation.x = -Math.PI / 2;
     const pivot = new THREE.Group(); scene.add(pivot); pivot.add(table);      // 台は 展開図の 下に ついて うごく
     const s = { renderer, scene, camera, pivot, table, content: null, nodes: {}, yaw: -0.55, pitch: 0.0, fitSize: 2, spinUntil: 0, raf: 0 };
-    s.render = () => { pivot.rotation.set(s.pitch, s.yaw, 0, "YXZ"); renderer.render(scene, camera); };
+    s.render = () => {
+      pivot.rotation.set(s.pitch, s.yaw, 0, "YXZ"); renderer.render(scene, camera);
+      // 光って いる ものの 画面の いち（かわった ときだけ しらせる）
+      if (s.glowObj && cb.current.onGlowPos) {
+        scene.updateMatrixWorld(true);
+        const wp = new THREE.Vector3(); s.glowObj.getWorldPosition(wp); const sp = wp.project(camera);
+        const pos = { x: Math.round((sp.x + 1) * 50), y: Math.round((1 - sp.y) * 50) }, k = pos.x + "," + pos.y;
+        if (k !== s.glowPosKey) { s.glowPosKey = k; cb.current.onGlowPos(pos); }
+      }
+    };
     s.fit = () => {
       const w = wrap.clientWidth, h = wrap.clientHeight; if (!w || !h) return;
       renderer.setSize(w, h, false); renderer.domElement.style.width = w + "px"; renderer.domElement.style.height = h + "px";
@@ -84,12 +96,14 @@ export default function Hako3D({ mode, dims, layout, angles, styles = {}, wire =
   /* ---- 中身を つくる ---- */
   const styleKey = JSON.stringify(styles);
   const layoutKey = layout ? layout.cells.map((c) => c.id + c.face + c.rect.join(",")).join("|") : "";
-  const onKey = [wire, edgesOn ? [...edgesOn].sort().join() : "", verticesOn ? [...verticesOn].sort().join() : "", cuts.slice().sort().join(), JSON.stringify(tappable)].join("/");
+  const glowKey = glow ? glow.type + ":" + glow.id : "";
+  const onKey = [glowKey, wire, edgesOn ? [...edgesOn].sort().join() : "", verticesOn ? [...verticesOn].sort().join() : "", cuts.slice().sort().join(), JSON.stringify(tappable)].join("/");
   useEffect(() => {
     const s = S.current; if (!s) return;
     if (s.content) { s.pivot.remove(s.content); s.content.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach((m) => m.dispose()); }); }
     const content = new THREE.Group(); s.content = content; s.nodes = {}; s.pivot.add(content);
     const hits = [];
+    s.glowObj = null;
     if (mode === "box") {
       const faces = new THREE.Group(); content.add(faces);
       for (const f of FACES) {
@@ -111,6 +125,35 @@ export default function Hako3D({ mode, dims, layout, angles, styles = {}, wire =
       for (const v of boxVertices(dims)) {
         if (verticesOn && verticesOn.has(v.id)) { const ball = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), new THREE.MeshLambertMaterial({ color: 0x8fd0ff })); ball.position.copy(v3(v.p)); content.add(ball); }
         const hit = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), new THREE.MeshBasicMaterial({ visible: false })); hit.position.copy(v3(v.p)); hit.userData = { type: "vertex", id: v.id }; content.add(hit); hits.push(hit);
+      }
+      // 光らせる 1つ（金色）
+      s.glowObj = null; s.glowPosKey = "";
+      let glw = glow;
+      if (glw) {
+        const GOLD = 0xffc21a;
+        // id:"auto" … いま いちばん てまえに 見えて いる ものを えらぶ（まわした あとでも 見える ものが 光る）
+        if (glw.id === "auto") {
+          s.pivot.rotation.set(s.pitch, s.yaw, 0, "YXZ"); s.pivot.updateMatrixWorld(true);
+          const cand = glw.type === "face" ? FACES.map((f) => ({ id: f, p: faceInfo(dims, f).center }))
+            : glw.type === "edge" ? boxEdges(dims).map((e) => ({ id: e.id, p: { x: (e.p0.x + e.p1.x) / 2, y: (e.p0.y + e.p1.y) / 2, z: (e.p0.z + e.p1.z) / 2 } }))
+              : boxVertices(dims).map((v) => ({ id: v.id, p: v.p }));
+          let best = cand[0], bd = Infinity;
+          for (const c of cand) { const d = v3(c.p).add(new THREE.Vector3(0, -dims.h / 2, 0)).applyMatrix4(s.pivot.matrixWorld).distanceTo(s.camera.position); if (d < bd) { bd = d; best = c; } }
+          glw = { type: glw.type, id: best.id };
+        }
+        if (glw.type === "face") {
+          const fi = faceInfo(dims, glw.id), n = { x: 0, y: 0, z: 0 }; n[{ D: "y", U: "y", W: "x", E: "x", N: "z", S: "z" }[glw.id]] = { D: -1, U: 1, W: -1, E: 1, N: -1, S: 1 }[glw.id] * 0.012;
+          const [rw, rh] = glw.id === "U" || glw.id === "D" ? [dims.w, dims.d] : glw.id === "E" || glw.id === "W" ? [dims.d, dims.h] : [dims.w, dims.h];
+          const g = new THREE.Mesh(new THREE.PlaneGeometry(rw * 0.94, rh * 0.94), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false }));
+          g.position.set(fi.center.x + n.x, fi.center.y + n.y, fi.center.z + n.z); g.rotation.set(FACE_ROT[glw.id][0], FACE_ROT[glw.id][1], 0, "YXZ");
+          content.add(g); s.glowObj = g;
+        } else if (glw.type === "edge") {
+          const e = boxEdges(dims).find((x) => x.id === glw.id);
+          if (e) { const g = stick(e.p0, e.p1, 0.06, GOLD); content.add(g); s.glowObj = g; }
+        } else if (glw.type === "vertex") {
+          const v = boxVertices(dims).find((x) => x.id === glw.id);
+          if (v) { const g = new THREE.Mesh(new THREE.SphereGeometry(0.13, 18, 14), new THREE.MeshBasicMaterial({ color: GOLD })); g.position.copy(v3(v.p)); content.add(g); s.glowObj = g; }
+        }
       }
       content.position.set(0, -dims.h / 2, 0);
       s.table.visible = false;                     // とじた はこは うかせて、うらがわ（下の 面）まで まわせる
@@ -218,6 +261,7 @@ export default function Hako3D({ mode, dims, layout, angles, styles = {}, wire =
   };
   const up = (e) => {
     const p = P.current; P.current = null; if (!p) return;
+    if (!p.faceDrag && cb.current.onTurn) cb.current.onTurn(p.moved);
     if (p.faceDrag) cb.current.onFaceDrag(p.faceDrag, "end", e.clientX - p.x, e.clientY - p.y, p.moved < 7);
     if (p.moved < 7) { const hit = pick(e); if (hit && cb.current.onTap) cb.current.onTap(hit); }
   };

@@ -5,6 +5,8 @@
    - 指を はなすと 止まって もとの 場所に もどる
    - 目もりの 線では かるく すいつく（すこし 止まる。はなした ときも 線の ちかくなら ぴったりに）
    りょうの 計算は juice.js（flowStep / releaseSnap）。ここは 絵と 指の うごきだけ
+   あそびかた（チュートリアル）用：glowMark（目もりの 線を 光らせる）・demo（お手本の かげと 指）・
+     auto（お手本どおりに じっさいに そそぐ）・onGrab／onRelease（もった・はなした）
    ===================================================================== */
 import React, { useEffect, useRef, useState } from "react";
 import { TYPES, MAX_TILT, flowStep, applyFlow, releaseSnap, lipAngle } from "./juice.js";
@@ -16,11 +18,13 @@ const TILT_PX = 85;                                  // 指を 下へ 85px で �
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* 入れ物の 絵（ローカル座標：中の 四角が (0,0)-(w,h)） */
-function Marks({ v, T, glowL1 }) {
+function Marks({ v, T, glowL1, glowMl }) {
   const { w, h, cap } = T, y = (ml) => h - (ml / cap) * h;
   const out = [];
   if (T.shape === "masu" && !T.fine) {
     for (const m of T.marks) out.push(<line key={m} x1={w - (m % 500 ? 9 : 16)} x2={w} y1={y(m)} y2={y(m)} stroke="#7A4E22" strokeWidth={m % 500 ? 1.2 : 2} />);
+    if (glowMl) out.push(<line key="glow" x1={0} x2={w} y1={y(glowMl)} y2={y(glowMl)} stroke="#FFC21A" strokeWidth={3.5} className="jc-glow-line" />,
+      <text key="glowt" x={4} y={y(glowMl) - 4} fontSize={10} fontWeight={900} fill="#C77700">{glowMl / 100}dL</text>);
     if (T.marks.length) { out.push(<text key="t5" x={w - 18} y={y(500) + 3} textAnchor="end" fontSize={8} fontWeight={900} fill="#7A4E22">5dL</text>); }
   }
   if (T.fine) {
@@ -54,7 +58,7 @@ function Marks({ v, T, glowL1 }) {
   return <g pointerEvents="none">{out}</g>;
 }
 
-function Vessel({ v, pose, glowL1, hot, grab, onDown }) {
+function Vessel({ v, pose, glowL1, glowMl, hot, grab, onDown, ghost = false }) {
   const T = TYPES[v.type], { w, h, cap } = T;
   const level = (v.amount / cap) * h;
   const { tx, ty, deg, lipX } = pose;
@@ -63,7 +67,7 @@ function Vessel({ v, pose, glowL1, hot, grab, onDown }) {
   const r = T.shape === "cup" ? 5 : T.shape === "pot" ? 14 : 2;
   return (
     <g transform={`translate(${tx} ${ty}) rotate(${deg} ${lipX} 0)`} onPointerDown={onDown} style={onDown ? { cursor: "grab", touchAction: "none" } : undefined}
-      data-vessel={v.id} data-amount={Math.round(v.amount * 100) / 100} className={grab ? "jc-grab" : undefined}>
+      data-vessel={ghost ? undefined : v.id} data-amount={ghost ? undefined : Math.round(v.amount * 100) / 100} className={grab ? "jc-grab" : undefined}>
       <defs><clipPath id={clip}><rect x={0} y={0} width={w} height={h} rx={r} /></clipPath></defs>
       {/* さわれる はんい（すこし ひろめ） */}
       <rect x={-8} y={-10} width={w + 16} height={h + 18} fill="transparent" />
@@ -76,7 +80,7 @@ function Vessel({ v, pose, glowL1, hot, grab, onDown }) {
           </g>
         </g>
       )}
-      <Marks v={v} T={T} glowL1={glowL1} />
+      <Marks v={v} T={T} glowL1={glowL1} glowMl={glowMl} />
       {T.shape === "masu" && <>
         <rect x={-3} y={-2} width={w + 6} height={h + 5} rx={3} fill="none" stroke="#B98A52" strokeWidth={5} />
         <rect x={-3} y={-2} width={w + 6} height={h + 5} rx={3} fill="none" stroke="#7A4E22" strokeWidth={1} />
@@ -98,10 +102,20 @@ function Vessel({ v, pose, glowL1, hot, grab, onDown }) {
 
 /* vessels：[{ id, type, amount, x, label }]、pours：{ id: [そそげる 相手…] }
    onChange(vessels)：りょうが かわる たびに、onPourEnd(before, after, from, to)：1かい そそぎ おわった とき */
-export function PourScene({ vessels, pours, interactive = true, onChange, onPourEnd, glowL1 = false, hint = null }) {
+/* お手本の うごき（k：0〜1）。v を もちあげて tgt の 上へ → ゆびを 下へ（かたむける） */
+const DEMO_MS = 3000;
+const ease = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
+function scriptPoint(v, tgt, k) {
+  const T = TYPES[v.type], y0 = GROUND - T.h / 2;
+  const a = clamp(k / 0.35, 0, 1), b = clamp((k - 0.42) / 0.3, 0, 1);
+  return { fx: v.x + (tgt.x - v.x) * ease(a), fy: y0 + TILT_PX * 0.8 * ease(b), y0 };
+}
+
+export function PourScene({ vessels, pours, interactive = true, onChange, onPourEnd, glowL1 = false, hint = null, glowMark = null, demo = null, auto = null, onGrab, onRelease }) {
   const svgRef = useRef(null);
   const vref = useRef(vessels); vref.current = vessels;
-  const cbs = useRef({}); cbs.current = { onChange, onPourEnd };
+  const cbs = useRef({}); cbs.current = { onChange, onPourEnd, onGrab, onRelease };
+  const [demoK, setDemoK] = useState(null);
   const H = useRef(null);                       // もっている：{ id, grabDX, startY, fx, fy, side, target, tilt, lip:[x,y], before, moved, flowing }
   const R = useRef(null);                       // もどる アニメ：{ id, from:{tx,ty,deg,lipX}, t0 }
   const raf = useRef(0);
@@ -146,6 +160,12 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
   const loop = (tPrev) => (tNow) => {
     const hd = H.current;
     const dt = Math.min(0.05, (tNow - tPrev) / 1000);
+    if (hd && hd.script) {          // お手本どおりに うごかす：きまった りょうまで そそいだら はなす
+      const sc = hd.script, v = vref.current.find((x) => x.id === hd.id), tg = vref.current.find((x) => x.id === sc.to);
+      const pt = scriptPoint(v, tg, Math.min(0.75, (tNow - sc.t0) / DEMO_MS));
+      hd.fx = pt.fx; hd.fy = pt.fy;
+      if (tg.amount >= sc.stopAt - 0.5 || v.amount < 0.01 || tNow - sc.t0 > 9000) { onUp(); return; }
+    }
     if (hd) {
       const hp = heldPose(hd);
       hd.side = hp.side; hd.target = hp.target ? hp.target.id : null; hd.flowing = false;
@@ -180,11 +200,13 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
     const [fx, fy] = toScene(e);
     cancelAnimationFrame(raf.current); R.current = null;
     H.current = { id: v.id, grabDX: fx - v.x, startY: fy, fx, fy, side: 1, target: null, before: vref.current, moved: false };
+    cbs.current.onGrab && cbs.current.onGrab(v.id);
     raf.current = requestAnimationFrame(loop(performance.now()));
   };
-  const onMove = (e) => { const hd = H.current; if (!hd) return; const [fx, fy] = toScene(e); hd.fx = fx; hd.fy = fy; };
-  const onUp = () => {
+  const onMove = (e) => { const hd = H.current; if (!hd || hd.script) return; const [fx, fy] = toScene(e); hd.fx = fx; hd.fy = fy; };
+  const onUp = (e) => {
     const hd = H.current; if (!hd) return;
+    if (e && hd.script) return;                   // お手本の とちゅうは ゆびを はなしても つづける
     const hp = heldPose(hd);
     H.current = null;
     // はなした とき：線の ちかくなら ぴったりに
@@ -196,9 +218,32 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
       cbs.current.onPourEnd && cbs.current.onPourEnd(hd.before, nv, hd.id, hd.lastTo);
     }
     R.current = { id: hd.id, from: hp.pose, t0: performance.now() };
+    cbs.current.onRelease && cbs.current.onRelease({ id: hd.id, poured: !!hd.moved, auto: !!hd.script });
     cancelAnimationFrame(raf.current);
     raf.current = requestAnimationFrame(loop(performance.now()));
   };
+
+  /* お手本どおりに そそぐ（auto：{ key, id, to, stopAt }。key が かわる たびに 1かい） */
+  const autoKey = auto ? auto.key : null;
+  useEffect(() => {
+    if (!auto || H.current) return;
+    const v = vref.current.find((x) => x.id === auto.id); if (!v) return;
+    const y0 = GROUND - TYPES[v.type].h / 2;
+    cancelAnimationFrame(raf.current); R.current = null;
+    H.current = { id: v.id, grabDX: 0, startY: y0, fx: v.x, fy: y0, side: 1, target: null, before: vref.current, moved: false, script: { t0: performance.now(), to: auto.to, stopAt: auto.stopAt } };
+    raf.current = requestAnimationFrame(loop(performance.now()));
+    /* eslint-disable-next-line */
+  }, [autoKey]);
+
+  /* お手本の かげ（demo：{ id, to }）を くりかえし うごかす */
+  const demoOn = !!demo;
+  useEffect(() => {
+    if (!demoOn) { setDemoK(null); return undefined; }
+    let id = 0; const t0 = performance.now();
+    const tick = (now) => { setDemoK(((now - t0) % DEMO_MS) / DEMO_MS); id = requestAnimationFrame(tick); };
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [demoOn]);
 
   /* ---------- 絵 ---------- */
   const hd = H.current, rt = R.current;
@@ -216,6 +261,18 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
       const k = Math.min(1, (now - rt.t0) / 220), e = 1 - (1 - k) * (1 - k), rp = restPose(v), f = rt.from;
       poses[v.id] = { tx: f.tx + (rp.tx - f.tx) * e, ty: f.ty + (rp.ty - f.ty) * e, deg: f.deg * (1 - e), lipX: f.lipX };
     } else poses[v.id] = restPose(v);
+  }
+  let ghost = null;
+  if (demo && demoK != null && !hd && !rt) {
+    const v = vessels.find((x) => x.id === demo.id), tg = vessels.find((x) => x.id === demo.to);
+    if (v && tg) {
+      const pt = scriptPoint(v, tg, Math.min(1, demoK / 0.85));
+      const hp = heldPose({ id: v.id, grabDX: 0, startY: pt.y0, fx: pt.fx, fy: pt.fy, side: 1 });
+      const G = TYPES[tg.type], [lx, ly] = hp.lip, sy = GROUND - (tg.amount / G.cap) * G.h;
+      const pouring = hp.target && hp.tilt > lipAngle(v) && v.amount > 0.01;
+      ghost = { v, pose: hp.pose, fx: pt.fx, fy: pt.fy, fade: demoK > 0.85 ? 1 - (demoK - 0.85) / 0.15 : Math.min(1, demoK / 0.06),
+        stream: pouring ? `M${lx} ${ly} C ${lx + 9} ${ly - 2}, ${lx + 7} ${ly + 12}, ${lx + 6} ${sy}` : null };
+    }
   }
   const order = vessels.filter((v) => !(hd && hd.id === v.id) && !(rt && rt.id === v.id)).concat(vessels.filter((v) => (hd && hd.id === v.id) || (rt && rt.id === v.id)));
   const canDrag = (v) => interactive && (pours[v.id] || []).length > 0;
@@ -235,8 +292,16 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
       ))}
       {order.map((v) => (
         <Vessel key={v.id} v={v} pose={poses[v.id]} glowL1={glowL1 && v.type === "tank" && v.amount >= 1000 - 0.5}
+          glowMl={glowMark && glowMark.id === v.id ? glowMark.ml : null}
           hot={hd && hd.target === v.id} grab={hd && hd.id === v.id} onDown={canDrag(v) ? onDown(v) : undefined} />
       ))}
+      {ghost && (
+        <g opacity={ghost.fade} pointerEvents="none" className="jc-ghost">
+          <g opacity={0.55}><Vessel v={ghost.v} pose={ghost.pose} ghost /></g>
+          {ghost.stream && <path d={ghost.stream} fill="none" stroke={JUICE} strokeWidth={5} strokeLinecap="round" opacity={0.7} />}
+          <text x={ghost.fx} y={Math.min(ghost.fy, GROUND - 22) + 22} textAnchor="middle" fontSize={30} className="jc-demo-hand">👆</text>
+        </g>
+      )}
       {stream && <path d={stream} fill="none" stroke={JUICE} strokeWidth={5} strokeLinecap="round" className="jc-stream" pointerEvents="none" />}
       {held && held.hp.tilt < 8 && (
         <text x={clamp(held.hp.lip[0], 70, SCENE_W - 70)} y={Math.max(14, held.hp.pose.ty - 10)} textAnchor="middle" fontSize={11} fontWeight={900} fill="#E85FA3" pointerEvents="none">
