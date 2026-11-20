@@ -3,13 +3,16 @@
    App から React.lazy で 読みこむ（Three.js は ここから 先だけ。ほかの モードの 起動は おそく ならない）
    エリアごとに 案内役の 妖精が いる（つみきの森＝ミント、ジュースの泉＝ラムネ、ますめの花畑＝ポピー、はこの工房＝ペタ）。なかよし度は 妖精ごと
    ごほうびは「妖精と なかよしに なる」（ドラゴンの そだちポイント・星のかけらとは 別）
+   あそびかた（チュートリアル）：エリアに はじめて 入った とき 自動で 出す（セーブの fairy.tutorials）。
+     エリアの 画面と あそぶ 画面の「あそびかた」ボタンで いつでも 見なおせる（あそんで いる とちゅうでも 上に かさねて 出す）
    ===================================================================== */
 import React, { useState } from "react";
 import { TsumikiForest, FairyGuide, STAGES } from "./TsumikiForest.jsx";
 import { JuiceSpring, JSTAGES, JUICE_FAIRY } from "./JuiceSpring.jsx";
 import { MasumeGarden, MSTAGES, MASUME_FAIRY } from "./MasumeGarden.jsx";
 import { HakoWorkshop, HSTAGES, HAKO_FAIRY, NetDex } from "./HakoWorkshop.jsx";
-import { AREAS, FAIRIES, GUIDE_FAIRY, normalizeFairy, addFriendship, markCleared, friendHearts, FRIEND_LEVEL, clearKey, cuboidOpen, addHakoDex, hakoCuboidOpen } from "./fairy.js";
+import { AREAS, FAIRIES, GUIDE_FAIRY, normalizeFairy, addFriendship, markCleared, friendHearts, FRIEND_LEVEL, clearKey, cuboidOpen, addHakoDex, hakoCuboidOpen, markTutorial } from "./fairy.js";
+import { AreaTutorial, TUTORIAL_AREAS } from "./AreaTutorials.jsx";
 import { KINDS } from "./tsumiki.js";
 import { PoseIcon } from "./TopGrid.jsx";
 import { fairyArt } from "../assets/fairy/index.js";
@@ -37,6 +40,11 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   const [playKey, setPlayKey] = useState(0);
   const [kind, setKind] = useState("cube");      // cube（さいころ）／ cuboid（2こ つなげた）
   const canCuboid = cuboidOpen(f);
+  const [tut, setTut] = useState(null);          // 見せて いる あそびかた（エリアの id）
+  const closeTut = () => { const a = tut; setTut(null); if (a) onFairy((cur) => markTutorial(cur, a, todayStr())); };
+  const shell = (el) => <>{el}{tut && <AreaTutorial key={tut} area={tut} sfx={sfx} onClose={closeTut} />}</>;
+  const HowBtn = () => (TUTORIAL_AREAS.includes(area) ? <button className="fl-how" onClick={() => { sfx.tap(); setTut(area); }}>❓ あそびかた</button> : null);
+  const enterArea = (id) => { setStage(null); setArea(id); if (TUTORIAL_AREAS.includes(id) && !f.tutorials[id]) setTut(id); };
 
   const gain = (n) => onFairy((cur) => addFriendship(cur, GUIDE_FAIRY, n));
   const gainJuice = (n) => onFairy((cur) => addFriendship(cur, JUICE_FAIRY, n));
@@ -50,18 +58,20 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   const hkCuboid = hakoCuboidOpen(f);
 
   if (area === "hako" && stage) {
-    return (
+    return shell(
       <div className="fl-wrap">
         <HakoWorkshop key={playKey} stage={stage} kind={hkind} sfx={sfx} onGain={gainHako} onClearStage={clearHako}
           dex={f.hakoDex} onDex={(id) => onFairy((cur) => addHakoDex(cur, id))} />
+        <HowBtn />
         <button className="kk-text-btn fl-back" onClick={() => { sfx.tap(); setStage(null); }}>だんかいを えらびなおす</button>
       </div>
     );
   }
   if (area === "hako") {
-    return (
+    return shell(
       <div className="fl-wrap">
         <h2 className="kk-h2">📦 はこの工房</h2>
+        <HowBtn />
         <FairyGuide full fairy={HAKO_FAIRY} text={hkCuboid ? "直方体の はこも つくれるように なったよ！ 長い 面と みじかい 面が あるね" : "わたしは ペタ！ はこを きって ひらいたり、おって くみたてたり しよう！"} />
         <Friendship n={f.friendship[HAKO_FAIRY] || 0} fairy={HAKO_FAIRY} />
         <div className="fl-kinds" role="radiogroup" aria-label="はこを えらぶ">
@@ -96,17 +106,19 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   const clearMasume = (no) => onFairy((cur) => markCleared(cur, "masume", no, todayStr()));
 
   if (area === "masume" && stage) {
-    return (
+    return shell(
       <div className="fl-wrap">
         <MasumeGarden key={playKey} stage={stage} sfx={sfx} onGain={gainMasume} onClearStage={clearMasume} />
+        <HowBtn />
         <button className="kk-text-btn fl-back" onClick={() => { sfx.tap(); setStage(null); }}>だんかいを えらびなおす</button>
       </div>
     );
   }
   if (area === "masume") {
-    return (
+    return shell(
       <div className="fl-wrap">
         <h2 className="kk-h2">🌷 ますめの花畑</h2>
+        <HowBtn />
         <FairyGuide full fairy={MASUME_FAIRY} text="わたしは ポピー！ 花だんの 広さを、切ったり うごかしたり して「何ます分」か しらべよう！" />
         <Friendship n={f.friendship[MASUME_FAIRY] || 0} fairy={MASUME_FAIRY} />
         <div className="fl-stages">
@@ -123,17 +135,19 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
     );
   }
   if (area === "juice" && stage) {
-    return (
+    return shell(
       <div className="fl-wrap">
         <JuiceSpring key={playKey} stage={stage} sfx={sfx} onGain={gainJuice} onClearStage={clearJuice} />
+        <HowBtn />
         <button className="kk-text-btn fl-back" onClick={() => { sfx.tap(); setStage(null); }}>だんかいを えらびなおす</button>
       </div>
     );
   }
   if (area === "juice") {
-    return (
+    return shell(
       <div className="fl-wrap">
         <h2 className="kk-h2">🧃 ジュースの泉</h2>
+        <HowBtn />
         <FairyGuide full fairy={JUICE_FAIRY} text="わたしは ラムネ！ ジュースを そそいで、L・dL・mL の かさを はかってみよう！" />
         <Friendship n={f.friendship[JUICE_FAIRY] || 0} fairy={JUICE_FAIRY} />
         <div className="fl-stages">
@@ -153,17 +167,19 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   const clearStage = (no) => onFairy((cur) => markCleared(cur, kind === "cuboid" ? "tsumiki-cuboid" : "tsumiki", no, todayStr()));
 
   if (area === "tsumiki" && stage) {
-    return (
+    return shell(
       <div className="fl-wrap">
         <TsumikiForest key={playKey} stage={stage} kind={kind} sfx={sfx} onGain={gain} onClearStage={clearStage} />
+        <HowBtn />
         <button className="kk-text-btn fl-back" onClick={() => { sfx.tap(); setStage(null); }}>だんかいを えらびなおす</button>
       </div>
     );
   }
   if (area === "tsumiki") {
-    return (
+    return shell(
       <div className="fl-wrap">
         <h2 className="kk-h2">🧊 つみきの森</h2>
+        <HowBtn />
         <FairyGuide full text={canCuboid ? "2こ つなげた つみきも ころがせるように なったよ！ たったり ねたり するよ" : "つみきを ころがすと、紙に ついた マスに 色が つくよ。いっしょに やってみよう！"} />
         <Friendship n={f.friendship[GUIDE_FAIRY] || 0} />
         <div className="fl-kinds" role="radiogroup" aria-label="つみきを えらぶ">
@@ -192,7 +208,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
       </div>
     );
   }
-  return (
+  return shell(
     <div className="fl-wrap">
       <h2 className="kk-h2">🧚 ようせいの くに たんけん</h2>
       <FairyGuide full text="ようこそ！ わたしは ミント。ようせいの くにを いっしょに たんけん しよう！" />
@@ -203,7 +219,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
         {AREAS.map((a) => {
           const open = a.ready && f.map.includes(a.id);
           return (
-            <button key={a.id} className={"fl-area" + (open ? "" : " fl-area-lock")} disabled={!open} onClick={() => { sfx.tap(); setStage(null); setArea(a.id); }}>
+            <button key={a.id} className={"fl-area" + (open ? "" : " fl-area-lock")} disabled={!open} onClick={() => { sfx.tap(); enterArea(a.id); }}>
               <span className="fl-area-icon">{!open ? "🔒" : fairyArt("fairy-" + a.fairy + "-face") ? <img className="fl-area-face" src={fairyArt("fairy-" + a.fairy + "-face")} alt={FAIRIES[a.fairy].name} /> : a.icon}</span>
               <b>{a.name}</b><small>{a.desc}</small>
             </button>

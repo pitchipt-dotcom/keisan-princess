@@ -23,6 +23,35 @@ const WHAT = { face: { name: "面", unit: "つ", tap: "面" }, edge: { name: "�
 const PAPER = "#FFF6E3";
 const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
 
+/* 段階1：めん・へん・ちょうてん の 小さな 見本（絵と ことば）。タップすると はこの 上で 光って おしえる */
+const WORD_TELL = {
+  face: "たいらな ところを めん と いうよ。光って いる ところが めん だよ",
+  edge: "めんと めんの さかいめの まっすぐな せんを へん と いうよ",
+  vertex: "とがった かどを ちょうてん と いうよ",
+};
+function WordIcon({ type }) {
+  return (
+    <svg viewBox="0 0 26 26" width={22} height={22} aria-hidden="true">
+      <path d="M5 9 L13 5 L21 9 L21 18 L13 22 L5 18 Z" fill="#FFF6E3" stroke="#C9B3E6" strokeWidth="1.2" />
+      <path d="M5 9 L13 13 L21 9 M13 13 L13 22" fill="none" stroke="#C9B3E6" strokeWidth="1.2" />
+      {type === "face" && <path d="M5 9 L13 13 L13 22 L5 18 Z" fill="#FFC21A" opacity=".8" />}
+      {type === "edge" && <path d="M13 13 L13 22" stroke="#E8A000" strokeWidth="3" strokeLinecap="round" />}
+      {type === "vertex" && <circle cx="13" cy="13" r="2.8" fill="#E8A000" />}
+    </svg>
+  );
+}
+export function HakoWords({ active, onPick }) {
+  return (
+    <div className="hk-words" role="group" aria-label="ことばの 見本">
+      {["face", "edge", "vertex"].map((k) => (
+        <button key={k} className={"hk-word" + (active === k ? " hk-word-on" : "")} onClick={() => onPick(k)} aria-label={WHAT[k].name + "（" + { face: "めん", edge: "へん", vertex: "ちょうてん" }[k] + "）を 見る"}>
+          <WordIcon type={k} /><span><ruby>{WHAT[k].name}<rt>{{ face: "めん", edge: "へん", vertex: "ちょうてん" }[k]}</rt></ruby></span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ずかん：立方体の 展開図 11しゅるい（集めた ものは 色つき） */
 export function NetDex({ have }) {
   return (
@@ -57,6 +86,13 @@ export function HakoWorkshop({ stage, kind = "cube", sfx, onGain, onClearStage, 
   const [glFail, setGlFail] = useState(false);
   // だんかい1
   const [found, setFound] = useState(() => new Set());
+  const [word, setWord] = useState(null);          // ことばの 見本：光らせて いる もの（face / edge / vertex）
+  const wordTimer = useRef(0);
+  useEffect(() => () => clearTimeout(wordTimer.current), []);
+  const pickWord = (k) => {
+    sfx.tap(); setWord(k); setMsg(WORD_TELL[k]);
+    clearTimeout(wordTimer.current); wordTimer.current = setTimeout(() => setWord(null), 3200);
+  };
   // だんかい2
   const [cuts, setCuts] = useState([]);
   const [layout, setLayout] = useState(null);
@@ -267,7 +303,8 @@ export function HakoWorkshop({ stage, kind = "cube", sfx, onGain, onClearStage, 
     const st = {}; if (p.what === "face") for (const f of FACES) st[f] = { color: found.has(f) ? "#FF9EC7" : PAPER, mark: found.has(f) ? String([...found].indexOf(f) + 1) : "" };
     else for (const f of FACES) st[f] = {};
     view = <Hako3D mode="box" dims={p.dims} styles={st} wire={p.what !== "face"} edgesOn={p.what === "edge" ? found : new Set(boxEdges(p.dims).map((e) => e.id))}
-      verticesOn={p.what === "vertex" ? found : null} tappable={{ [p.what]: phase === "play" }} onTap={tap1} spin={spin} onFail={() => setGlFail(true)} />;
+      verticesOn={p.what === "vertex" ? found : null} tappable={{ [p.what]: phase === "play" }} onTap={tap1} spin={spin} onFail={() => setGlFail(true)}
+      glow={word ? { type: word, id: "auto" } : null} />;
     goal = `はこの ${WHAT[p.what].name}は いくつ？ ぜんぶ タップして かぞえよう`;
     extra = <div className="hk-counter"><span>{WHAT[p.what].name}</span><b>{found.size}</b><span>{WHAT[p.what].unit}</span></div>;
   } else if (p.stage === 2) {
@@ -304,6 +341,7 @@ export function HakoWorkshop({ stage, kind = "cube", sfx, onGain, onClearStage, 
         <span className="ts-goal-text"><small>ゴール</small>{goal}</span>
       </div>
       <FairyGuide fairy={HAKO_FAIRY} text={msg} mood={mood} />
+      {p.stage === 1 && <HakoWords active={word} onPick={pickWord} />}
       <div className="hk-box">
         {glFail ? <div className="ts-note">この そうちでは 3Dが 出せないみたい。おうちの ひとに パソコンや べつの たんまつで ためして もらってね</div> : view}
         <span className="hk-cap">{p.stage === 3 && phase === "fold" ? "面を 上へ もちあげて おろう（タップでも おれる）" : layout && p.stage === 2 && phase === "play" ? "面を つまんで ひっぱろう" : "なにも ない ところを ドラッグすると まわるよ"}</span>

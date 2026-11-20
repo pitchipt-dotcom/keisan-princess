@@ -30,7 +30,10 @@ export function normalizeFairy(f) {
   for (const a of AREAS) if (a.ready && !map.includes(a.id)) map.push(a.id);     // できあがった エリアは ひらく
   const cleared = f && f.cleared && typeof f.cleared === "object" ? { ...f.cleared } : {};
   const hakoDex = Array.isArray(f && f.hakoDex) ? f.hakoDex.filter((x) => typeof x === "string") : [];   // はこの工房：ひらいた 展開図（立方体 11しゅるい）
-  return { ...(f && typeof f === "object" ? f : {}), friendship, map, cleared, hakoDex };
+  // あそびかた（チュートリアル）を 見た エリア：{ juice: "2026-11-21" }。古い セーブには ない → まだ 見て いない
+  const tutorials = {};
+  if (f && f.tutorials && typeof f.tutorials === "object") for (const [k, v] of Object.entries(f.tutorials)) if (v) tutorials[k] = v;
+  return { ...(f && typeof f === "object" ? f : {}), friendship, map, cleared, hakoDex, tutorials };
 }
 export function addFriendship(f, id, n) {
   const nf = normalizeFairy(f);
@@ -50,5 +53,11 @@ export const cuboidOpen = (f) => !!normalizeFairy(f).cleared["tsumiki:3"];
 export function addHakoDex(f, id) {
   const nf = normalizeFairy(f);
   return nf.hakoDex.includes(id) ? nf : { ...nf, hakoDex: [...nf.hakoDex, id].sort((a, b) => Number(a.slice(1)) - Number(b.slice(1))) };
+}
+/* あそびかた：エリアに はじめて 入った ときだけ 自動で 出す。見おわる か「とばす」で しるしを つける */
+export const tutorialSeen = (f, area) => !!normalizeFairy(f).tutorials[area];
+export function markTutorial(f, area, date) {
+  const nf = normalizeFairy(f);
+  return nf.tutorials[area] ? nf : { ...nf, tutorials: { ...nf.tutorials, [area]: date || true } };
 }
 export const hakoCuboidOpen = (f) => !!normalizeFairy(f).cleared["hako:4"];

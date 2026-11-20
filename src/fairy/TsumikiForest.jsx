@@ -43,7 +43,7 @@ export function FairyGuide({ text, mood, fairy = GUIDE_FAIRY, full = false }) {
   );
 }
 
-function DirPad({ onDir, disabled, highlight }) {
+export function DirPad({ onDir, disabled, highlight }) {
   const btn = (d) => (
     <button key={d} className={"ts-dir ts-dir-" + d + (highlight === d ? " ts-dir-hi" : "")} disabled={disabled} onClick={() => onDir(d)} aria-label={DIRS[d].label + "へ ころがす"}>
       <span className="ts-dir-arrow">{DIRS[d].arrow}</span>{DIRS[d].label}
