@@ -10,6 +10,7 @@
    見せ方：メインは ななめ上から 見た 3D、よこに 真上から 見た 盤（同じ うごきを 同時に）。小さい ほうを タップすると 入れかわる
    ===================================================================== */
 import React, { useEffect, useRef, useState } from "react";
+import { fairyPraise } from "../theme.js";
 import Tsumiki3D from "./Tsumiki3D.jsx";
 import { TopGrid, RollLog, PoseBadge } from "./TopGrid.jsx";
 import {
@@ -168,7 +169,7 @@ export function TsumikiForest({ stage, kind = "cube", sfx, onGain, onClearStage 
   const after1 = () => {
     const cur = bref.current, painted = paintedOf(cur.stamps);
     if (painted.size === onBoard.size) {
-      setPhase("done"); setMood("happy"); sfx.correct(); setMsg(pickOne(PRAISE_ALL)); return;
+      setPhase("done"); setMood("happy"); sfx.correct(); setMsg(pickOne(fairyPraise("tsumikiAll", PRAISE_ALL))); return;
     }
     if (!legalDirs(cur.block, onBoard, painted).length) {
       setPhase("stuck"); setMood(null);
@@ -195,7 +196,7 @@ export function TsumikiForest({ stage, kind = "cube", sfx, onGain, onClearStage 
   const finish2 = () => {
     const r = checkPrediction(p, predicted);
     setResult(r); setPhase("result"); setBig("2d");
-    if (r.ok) { sfx.correct(); setMood("happy"); setMsg(pickOne(PRAISE_OK)); return; }
+    if (r.ok) { sfx.correct(); setMood("happy"); setMsg(pickOne(fairyPraise("tsumikiOk", PRAISE_OK))); return; }
     if (r.missed.length && !r.extra.length) setMsg("おしい！ ピンクの「!」の マスにも 色が ついたよ。とちゅうの マスも ぜんぶ だよ");
     else if (!r.missed.length) setMsg("おしい！ グレーの 点線の 〇の マスには 色が つかなかったね");
     else setMsg("おしい！ ピンクの「!」が たりない マス、グレーの 〇が よけいな マスだよ。①②③の じゅんに たどってみよう");
@@ -219,7 +220,7 @@ export function TsumikiForest({ stage, kind = "cube", sfx, onGain, onClearStage 
   const finish3 = (moves, failStep, why) => {
     const r = checkOrder(p, moves);
     setResult(r); setPhase("result"); setBig("2d");
-    if (r.ok) { sfx.correct(); setMood("happy"); setMsg(pickOne(PRAISE_ORDER)); return; }
+    if (r.ok) { sfx.correct(); setMood("happy"); setMsg(pickOne(fairyPraise("tsumikiOrder", PRAISE_ORDER))); return; }
     if (failStep) {
       setFailIdx(failStep - 1);
       const step = `きみの じゅんばんの ${NUM(failStep)}（${DIRS[moves[failStep - 1]].label}）`;

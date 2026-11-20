@@ -6,6 +6,7 @@ import {
   ELEMENTS, STAGES, nextStageInfo, selectableElements, isMaster, todayStr, addDays, currentStreak, pointSources, STORY_FOOD_PER_POINT,
 } from "./dragon.js";
 import "./dragonMode.css";
+import { useThemeId, themedArtKey } from "./theme.js";
 
 /* ---- src/art/dragons/{element}_{stage}.webp（無い／よめない ときは 絵文字に もどる） ---- */
 const DRAGON_ART = Object.fromEntries(
@@ -39,13 +40,17 @@ const LINES = {
 };
 
 /* ---- ドラゴンの 絵（silhouette：ずかんで まだの もの） ---- */
+// テーマの 絵：こども・おとな だけ {element}_{stage}_prince.webp（たまご・あかちゃんは 共通）
+const THEMED_STAGES = ["child", "adult"];
 export function DragonArt({ element, stage, size = 120, silhouette = false, className = "" }) {
+  const themeId = useThemeId();
   const d = DRAGONS[element] && DRAGONS[element].stages[stage];
-  const [broken, setBroken] = useState(false);
+  const [broken, setBroken] = useState(() => new Set());
   if (!d) return null;
   const sil = silhouette ? " dr-sil" : "";
-  if (d.art && !broken) {
-    return <img src={d.art} alt={d.name} draggable={false} onError={() => setBroken(true)}
+  const key = themedArtKey((k) => !!DRAGON_ART[k] && !broken.has(k), `${element}_${stage}`, THEMED_STAGES.includes(stage) ? themeId : "princess");
+  if (key) {
+    return <img src={DRAGON_ART[key]} alt={d.name} draggable={false} onError={() => setBroken((b) => new Set([...b, key]))}
       className={"dr-art" + sil + " " + className} style={{ width: size, height: size }} />;
   }
   return (
