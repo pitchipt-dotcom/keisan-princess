@@ -20,10 +20,15 @@ import { normalizeReadProgress, applyReadResults, pickPraise, READ_STREAK_UP } f
 import { buildOhanashiSet, checkExpr, checkAnswer, explainStep, answerText, OPS, OH_PEOPLE, SPEAKER, OH_PER_SET } from "./ohanashiYomitori.js";
 import { applyStoryFeed, STORY_FOOD_PER_POINT, STORY_FOOD_DAY_MAX, todayStr } from "./dragon.js";
 import "./ohanashi.css";
+import { useThemeId, themedArtKey, renameText, renameDeep } from "./theme.js";
 
 const STAR_PER_RIGHT = 10;                 // ★：1もん せいかい ごとに（まいにち けいさん と 同じ）
-const charUrls = import.meta.glob("./art/chars/*_idle.webp", { eager: true, query: "?url", import: "default" });
-const PEOPLE = Object.fromEntries(Object.entries(OH_PEOPLE).map(([k, name]) => [k, { name, url: charUrls[`./art/chars/${SPEAKER[k]}_idle.webp`] || null }]));
+const charUrls = import.meta.glob(["./art/chars/*_idle.webp", "./art/chars/*_idle_prince.webp"], { eager: true, query: "?url", import: "default" });
+// 絵の 人物：テーマの 名前と 絵（_prince が 無ければ 共通の 絵）
+const peopleFor = (theme) => Object.fromEntries(Object.entries(OH_PEOPLE).map(([k, name]) => {
+  const key = themedArtKey((x) => !!charUrls[`./art/chars/${x}.webp`], `${SPEAKER[k]}_idle`, theme);
+  return [k, { name: renameText(name, theme), url: key ? charUrls[`./art/chars/${key}.webp`] : null }];
+}));
 const STAGE_INFO = {
   A: { name: "ステップ A", desc: "せいかい したら マーカーを ひいて あげるね" },
   B: { name: "ステップ B", desc: "せいかい したら、つかった 数に じぶんで マーカーを ひこう" },
@@ -161,6 +166,7 @@ function Explain({ q, title }) {
 
 /* ------------------------------ 1もん ------------------------------ */
 export function OhanashiQuestion({ q, stage, sfx, characters, isLast, onFinish }) {
+  const themeId = useThemeId();
   const [usedHint, setUsedHint] = useState(false);
   const r = useReadMarks({ q, stage, sfx, onMissTap: () => setUsedHint(true) });
   const pen = useAttempts();
@@ -240,7 +246,7 @@ export function OhanashiQuestion({ q, stage, sfx, characters, isLast, onFinish }
         <div className="oh-face"><Face mood={phase === "right" ? "happy" : "idle"} size={44} /></div>
         <div className="yt-tag oh-tag">📖 よみとり れんしゅう<span className="yt-level">　🖍 {STAGE_INFO[stage].name}{r.selfMode && phase === "ask" ? "：つかう 数を タップで マーカー" : ""}</span></div>
       </div>
-      {q.scenes && <YomitoriScenes scenes={q.scenes} people={PEOPLE} />}
+      {q.scenes && <YomitoriScenes scenes={q.scenes} people={peopleFor(themeId)} />}
       {q.pic && <YomitoriPic pic={q.pic} sfx={sfx} />}
       <ReadText q={q} r={r} />
       {!r.found && <div className="yt-guide">🔍 なにを きかれているかな？ その ところを タップしてね</div>}
@@ -301,6 +307,7 @@ export function OhanashiQuestion({ q, stage, sfx, characters, isLast, onFinish }
 
 /* ------------------------------ 5もん セット ------------------------------ */
 export function OhanashiHard({ ohanashi, daily, characters, sfx, onComplete, onExit }) {
+  const themeId = useThemeId();
   const [set, setSet] = useState(null);
   const [idx, setIdx] = useState(0);
   const [results, setResults] = useState([]);
@@ -311,7 +318,7 @@ export function OhanashiHard({ ohanashi, daily, characters, sfx, onComplete, onE
 
   const start = () => {
     sfx.tap();
-    const s = buildOhanashiSet();
+    const s = renameDeep(buildOhanashiSet(), themeId);      // プリンス版は 名前だけ さしかえ（数・文の 形は 同じ）
     if (import.meta.env.DEV) window.__ohanashiSet = s;      // ブラウザ テスト用（本番には 入らない）
     setSet(s); setIdx(0); setResults([]); setSummary(null);
   };
