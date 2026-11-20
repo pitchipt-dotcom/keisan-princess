@@ -27,6 +27,11 @@
   元の 絵(~/moss-mcp/outputs/20261120_001〜004)の さいごの プロンプトと seed に HEROIC と マントか たてを 1つ たす(顔は 同じ)。
   そのあと 背景を ぬいて 上半身・顔を 切りだし、src/assets/fairy/fairy-{id}{,-bust,-face}_prince.webp に する
     python3 tools/art/moss_prince.py fairy                   # 4 枚(ある 絵は とばす)
+
+  そうび：art-raw/items/<id>_prince.png(320px)。新しい もの なので 今の アイテムと 同じ 絵がらの 指定(assets.json)で かく
+  (表情の 指定は いらない)。seed は 9001〜。そのあと  tools/art/.venv/bin/python tools/art/process.py items
+    python3 tools/art/moss_prince.py items                   # 24 枚(ある 絵は とばす)
+    python3 tools/art/moss_prince.py items p_wand            # その 1 枚だけ 作りなおす
 """
 import json
 import os
@@ -221,8 +226,66 @@ def fairy(args):
             sys.exit(f"上限に 当たったので 止めます({out} の まえ): {err}")
 
 
+# ---------------- そうび ----------------
+# (id, subject, wearable, lilac, creature)。白・銀の ものは うす紫の 背景で 抜きやすく
+ITEMS = [
+    ("ribbon", "A navy blue bandana headband with small gold stars, tied in a knot", True, False, False),
+    ("tiara", "A golden circlet crown for a boy with a gold star in the middle and small lavender gems", True, False, False),
+    ("dress", "A dark indigo wizard robe with a hood, tiny gold stars and a gold clasp", True, False, False),
+    ("socks", "A pair of navy socks with a small gold star pattern and lavender cuffs", True, False, False),
+    ("boots", "A pair of short dark navy wizard boots with gold buckles and turned-up toes", True, False, False),
+    ("wings", "A pair of small dragon wings with lavender purple membranes and gold edges", False, False, False),
+    ("cat", "A cute chubby black kitten sitting, with golden yellow eyes, a tiny pink nose and a small navy blue scarf with a gold star", False, False, True),
+    ("m_shellclip", "A round turquoise badge shaped like a scallop seashell with a gold rim", False, False, False),
+    ("m_pearlband", "A turquoise sports headband with small white pearls along the band", True, False, False),
+    ("m_scaledress", "A turquoise and mint fish-scale armor vest for a child with gold shoulder edges", True, False, False),
+    ("m_trident", "A small golden trident spear with three points and a turquoise handle", False, False, False),
+    ("m_shellbag", "A small round shield shaped like a pale turquoise scallop seashell with a gold rim", False, False, False),
+    ("p_hairribbon", "A red hero headband with two long tails and a small gold emblem", True, False, False),
+    ("p_pearlpin", "A round gold knight badge with a blue shield emblem and a small red ribbon", False, False, False),
+    ("p_flowercrown", "A green laurel wreath crown with small gold berries", True, False, False),
+    ("p_tiara", "A golden prince crown with five points and small red and blue gems", True, False, False),
+    ("p_balldress", "A shiny silver knight chestplate armor for a child with gold trim and a blue gem in the center", True, True, False),
+    ("p_cape", "A royal red short cape with a white fluffy fur collar and gold trim", True, False, False),
+    ("p_lacesocks", "A pair of silver knight shin guards with gold trim", True, True, False),
+    ("p_glassshoes", "A pair of brown knight boots with gold buckles and silver toe caps", True, False, False),
+    ("p_wand", "A small hero sword with a silver blade, a gold cross guard, a blue handle and a round blue gem on the pommel", False, True, False),
+    ("p_mirror", "A round shining knight shield, silver with a gold rim and a golden sun emblem", False, True, False),
+    ("p_necklace", "A gold medal with a blue and red ribbon and a star in the middle", False, False, False),
+    ("p_moon", "A yellow crescent moon charm with a small gold star hanging from a short gold chain", False, False, False),
+]
+
+
+def items(args):
+    named = [a for a in args if not a.startswith("--")]
+    spec = json.loads((G.HERE / "assets.json").read_text())
+    api = api_from_env()
+    for n, (iid, subject, wearable, lilac, creature) in enumerate(ITEMS):
+        if named and iid not in named:
+            continue
+        out = f"{iid}_prince"
+        if not named and (G.RAW / "items" / f"{out}.png").exists():
+            print(f"skip {out} (ある)")
+            continue
+        entry = {"key": f"items/{out}", "mode": "generate", "subject": subject, "wearable": wearable, "lilac": lilac, "creature": creature}
+        prompt, seed, t0 = G.build_prompt(spec, entry), 9001 + n, time.time()
+        try:
+            conv = api.call("POST", "/api/images/conversations")["conversation_id"]
+            job = api.call("POST", "/api/media/jobs", body={
+                "prompt": prompt, "negative_prompt": "", "seed": seed, "kind": "image", "backend": "moss-image", "aspect_ratio": "1:1",
+                "prompt_mode": "direct", "preview_only": False, "conversation_id": conv})
+            G.save_raw(f"items/{out}", api.result_png(job["job_id"]), 320)
+        except DailyLimit as err:
+            sys.exit(f"上限に 当たったので 止めます({out} の まえ): {err}")
+        path = G.RAW / "items" / "_prince.json"
+        log = json.loads(path.read_text()) if path.exists() else {}
+        log.setdefault(out, []).append({"seed": seed, "prompt": prompt, "job": job["job_id"], "sec": round(time.time() - t0, 1), "at": time.strftime("%Y-%m-%d %H:%M:%S")})
+        path.write_text(json.dumps(log, ensure_ascii=False, indent=1))
+        print(f"ok   {out} seed={seed} {time.time() - t0:.0f}s", flush=True)
+
+
 if __name__ == "__main__":
-    cmds = {"dragons": dragons, "chars": chars, "fairy": fairy}
+    cmds = {"dragons": dragons, "chars": chars, "fairy": fairy, "items": items}
     if len(sys.argv) < 2 or sys.argv[1] not in cmds:
         print(__doc__)
         sys.exit(1)
