@@ -19,7 +19,7 @@
 | ドラゴン（こども・おとな） | `src/art/dragons/{fire,water,light}_{child,adult}_prince.webp` | 6 | 元の プロンプト・seed ＋ 表情の 指定（水の おとなは 胸の ハートを negative で けした） |
 | 主人公 | `src/art/chars/{witch,mermaid,princess}_{idle,happy,oops}_prince.webp` | 9 | 立ち絵は 新しく 生成（seed 8101/8202/8303。カイは slightly で よわめた）、表情は flux-klein で 立ち絵から |
 | 妖精 | `src/assets/fairy/fairy-{mint,ramune,poppy,peta}{,-bust,-face}_prince.webp` | 4（＋切りだし 8） | ミント・ポピーは 元の プロンプト・seed ＋ 表情・マント。ラムネ・ペタは 元の 絵から flux-klein（顔と 色を のこすため） |
-| そうび | `src/art/items/<id>_prince.webp` | 24 | 今の アイテムと 同じ 絵がらで 新しく（seed 9001〜9024） |
+| そうび | `src/art/items/<id>_prince.webp` | 24 | 今の アイテムと 同じ 絵がらで 新しく（seed 9001〜9024、作りなおし 9025〜9027） |
 | チャレンジの ボタン | ドラゴン（fire_child_prince）・ミント（bust_prince） | － | 上の 絵を つかう |
 
 ### まだ 共通の 絵の もの
@@ -28,7 +28,7 @@
 - ものがたりの たっせい イベントの 場面の 絵（おしろ・ぶとうかい・たたかい・かんせい。SVG）
 - 絵が 無い ときに 出る SVG の 主人公（ふだんは 出ない）
 
-### 見なおし候補
-- p_moon_prince（つきの おまもり）：上の くさりが ふちで 切れている
-- m_shellbag_prince（かいがらの たて）：上の ふちに 切れこみ
-- p_lacesocks_prince（きしの すねあて）：かぶとの ように 見える
+### 作りなおした そうび（seed は 9001〜9024 の つづき）
+- p_moon_prince（つきの おまもり）seed 9025：くさりの 上の わまで 画像に おさまる ように 上に よはく
+- m_shellbag_prince（かいがらの たて）seed 9026：ふちが なめらかに つながった たて
+- p_lacesocks_prince（きしの すねあて）seed 9027：左右 1くみ・ひざから 足首・ベルトつき

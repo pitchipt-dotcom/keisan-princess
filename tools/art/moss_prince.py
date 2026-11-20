@@ -32,6 +32,7 @@
   (表情の 指定は いらない)。seed は 9001〜。そのあと  tools/art/.venv/bin/python tools/art/process.py items
     python3 tools/art/moss_prince.py items                   # 24 枚(ある 絵は とばす)
     python3 tools/art/moss_prince.py items p_wand            # その 1 枚だけ 作りなおす
+    python3 tools/art/moss_prince.py items p_moon --seed 9028   # seed を かえて 作りなおす（ITEM_SEEDS も なおす）
 """
 import json
 import os
@@ -240,23 +241,30 @@ ITEMS = [
     ("m_pearlband", "A turquoise sports headband with small white pearls along the band", True, False, False),
     ("m_scaledress", "A turquoise and mint fish-scale armor vest for a child with gold shoulder edges", True, False, False),
     ("m_trident", "A small golden trident spear with three points and a turquoise handle", False, False, False),
-    ("m_shellbag", "A small round shield shaped like a pale turquoise scallop seashell with a gold rim", False, False, False),
+    ("m_shellbag", "A small round shield shaped like a pale turquoise scallop seashell, with a smooth continuous rounded gold rim all the way around the edge", False, False, False),
     ("p_hairribbon", "A red hero headband with two long tails and a small gold emblem", True, False, False),
     ("p_pearlpin", "A round gold knight badge with a blue shield emblem and a small red ribbon", False, False, False),
     ("p_flowercrown", "A green laurel wreath crown with small gold berries", True, False, False),
     ("p_tiara", "A golden prince crown with five points and small red and blue gems", True, False, False),
     ("p_balldress", "A shiny silver knight chestplate armor for a child with gold trim and a blue gem in the center", True, True, False),
     ("p_cape", "A royal red short cape with a white fluffy fur collar and gold trim", True, False, False),
-    ("p_lacesocks", "A pair of silver knight shin guards with gold trim", True, True, False),
+    ("p_lacesocks", "A pair of silver knight greaves for a child's legs, left and right side by side, each a long curved plate shaped to cover the shin from the knee down to the ankle, with a brown leather strap and a small gold buckle", True, True, False),
     ("p_glassshoes", "A pair of brown knight boots with gold buckles and silver toe caps", True, False, False),
     ("p_wand", "A small hero sword with a silver blade, a gold cross guard, a blue handle and a round blue gem on the pommel", False, True, False),
     ("p_mirror", "A round shining knight shield, silver with a gold rim and a golden sun emblem", False, True, False),
     ("p_necklace", "A gold medal with a blue and red ribbon and a star in the middle", False, False, False),
-    ("p_moon", "A yellow crescent moon charm with a small gold star hanging from a short gold chain", False, False, False),
+    ("p_moon", "A yellow crescent moon charm with a small gold star, hanging from a short gold chain with a small ring at the top end, the whole chain and ring shown completely, with a wide empty margin at the top of the picture", False, False, False),
 ]
 
 
+# 作りなおした ときの seed（さいしょの 9001〜9024 の つづき）。--seed で その 1まいだけ かえられる
+ITEM_SEEDS = {"p_moon": 9025, "m_shellbag": 9026, "p_lacesocks": 9027}
+
+
 def items(args):
+    seed_arg = None
+    if "--seed" in args:
+        i = args.index("--seed"); seed_arg = int(args[i + 1]); args = args[:i] + args[i + 2:]
     named = [a for a in args if not a.startswith("--")]
     spec = json.loads((G.HERE / "assets.json").read_text())
     api = api_from_env()
@@ -268,7 +276,8 @@ def items(args):
             print(f"skip {out} (ある)")
             continue
         entry = {"key": f"items/{out}", "mode": "generate", "subject": subject, "wearable": wearable, "lilac": lilac, "creature": creature}
-        prompt, seed, t0 = G.build_prompt(spec, entry), 9001 + n, time.time()
+        seed = seed_arg if seed_arg is not None else ITEM_SEEDS.get(iid, 9001 + n)
+        prompt, t0 = G.build_prompt(spec, entry), time.time()
         try:
             conv = api.call("POST", "/api/images/conversations")["conversation_id"]
             job = api.call("POST", "/api/media/jobs", body={
