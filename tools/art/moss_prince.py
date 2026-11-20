@@ -22,6 +22,11 @@
   そのあと  tools/art/.venv/bin/python tools/art/process.py chars
     python3 tools/art/moss_prince.py chars                   # 9 枚(ある 絵は とばす)
     python3 tools/art/moss_prince.py chars witch_idle        # その 1 枚だけ 作りなおす(idle を かえたら happy・oops も)
+
+  妖精：{mint, ramune, poppy, peta} → art-raw/fairy/fairy-{id}_prince.png(1024px)
+  元の 絵(~/moss-mcp/outputs/20261120_001〜004)の さいごの プロンプトと seed に HEROIC と マントか たてを 1つ たす(顔は 同じ)。
+  そのあと 背景を ぬいて 上半身・顔を 切りだし、src/assets/fairy/fairy-{id}{,-bust,-face}_prince.webp に する
+    python3 tools/art/moss_prince.py fairy                   # 4 枚(ある 絵は とばす)
 """
 import json
 import os
@@ -185,8 +190,39 @@ def chars(args):
             sys.exit(f"上限に 当たったので 止めます({out} の まえ): {err}")
 
 
+# ---------------- 妖精 ----------------
+FAIRY = {   # 元の 絵の 記録(moss-mcp/outputs/index.jsonl)の positive_prompt と seed
+    "mint": {"seed": 549347313414442215, "add": "wearing a small leaf-green cape",
+             "prompt": "A cute chibi fairy girl with mint green hair, sparkling eyes, and translucent green butterfly wings, wearing a light green petal dress and holding a magic wand, standing happily on a plain white background in a modern kawaii mobile game illustration style."},
+    "ramune": {"seed": 7947923956517659597, "add": "with a small round orange shield on her arm",
+               "prompt": "A cute chibi fairy girl with peach-orange twin-tail hair, big sparkling eyes, and translucent aqua-orange butterfly wings, holding a small glass pitcher of orange juice in a cheerful pose against a plain white background."},
+    "poppy": {"seed": 5593322227778051604, "add": "wearing a small soft pink cape",
+              "prompt": "Cute chibi fairy girl character for a children's learning game app, full body, cheerful pose holding a bouquet of small flowers. Soft pink wavy long hair with a flower crown, big sparkling eyes, rosy cheeks, happy smile. Translucent pink and lavender petal-shaped wings with sparkles. Pink tulip petal dress with a skirt patterned like a checkered flower garden grid, white frills, flower shoes. Soft pastel colors, clean thick outline, modern kawaii mobile game illustration style, smooth cel shading, soft glow. Plain white background, centered, no text."},
+    "peta": {"seed": 4574136625641206052, "add": "with a small round lilac shield on her arm",
+             "prompt": "A cute chibi fairy girl with lavender purple hair, big sparkling eyes, and translucent lilac and pale yellow butterfly wings, holding a small gift box in a cheerful pose against a plain white background."},
+}
+
+
+def fairy(args):
+    soft = "--soft" in args
+    named = [a for a in args if not a.startswith("--")]
+    api = api_from_env()
+    raw = G.RAW / "fairy"
+    for fid in named or list(FAIRY):
+        out = f"fairy-{fid}_prince"
+        if not named and (raw / f"{out}.png").exists():
+            print(f"skip {out} (ある)")
+            continue
+        f = FAIRY[fid]
+        prompt = f["prompt"].rstrip(".") + ", " + f["add"] + ", " + (HEROIC_SOFT if soft else HEROIC) + ", no text"
+        try:
+            render(api, out, prompt, f["seed"], "", raw, raw / "_prince.json")
+        except DailyLimit as err:
+            sys.exit(f"上限に 当たったので 止めます({out} の まえ): {err}")
+
+
 if __name__ == "__main__":
-    cmds = {"dragons": dragons, "chars": chars}
+    cmds = {"dragons": dragons, "chars": chars, "fairy": fairy}
     if len(sys.argv) < 2 or sys.argv[1] not in cmds:
         print(__doc__)
         sys.exit(1)
