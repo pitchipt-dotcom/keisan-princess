@@ -1,6 +1,7 @@
 /* =====================================================================
    ドラゴンそだて（まいにち けいさん の つづけた ごほうび）— ロジックだけ
-   - ★・コーデ・とびら とは べつの ごほうび。まいにち けいさん でしか そだたない
+   - ★・コーデ・とびら とは べつの ごほうび。そだつのは「まいにち けいさん」と「おはなし もんだい むずかしい」だけ
+     おはなし もんだい は「ごはん」（4つで 1ポイント、1日 4つまで）。れんぞく日数・カレンダーは まいにち けいさん だけで かぞえる
    - やらなかった日が あっても ドラゴンは よわらない（ポイントは へらない）
    - 画面や JSX を ふくまないので、node から そのまま テストできる
    ===================================================================== */
@@ -93,6 +94,23 @@ export function normalizeDaily(d) {
   return out;
 }
 
+/* ---------------- ドラゴンが そだつ（まいにち けいさん・おはなし もんだい で 共通） ----------------
+   gained ポイント ふやす。おとなで とまる。おとなに なったら ずかんへ */
+export function growDragon(dragon, dragonDex, gained) {
+  const out = { dragon, dragonDex, stageFrom: null, stageTo: null, dexAdded: null, becameMaster: false };
+  const points = Math.min(STAGE_AT.adult, dragon.points + gained);
+  const stage = stageFor(points);
+  if (stage !== dragon.stage) { out.stageFrom = dragon.stage; out.stageTo = stage; }
+  if (stage === "adult" && !dragonDex.includes(dragon.element)) {
+    const wasMaster = isMaster(dragonDex);
+    out.dragonDex = [...dragonDex, dragon.element];
+    out.dexAdded = dragon.element;
+    out.becameMaster = !wasMaster && isMaster(out.dragonDex);
+  }
+  out.dragon = { ...dragon, points, stage };
+  return out;
+}
+
 /* ---------------- 10もん おわった ときの きろく ----------------
    res = { correct, hints, total }。その日 はじめて なら、れんぞく・そだちポイントを 判定する。
    かえりち：{ daily: あたらしい daily, report: 結果画面に 出す ないよう } */
@@ -130,16 +148,9 @@ export function applyCompletion(daily, res, today = todayStr()) {
 
   let dragon = daily.dragon, dragonDex = daily.dragonDex || [];
   if (dragon && dragon.stage !== "adult") {
-    const points = Math.min(STAGE_AT.adult, dragon.points + gained);
-    const stage = stageFor(points);
-    if (stage !== dragon.stage) { report.stageFrom = dragon.stage; report.stageTo = stage; }
-    if (stage === "adult" && !dragonDex.includes(dragon.element)) {
-      const wasMaster = isMaster(dragonDex);
-      dragonDex = [...dragonDex, dragon.element];
-      report.dexAdded = dragon.element;
-      report.becameMaster = !wasMaster && isMaster(dragonDex);
-    }
-    dragon = { ...dragon, points, stage };
+    const g = growDragon(dragon, dragonDex, gained);
+    dragon = g.dragon; dragonDex = g.dragonDex;
+    Object.assign(report, { stageFrom: g.stageFrom, stageTo: g.stageTo, dexAdded: g.dexAdded, becameMaster: g.becameMaster });
     report.gains = gains; report.gained = gained;
   }
 
@@ -147,4 +158,41 @@ export function applyCompletion(daily, res, today = todayStr()) {
     daily: { ...daily, lastDate: today, streakDays: streak, totalDays: (daily.totalDays || 0) + 1, lastTicketWeek, calendar, dragon, dragonDex },
     report,
   };
+}
+
+/* ---------------- おはなし もんだい「むずかしい」の ごはん ----------------
+   5もん やりきる ごはん +1、ヒントなしで ぜんもん せいかい +1。ごはん 4つで そだちポイント 1
+   → 同じ もんだい数（10もん）なら まいにち けいさん（1〜2ポイント）の 半分（0.5〜1ポイント）
+   1日に あげられる ごはんは 4つ（＝1ポイント）まで。まいにち けいさん（やりきり 1ポイント〜）より 多くは ならない
+   ヒントを つかっても へらさない（ヒントなし ぜんもん せいかい の ボーナスが つかない だけ）
+   れんぞく日数・カレンダー・やった日数（lastDate／streakDays／calendar／totalDays）は かえない
+   セーブ：daily.storyFeed = { date, food }（その日に あげた ごはん）
+           dragon.food（ポイントに なる まえの ごはん 0〜3）、dragon.fromStory（おはなし もんだい から 入った ポイント） */
+export const STORY_FOOD_PER_POINT = 4;
+export const STORY_FOOD_DAY_MAX = 4;
+export function applyStoryFeed(daily, res, today = todayStr()) {
+  const earned = 1 + (res.total > 0 && res.correct === res.total && res.hints === 0 ? 1 : 0);
+  const fedToday = daily.storyFeed && daily.storyFeed.date === today ? daily.storyFeed.food || 0 : 0;
+  const report = { earned, given: 0, fedToday, full: fedToday >= STORY_FOOD_DAY_MAX, noDragon: false, food: 0, gained: 0,
+    stageFrom: null, stageTo: null, dexAdded: null, becameMaster: false };
+  const dragon0 = daily.dragon;
+  if (!dragon0 || dragon0.stage === "adult") { report.noDragon = true; return { daily, report }; }
+  const given = Math.max(0, Math.min(earned, STORY_FOOD_DAY_MAX - fedToday));
+  const food = (dragon0.food || 0) + given;
+  const gained = Math.floor(food / STORY_FOOD_PER_POINT);
+  let dragon = { ...dragon0, food: food % STORY_FOOD_PER_POINT, fromStory: (dragon0.fromStory || 0) + gained };
+  let dragonDex = daily.dragonDex || [];
+  if (gained) {
+    const g = growDragon(dragon, dragonDex, gained);
+    dragon = g.dragon; dragonDex = g.dragonDex;
+    Object.assign(report, { stageFrom: g.stageFrom, stageTo: g.stageTo, dexAdded: g.dexAdded, becameMaster: g.becameMaster });
+  }
+  Object.assign(report, { given, gained, food: dragon.food, fedToday: fedToday + given, full: fedToday + given >= STORY_FOOD_DAY_MAX });
+  return { daily: { ...daily, dragon, dragonDex, storyFeed: { date: today, food: fedToday + given } }, report };
+}
+/* ドラゴンの 画面用：ポイントが どこから 入ったか */
+export function pointSources(dragon) {
+  if (!dragon) return null;
+  const story = Math.min(dragon.points || 0, dragon.fromStory || 0);
+  return { daily: (dragon.points || 0) - story, story, food: dragon.food || 0 };
 }

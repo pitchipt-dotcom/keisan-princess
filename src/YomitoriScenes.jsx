@@ -11,14 +11,16 @@ import { asset, PEOPLE, OBJECTS } from "./assets/yomitori/index.js";
 const INK = "#3A2A6B";
 const NUM = ["①", "②", "③", "④", "⑤"];
 
-function Person({ who, x, y, size = 30 }) {
-  const url = asset(who);
+/* people：{ 名前: { name, url } } … おはなし もんだいの ルナ・マリン・ロゼ など（無ければ src/assets/yomitori/ の 人物） */
+function Person({ who, x, y, size = 30, people }) {
+  const pp = people && people[who];
+  const url = pp ? pp.url : asset(who), label = pp ? pp.name : PEOPLE[who];
   return (
     <g>
       {url ? <image href={url} x={x} y={y} width={size} height={size} />
         : <><circle cx={x + size / 2} cy={y + size / 2} r={size / 2 - 1} fill="#FBF7FF" stroke={INK} />
-          <text x={x + size / 2} y={y + size / 2 + 4} textAnchor="middle" fontSize={11} fill={INK}>{(PEOPLE[who] || "?")[0]}</text></>}
-      <text x={x + size / 2} y={y + size + 8} textAnchor="middle" fontSize={8} fill="#7A5C98">{PEOPLE[who] || who}</text>
+          <text x={x + size / 2} y={y + size / 2 + 4} textAnchor="middle" fontSize={11} fill={INK}>{(label || "?")[0]}</text></>}
+      <text x={x + size / 2} y={y + size + 8} textAnchor="middle" fontSize={8} fill="#7A5C98">{label || who}</text>
     </g>
   );
 }
@@ -63,14 +65,14 @@ function Things({ obj, n, x, y, w, h, k = 1 }) {
   return <g>{out}</g>;
 }
 
-function Panel({ sc, i }) {
+function Panel({ sc, i, people }) {
   const unit = sc.obj ? (OBJECTS[sc.obj] || {}).unit || "" : "";
   let body;
   if (sc.kind === "move") {
     body = (
       <>
-        <Person who={sc.from} x={4} y={5} />
-        <Person who={sc.to} x={86} y={5} />
+        <Person who={sc.from} x={4} y={5} people={people} />
+        <Person who={sc.to} x={86} y={5} people={people} />
         <path d="M38 21 L80 21" stroke="#E85FA3" strokeWidth={3} strokeLinecap="round" />
         <path d="M74 15 L81 21 L74 27" fill="none" stroke="#E85FA3" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         <text x={59} y={14} textAnchor="middle" fontSize={8} fontWeight={700} fill="#E85FA3">{sc.cap}</text>
@@ -80,21 +82,21 @@ function Panel({ sc, i }) {
   } else if (sc.kind === "ask") {
     body = (
       <>
-        {sc.who && <Person who={sc.who} x={45} y={6} />}
+        {sc.who && <Person who={sc.who} x={45} y={6} people={people} />}
         <text x={60} y={sc.who ? 88 : 72} textAnchor="middle" fontSize={sc.who ? 34 : 46} fontWeight={900} fill="#C9A8F0">？</text>
       </>
     );
   } else {
     body = (
       <>
-        {sc.who && <Person who={sc.who} x={45} y={3} />}
+        {sc.who && <Person who={sc.who} x={45} y={3} people={people} />}
         <Things obj={sc.obj} n={sc.n} x={4} y={sc.who ? 44 : 14} w={112} h={sc.who ? 52 : 82} k={sc.who ? 1 : 1.35} />
       </>
     );
   }
   return (
     <svg viewBox="0 0 120 128" className="ys-panel" role="img"
-      aria-label={sc.kind === "ask" ? sc.cap : `${PEOPLE[sc.who || sc.from] || ""} ${sc.n}${unit}`}>
+      aria-label={sc.kind === "ask" ? sc.cap : `${(people && people[sc.who || sc.from] ? people[sc.who || sc.from].name : PEOPLE[sc.who || sc.from]) || ""} ${sc.n}${unit}`}>
       <rect x={0.5} y={0.5} width={119} height={127} rx={10} fill={sc.kind === "ask" ? "#FBF7FF" : "#FFFDF7"} stroke="#EAD9F5" />
       <text x={7} y={14} fontSize={12} fontWeight={700} fill="#B48CE8">{NUM[i]}</text>
       {body}
@@ -108,12 +110,12 @@ function Panel({ sc, i }) {
   );
 }
 
-export function YomitoriScenes({ scenes }) {
+export function YomitoriScenes({ scenes, people }) {
   const wide = scenes.length > 3;
   return (
     <div className="ys-wrap">
       <div className={"ys-strip" + (wide ? " ys-scroll" : "")}>
-        {scenes.map((sc, i) => <Panel key={i} sc={sc} i={i} />)}
+        {scenes.map((sc, i) => <Panel key={i} sc={sc} i={i} people={people} />)}
       </div>
       {wide && <div className="ys-more">よこに うごかすと つづきが 見られるよ →</div>}
     </div>
