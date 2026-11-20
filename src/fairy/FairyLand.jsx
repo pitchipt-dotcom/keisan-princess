@@ -17,6 +17,7 @@ import { KINDS } from "./tsumiki.js";
 import { PoseIcon } from "./TopGrid.jsx";
 import { fairyArt } from "../assets/fairy/index.js";
 import "./fairy.css";
+import { fairyLine, useThemeId } from "../theme.js";
 
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 
@@ -34,6 +35,7 @@ function Friendship({ n, fairy = GUIDE_FAIRY }) {
 }
 
 export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
+  useThemeId();                                  // テーマが かわったら セリフ・絵を かえる
   const f = normalizeFairy(fairy);
   const [area, setArea] = useState(null);        // null = 地図
   const [stage, setStage] = useState(null);      // null = だんかい えらび
@@ -72,7 +74,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
       <div className="fl-wrap">
         <h2 className="kk-h2">📦 はこの工房</h2>
         <HowBtn />
-        <FairyGuide full fairy={HAKO_FAIRY} text={hkCuboid ? "直方体の はこも つくれるように なったよ！ 長い 面と みじかい 面が あるね" : "わたしは ペタ！ はこを きって ひらいたり、おって くみたてたり しよう！"} />
+        <FairyGuide full fairy={HAKO_FAIRY} text={hkCuboid ? fairyLine("hakoCuboid", "直方体の はこも つくれるように なったよ！ 長い 面と みじかい 面が あるね") : fairyLine("hako", "わたしは ペタ！ はこを きって ひらいたり、おって くみたてたり しよう！")} />
         <Friendship n={f.friendship[HAKO_FAIRY] || 0} fairy={HAKO_FAIRY} />
         <div className="fl-kinds" role="radiogroup" aria-label="はこを えらぶ">
           {["cube", "cuboid"].map((k) => {
@@ -119,7 +121,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
       <div className="fl-wrap">
         <h2 className="kk-h2">🌷 ますめの花畑</h2>
         <HowBtn />
-        <FairyGuide full fairy={MASUME_FAIRY} text="わたしは ポピー！ 花だんの 広さを、切ったり うごかしたり して「何ます分」か しらべよう！" />
+        <FairyGuide full fairy={MASUME_FAIRY} text={fairyLine("masume", "わたしは ポピー！ 花だんの 広さを、切ったり うごかしたり して「何ます分」か しらべよう！")} />
         <Friendship n={f.friendship[MASUME_FAIRY] || 0} fairy={MASUME_FAIRY} />
         <div className="fl-stages">
           {MSTAGES.map((st) => (
@@ -148,7 +150,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
       <div className="fl-wrap">
         <h2 className="kk-h2">🧃 ジュースの泉</h2>
         <HowBtn />
-        <FairyGuide full fairy={JUICE_FAIRY} text="わたしは ラムネ！ ジュースを そそいで、L・dL・mL の かさを はかってみよう！" />
+        <FairyGuide full fairy={JUICE_FAIRY} text={fairyLine("juice", "わたしは ラムネ！ ジュースを そそいで、L・dL・mL の かさを はかってみよう！")} />
         <Friendship n={f.friendship[JUICE_FAIRY] || 0} fairy={JUICE_FAIRY} />
         <div className="fl-stages">
           {JSTAGES.map((st) => (
@@ -180,7 +182,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
       <div className="fl-wrap">
         <h2 className="kk-h2">🧊 つみきの森</h2>
         <HowBtn />
-        <FairyGuide full text={canCuboid ? "2こ つなげた つみきも ころがせるように なったよ！ たったり ねたり するよ" : "つみきを ころがすと、紙に ついた マスに 色が つくよ。いっしょに やってみよう！"} />
+        <FairyGuide full text={canCuboid ? fairyLine("tsumikiCuboid", "2こ つなげた つみきも ころがせるように なったよ！ たったり ねたり するよ") : fairyLine("tsumiki", "つみきを ころがすと、紙に ついた マスに 色が つくよ。いっしょに やってみよう！")} />
         <Friendship n={f.friendship[GUIDE_FAIRY] || 0} />
         <div className="fl-kinds" role="radiogroup" aria-label="つみきを えらぶ">
           {["cube", "cuboid"].map((k) => {
@@ -211,7 +213,7 @@ export default function FairyLand({ fairy, sfx, onFairy, onExit }) {
   return shell(
     <div className="fl-wrap">
       <h2 className="kk-h2">🧚 ようせいの くに たんけん</h2>
-      <FairyGuide full text="ようこそ！ わたしは ミント。ようせいの くにを いっしょに たんけん しよう！" />
+      <FairyGuide full text={fairyLine("map", "ようこそ！ わたしは ミント。ようせいの くにを いっしょに たんけん しよう！")} />
       <div className="fl-friends">
         {AREAS.filter((a) => a.ready).map((a) => <Friendship key={a.fairy} n={f.friendship[a.fairy] || 0} fairy={a.fairy} />)}
       </div>

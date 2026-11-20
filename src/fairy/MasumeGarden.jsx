@@ -9,6 +9,7 @@
    見た目と 流れは ほかの エリアと そろえる（ゴールの帯・妖精の セリフ・なかよし度）
    ===================================================================== */
 import React, { useEffect, useRef, useState } from "react";
+import { fairyPraise } from "../theme.js";
 import { MasumeField } from "./MasumeField.jsx";
 import { FairyGuide } from "./TsumikiForest.jsx";
 import { AmountPad } from "./JuiceSpring.jsx";
@@ -68,7 +69,7 @@ export function MasumeGarden({ stage, sfx, onGain, onClearStage }) {
   }, []);
 
   const gain = (n) => { if (n <= 0) return; onGain(n); setScore((s) => ({ ...s, gained: s.gained + n })); setGainFx({ n, id: Date.now() }); };
-  const right = (text) => { sfx.correct(); setMood("happy"); setMsg(text || pickOne(PRAISE)); setPhase("done"); stopCount(); };
+  const right = (text) => { sfx.correct(); setMood("happy"); setMsg(text || pickOne(fairyPraise("masume", PRAISE))); setPhase("done"); stopCount(); };
 
   /* ---------- かぞえる（1ますずつ ばんごうが つく） ---------- */
   const runCount = (tiles, after) => {

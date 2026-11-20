@@ -9,6 +9,7 @@
    見た目と 流れは つみきの森と そろえる（ゴールの帯・妖精の セリフ・なかよし度）
    ===================================================================== */
 import React, { useEffect, useRef, useState } from "react";
+import { fairyPraise } from "../theme.js";
 import { PourScene } from "./PourScene.jsx";
 import { FairyGuide } from "./TsumikiForest.jsx";
 import { makeSet, isExact, answerOK, badCups, fmtLdL, splitLdL, answerToML } from "./juice.js";
@@ -152,7 +153,7 @@ export function JuiceSpring({ stage, sfx, onGain, onClearStage }) {
     setMsg("ひとつ まえに もどしたよ");
   };
 
-  const right = (text) => { sfx.correct(); setMood("happy"); setMsg(text || pickOne(PRAISE)); setPhase("done"); };
+  const right = (text) => { sfx.correct(); setMood("happy"); setMsg(text || pickOne(fairyPraise("juice", PRAISE))); setPhase("done"); };
 
   /* ---------- だんかいごとの たしかめ ---------- */
   const check1 = () => {          // だんかい1／4（こまかい 目もり）：ちょうど はかれた？
