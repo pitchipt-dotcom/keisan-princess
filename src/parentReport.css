@@ -36,3 +36,7 @@
 .pr-open-btn{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#3A2A6B; background:#fff; border:2px solid #C9A8F0; border-radius:14px;
   padding:10px 14px; margin:0 0 12px; width:100%; cursor:pointer; box-shadow:0 3px 0 rgba(201,168,240,.6); touch-action:manipulation;}
 .pr-open-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(201,168,240,.6);}
+.pr-stage-btns{display:flex; gap:8px; flex-wrap:wrap;}
+.pr-stage-btn{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B; background:#FBF7FF; border:2px solid #C9A8F0; border-radius:12px;
+  padding:6px 12px; cursor:pointer; touch-action:manipulation;}
+.pr-stage-btn:active{transform:translateY(1px);}
