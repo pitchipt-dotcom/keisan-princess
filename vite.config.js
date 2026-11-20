@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// リポジトリのルート直下にある manifest.json / sw.js / privacy.html / icons/
+// リポジトリのルート直下にある manifest.json / sw.js / privacy.html / icons/ / .well-known/
 // を、ビルド後の dist/ にそのままコピーするための簡易プラグイン。
 // （本来は public/ に置くものだが、すでにルートに置いてある分をそのまま使うため）
 function copyExtraStaticFiles() {
@@ -25,6 +25,15 @@ function copyExtraStaticFiles() {
         mkdirSync(outIconsDir, { recursive: true });
         readdirSync(iconsDir).forEach((f) => {
           copyFileSync(resolve(iconsDir, f), resolve(outIconsDir, f));
+        });
+      }
+      // Android（TWA）で アドレスバーを 出さない ための Digital Asset Links
+      const wellKnownDir = resolve(__dirname, ".well-known");
+      if (existsSync(wellKnownDir)) {
+        const outWellKnownDir = resolve(outDir, ".well-known");
+        mkdirSync(outWellKnownDir, { recursive: true });
+        readdirSync(wellKnownDir).forEach((f) => {
+          copyFileSync(resolve(wellKnownDir, f), resolve(outWellKnownDir, f));
         });
       }
     },
