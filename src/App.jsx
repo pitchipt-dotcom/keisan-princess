@@ -3,6 +3,7 @@ import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./Wr
 import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
 import { DragonScreen } from "./DragonMode.jsx";
 import { ParentReport } from "./ParentReport.jsx";
+import { OhanashiHard } from "./OhanashiHard.jsx";      // まいにち けいさん より あとで 読む（よみとりの CSS の じゅんばんを かえない）
 import { normalizeDaily, chooseEgg, setTodayOverride } from "./dragon.js";
 import { normalizeFairy } from "./fairy/fairy.js";
 // 妖精の国（Three.js を つかう）は 入った ときだけ 読みこむ
@@ -1159,6 +1160,7 @@ export default function App() {
   const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
   const [fairy, setFairy] = useState(() => normalizeFairy());   // 妖精の国（なかよし度・ひらいた エリア）
   const fairyRef = useRef(fairy);
+  const [ohanashi, setOhanashi] = useState({});          // おはなし もんだい「むずかしい」：{ yomiRead:{ stage, streak } }（まいにち けいさん とは べつ）
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1180,6 +1182,7 @@ export default function App() {
             if (d.character) setCharacterId(d.character);
             if (d.daily) setDaily(normalizeDaily(d.daily));
             if (d.fairy) { const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf); }
+            if (d.ohanashi && typeof d.ohanashi === "object") setOhanashi(d.ohanashi);
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1193,7 +1196,7 @@ export default function App() {
     if (typeof window === "undefined" || !storage) return;
     const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, fairy: fairyRef.current, ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi]);
 
   // 妖精の国：いまの 値から あたらしい 値を つくって、すぐ 保存（つづけて よばれても 古い 値で 上書き しない）
   const updateFairy = (fn) => {
@@ -1393,6 +1396,7 @@ export default function App() {
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
     character: characterId, seenMilestones, daily, fairy: fairyRef.current,
+    character: characterId, seenMilestones, daily, ohanashi,
   });
 
   const applySnapshot = (d) => {
@@ -1406,6 +1410,7 @@ export default function App() {
     if (d.character) setCharacterId(d.character);
     setDaily(normalizeDaily(d.daily));
     const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf);
+    setOhanashi(d.ohanashi && typeof d.ohanashi === "object" ? d.ohanashi : {});
   };
 
   const resetAll = () => {
@@ -1539,7 +1544,11 @@ export default function App() {
                   key={key}
                   className="kk-gametype-card"
                   style={{ borderColor: info.accent }}
-                  onClick={() => { if (key === "daily") { SFX.tap(sound); setScreen("daily"); return; } startGame(key, key === "kuku" ? "mix" : undefined); }}
+                  onClick={() => {
+                    if (key === "daily") { SFX.tap(sound); setScreen("daily"); return; }
+                    if (key === "story") { SFX.tap(sound); setScreen("storyPick"); return; }   // ふつう／むずかしい を えらぶ
+                    startGame(key, key === "kuku" ? "mix" : undefined);
+                  }}
                 >
                   <span className="kk-gt-icon">{info.icon}</span>
                   <span className="kk-gt-text"><b>{info.label}</b><small>{info.sub}</small></span>
@@ -1626,11 +1635,48 @@ export default function App() {
             <FairyLand fairy={fairy} sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
               onFairy={updateFairy} onExit={() => { SFX.tap(sound); setScreen("mode"); }} />
           </React.Suspense>
+        {/* ---------- おはなし もんだい：ふつう／むずかしい ---------- */}
+        {screen === "storyPick" && (
+          <div className="kk-mode-screen">
+            <div className="kk-witch-mini"><DressedCharacter character={charKey} mood="idle" size={96} equipped={myEquipped} /></div>
+            <h2 className="kk-h2">📖 おはなし もんだい</h2>
+            <div className="oh-pick">
+              <button className="kk-gametype-card oh-pick-card" style={{ borderColor: "#FFB3C7" }} onClick={() => startGame("story")}>
+                <span className="kk-gt-icon">🌸</span>
+                <span className="kk-gt-text"><b>ふつう</b><small>ぶんしょうだいを ペンで とこう</small></span>
+              </button>
+              <button className="kk-gametype-card oh-pick-card oh-pick-hard" style={{ borderColor: "#B48CE8" }} onClick={() => { SFX.tap(sound); setScreen("ohanashi"); }}>
+                <span className="kk-gt-icon">🔍</span>
+                <span className="kk-gt-text"><b>むずかしい</b><small>よみとり れんしゅう：きかれている ところ・マーカー・2だんかいの しき（ドラゴンも そだつ）</small></span>
+              </button>
+            </div>
+            <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("mode"); }}>もどる</button>
+          </div>
+        )}
+        {screen === "ohanashi" && (
+          <OhanashiHard ohanashi={ohanashi} daily={daily} characters={CHARACTERS}
+            sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
+            onComplete={(nd, no, gain) => {
+              // ドラゴンの ごはん（daily）・読み方の 段階（ohanashi）・★を いっしょに 保存
+              const nv = stardust + gain;
+              const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
+              if (owed > 0) setPulls((p) => p + owed);
+              setDaily(nd); setOhanashi(no); setStardust(nv);
+              persist({ daily: nd, ohanashi: no, stardust: nv });
+            }}
+            onExit={() => { SFX.tap(sound); setScreen("storyPick"); }} />
         )}
 
         {/* ---------- おうちのひとレポート ---------- */}
         {screen === "report" && (
-          <ParentReport daily={daily} mastery={mastery} onExit={() => { SFX.tap(sound); setScreen("mode"); }} />
+          <ParentReport daily={daily} mastery={mastery} onExit={() => { SFX.tap(sound); setScreen("mode"); }}
+            onSetReadStage={(stage) => {
+              // よみとりチェックの 手つだいの 段階を 戻す（daily の yomiRead だけ かえる）
+              SFX.tap(sound);
+              const nd = { ...daily, yomiRead: { stage, streak: 0 } };
+              setDaily(nd);
+              persist({ daily: nd });
+            }} />
         )}
 
         {/* ---------- ドラゴン ---------- */}

@@ -1,0 +1,104 @@
+/* ===== よみとりチェック（まいにち けいさん の ぶんしょうだい） ===== */
+.yt-card{position:relative; gap:8px; padding:12px 12px 14px; margin-top:6px;}
+.yt-tag{align-self:flex-start; font-family:'Mochiy Pop One'; font-size:12px; color:#fff; background:#8FB8FF; border-radius:999px; padding:3px 10px;}
+.yt-text{text-align:left; line-height:2; width:100%;}
+.yt-seg{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:#3A2A6B; background:#FBF7FF; border:2px solid #E7D2F7; border-radius:10px;
+  padding:0 4px; margin:2px 2px; cursor:pointer; text-align:left; line-height:1.6; touch-action:manipulation;}
+.yt-seg:disabled{cursor:default; color:#3A2A6B; border-color:transparent; background:transparent;}
+.yt-seg-ask, .yt-seg-ask:disabled{background:linear-gradient(transparent 45%, #FFE58A 45%); border-color:transparent;}
+/* せいかい したら その 式で つかった ところに マーカー（①＝水色・②＝ピンク。きかれている ところの 黄色と 見分ける）
+   左から 右へ のびる（2行に わたる ときも 1本の 線として じゅんに のびる） */
+.yt-mk{background-repeat:no-repeat; background-position:0 0; background-size:100% 100%; animation:yt-mk-draw .6s ease-out both;}
+.yt-mk1{background-image:linear-gradient(transparent 45%, #8FD6FF 45%);}
+.yt-mk2{background-image:linear-gradient(transparent 45%, #FFA3CF 45%);}
+@keyframes yt-mk-draw{from{background-size:0% 100%;} to{background-size:100% 100%;}}
+@media (prefers-reduced-motion: reduce){.yt-mk{animation:none;}}
+.yt-guide{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#4A7BD0; background:#EEF5FF; border-radius:12px; padding:4px 10px;}
+.yt-small{font-size:14px;}
+
+.yt-pic{width:100%; background:#FFFDF7; border:2px solid #F3E3BF; border-radius:14px; padding:8px 6px 6px;}
+.yt-books{display:grid; gap:2px; align-items:end;}
+.yt-book{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:2px; background:none; border:none; padding:0; cursor:pointer; touch-action:manipulation; min-width:0;}
+.yt-spine{display:block; width:100%; border-radius:4px 4px 1px 1px; border:2px solid rgba(58,42,107,.25);}
+.yt-book.yt-tapped .yt-spine{outline:3px solid #2FAF8E; outline-offset:-1px;}
+.yt-tapno{font-family:'Mochiy Pop One'; font-size:12px; height:16px; color:#2FAF8E;}
+.yt-shelf{height:6px; background:#C79A6B; border-radius:3px; margin-top:1px;}
+.yt-lr{display:flex; justify-content:space-between; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#7A5C98; padding:2px 2px 0;}
+.yt-pic-foot{display:flex; justify-content:center; align-items:center; gap:10px; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#3A2A6B; margin-top:4px; min-height:26px;}
+.yt-pic-foot b{font-family:'Mochiy Pop One'; font-weight:400; color:#2FAF8E; font-size:16px;}
+.yt-clear{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#7A5C98; background:#F3ECFB; border:none; border-radius:10px; padding:3px 10px; cursor:pointer;}
+
+.yt-cal-title{font-family:'Mochiy Pop One'; font-size:14px; color:#3A2A6B; margin-bottom:2px;}
+.yt-cal{display:grid; grid-template-columns:repeat(7,1fr); gap:2px;}
+.yt-cal-w{font-family:'Zen Maru Gothic'; font-weight:700; font-size:11px; color:#7A5C98;}
+.yt-sun{color:#E0607E;} .yt-sat{color:#4A7BD0;}
+.yt-day{position:relative; font-family:'Mochiy Pop One'; font-size:14px; color:#3A2A6B; background:#fff; border:1px solid #EFE4F7; border-radius:8px;
+  height:26px; padding:0; cursor:pointer; touch-action:manipulation;}
+.yt-day-mark{background:#FFD6EA; border-color:#FF8FC4;}
+.yt-day.yt-tapped{background:#DDF7EE; border-color:#2FAF8E;}
+.yt-day-mark.yt-tapped{background:linear-gradient(135deg,#FFD6EA 50%,#DDF7EE 50%);}
+.yt-cal-6 .yt-day{height:22px; font-size:13px;}   /* 6だんの 月は ひくく して 1画面に おさめる */
+.yt-day-no{position:absolute; right:1px; top:-3px; font-size:9px; color:#fff; background:#2FAF8E; border-radius:999px; min-width:14px; line-height:14px;}
+
+.yt-answer{display:flex; flex-direction:column; align-items:center; gap:6px; width:100%;}
+.yt-done{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#7A5C98;}
+.yt-done b{color:#2FAF8E;}
+.yt-step{font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:#3A2A6B;}
+.yt-slots{display:flex; gap:12px; align-items:baseline; justify-content:center;}
+.yt-slot{display:inline-flex; align-items:baseline; gap:4px;}
+.yt-slot-box{font-family:'Mochiy Pop One'; font-size:30px; color:#E85FA3; min-width:2em; background:none; border:none; border-bottom:4px solid #E7D2F7; padding:0 4px; cursor:pointer;}
+.yt-slot-active{border-bottom-color:#FF8FC4; background:#FFF1F8; border-radius:8px 8px 0 0;}
+.yt-slot-empty{color:#C9A8F0;}
+.yt-unit{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:#3A2A6B;}
+.yt-hint{font-size:14px; text-align:left;}
+.yt-keys{width:100%;}
+.yt-keys .dm-keys{gap:8px;}
+.yt-keys .dm-key{font-size:24px; padding:8px 0;}
+.yt-keys .dm-key-ok, .yt-keys .dm-key-del{font-size:16px;}
+.yt-keys .yt-wide-keys{grid-template-columns:repeat(6,1fr); gap:6px;}
+.yt-keys .yt-wide-keys .dm-key{font-size:22px; padding:8px 0; border-radius:14px;}
+.yt-keys .yt-wide-keys .dm-key-del{font-size:13px;}
+.yt-keys .yt-wide-keys .dm-key-ok{font-size:11px; letter-spacing:-.5px;}
+.yt-level{font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px;}
+
+/* たんいの ヒント図 */
+.uh-wrap{width:100%; background:#FBF7FF; border:2px dashed #C9A8F0; border-radius:14px; padding:6px 6px 8px; display:flex; flex-direction:column; gap:4px;}
+.uh-svg{width:100%; height:auto; display:block;}
+.uh-tabs{display:flex; gap:6px;}
+.uh-tabs button{flex:1; font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#7A5C98; background:#fff; border:2px solid #E7D2F7; border-radius:10px; padding:4px 2px; cursor:pointer;}
+.uh-tabs .uh-tab-on{color:#fff; background:#B48CE8; border-color:#B48CE8;}
+.uh-legend{display:flex; flex-wrap:wrap; justify-content:center; gap:4px 12px; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#3A2A6B;}
+.uh-legend i{display:inline-block; width:12px; height:12px; border:1px solid #3A2A6B; border-radius:3px; margin-right:3px; vertical-align:-1px;}
+.uh-break{font-family:'Zen Maru Gothic'; font-weight:700; font-size:14px; color:#3A2A6B; text-align:center;}
+.uh-break b{color:#E85FA3;}
+.uh-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; line-height:1.5; color:#7A5C98; text-align:left;}
+
+/* 場面の 絵（1つの 式の もんだい） */
+.ys-wrap{width:100%;}
+.ys-strip{display:flex; gap:4px; width:100%;}
+.ys-panel{flex:1 1 0; min-width:0; height:auto; display:block;}
+.ys-scroll{overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:2px;}
+.ys-scroll .ys-panel{flex:0 0 31%; scroll-snap-align:start;}
+.ys-more{font-family:'Zen Maru Gothic'; font-weight:700; font-size:11px; color:#7A5C98; text-align:right; margin-top:2px;}
+
+/* 読み方の 手順を ほめる ／ じぶんで マーカー（だんかい B・C） */
+.yt-praise{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#B5651D; background:#FFF4D6; border-radius:12px; padding:4px 12px;
+  animation:yt-pop .35s ease-out both;}
+@keyframes yt-pop{from{transform:scale(.85); opacity:0;} to{transform:scale(1); opacity:1;}}
+.yt-mark-msg{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#4A7BD0; background:#EEF5FF; border-radius:12px; padding:4px 10px; line-height:1.5;}
+.yt-mark-done{color:#2FAF8E; background:#EAFBF5;}
+.yt-guide-self{font-size:12px; color:#7A5C98; background:#F6F0FF;}
+.yt-seg-static{display:inline-block; cursor:default; white-space:pre-wrap;}
+.yt-seg-static:not(.yt-seg-ask){background:transparent; border-color:transparent;}
+.yt-part{cursor:pointer; border-bottom:2px dotted #D9C6F0; touch-action:manipulation; -webkit-tap-highlight-color:transparent;}
+.yt-part.yt-mk{border-bottom-color:transparent;}
+.yt-glow{border-radius:4px; animation:yt-glow 1s ease-in-out infinite; border-bottom-color:transparent;}
+@keyframes yt-glow{0%,100%{box-shadow:0 0 0 0 rgba(143,214,255,0); background:rgba(143,214,255,.15);} 50%{box-shadow:0 0 0 3px rgba(143,214,255,.9); background:rgba(143,214,255,.35);}}
+.yt-glow2{animation-name:yt-glow2;}
+@keyframes yt-glow2{0%,100%{box-shadow:0 0 0 0 rgba(255,163,207,0); background:rgba(255,163,207,.15);} 50%{box-shadow:0 0 0 3px rgba(255,163,207,.9); background:rgba(255,163,207,.35);}}
+@media (prefers-reduced-motion: reduce){.yt-glow, .yt-praise{animation:none;} .yt-glow{background:rgba(143,214,255,.35);}}
+/* いっぱつで 見つけた ときの ほめことば：場所を とらずに カードの 上に うかんで、しばらくして きえる */
+.yt-praise-float{position:absolute; top:6px; left:50%; transform:translateX(-50%); z-index:5; white-space:nowrap; pointer-events:none;
+  box-shadow:0 3px 0 rgba(229,199,126,.7); animation:yt-float 3.2s ease-out both;}
+@keyframes yt-float{0%{opacity:0; transform:translate(-50%,6px) scale(.85);} 10%{opacity:1; transform:translate(-50%,0) scale(1);} 80%{opacity:1;} 100%{opacity:0; transform:translate(-50%,-4px);}}
+@media (prefers-reduced-motion: reduce){.yt-praise-float{animation:yt-fade 3.2s linear both;} @keyframes yt-fade{0%,80%{opacity:1;} 100%{opacity:0;}}}
