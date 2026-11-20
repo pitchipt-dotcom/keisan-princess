@@ -3,7 +3,12 @@ import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./Wr
 import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
 import { DragonScreen } from "./DragonMode.jsx";
 import { ParentReport } from "./ParentReport.jsx";
-import { OhanashiHard } from "./OhanashiHard.jsx";      // まいにち けいさん より あとで 読む（よみとりの CSS の じゅんばんを かえない）
+import { OhanashiHard } from "./OhanashiHard.jsx";
+import { MENU_GROUPS, EXTRA_ITEMS, MENU_SUB, ITEM_TARGET, groupById, normalizeGroup } from "./menu.js";
+import menuDragonArt from "./art/dragons/fire_child.webp";
+import menuFairyArt from "./assets/fairy/fairy-mint-bust.webp";
+const MENU_ART = { dragon: menuDragonArt, fairy: menuFairyArt };     // チャレンジの ボタンの 絵（いまの 素材）
+import "./menu.css";      // まいにち けいさん より あとで 読む（よみとりの CSS の じゅんばんを かえない）
 import { normalizeDaily, chooseEgg, setTodayOverride } from "./dragon.js";
 import { normalizeFairy } from "./fairy/fairy.js";
 // 妖精の国（Three.js を つかう）は 入った ときだけ 読みこむ
@@ -1158,6 +1163,7 @@ export default function App() {
   const [backupMsg, setBackupMsg] = useState("");
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
   const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
+  const [menuGroup, setMenuGroup] = useState(null);     // 「どこから はじめよう？」で えらんだ グループ（セーブの menuGroup）
   const [ohanashi, setOhanashi] = useState({});          // おはなし もんだい「むずかしい」：{ yomiRead:{ stage, streak } }（まいにち けいさん とは べつ）
   const [fairy, setFairy] = useState(() => normalizeFairy());   // 妖精の国（なかよし度・ひらいた エリア）
   const fairyRef = useRef(fairy);
@@ -1182,6 +1188,7 @@ export default function App() {
             if (d.character) setCharacterId(d.character);
             if (d.daily) setDaily(normalizeDaily(d.daily));
             if (d.ohanashi && typeof d.ohanashi === "object") setOhanashi(d.ohanashi);
+            setMenuGroup(normalizeGroup(d.menuGroup));
             if (d.fairy) { const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf); }
           }
         }
@@ -1194,9 +1201,14 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi, menuGroup]);
+
+  /* ---- メニュー：グループ → モード。モードから もどる ときは 入ってきた グループへ ---- */
+  const openGroup = (id) => { SFX.tap(sound); setMenuGroup(id); persist({ menuGroup: id }); setScreen("group"); };
+  const menuScreen = () => (groupById(menuGroup) ? "group" : "mode");
+  const goMenu = () => setScreen(menuScreen());
 
   // 妖精の国：いまの 値から あたらしい 値を つくって、すぐ 保存（つづけて よばれても 古い 値で 上書き しない）
   const updateFairy = (fn) => {
@@ -1238,6 +1250,14 @@ export default function App() {
     setShowHint(false);
     setShowColumnMemo(false);
     setPhase("ask");
+  };
+
+  /* グループの 中の カードを えらぶ（重ねて おいた モードも 同じ 行き先・同じ セーブ） */
+  const openItem = (key) => {
+    const t = ITEM_TARGET[key];
+    if (!t) return;
+    if (t.screen) { SFX.tap(sound); setScreen(t.screen); return; }
+    startGame(t.game, t.mode);
   };
 
   const spawnSparkles = () => {
@@ -1382,7 +1402,7 @@ export default function App() {
 
   // まいにち けいさん から もどる（上の「‹ もどる」と 結果画面の「もどる」で 共通）
   const exitDaily = () => {
-    setScreen("mode");
+    goMenu();
     if (pulls > 0) { setPulls((p) => p - 1); doPull(); }
   };
 
@@ -1395,7 +1415,7 @@ export default function App() {
 
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current,
+    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup,
   });
 
   const applySnapshot = (d) => {
@@ -1409,6 +1429,7 @@ export default function App() {
     if (d.character) setCharacterId(d.character);
     setDaily(normalizeDaily(d.daily));
     setOhanashi(d.ohanashi && typeof d.ohanashi === "object" ? d.ohanashi : {});
+    setMenuGroup(normalizeGroup(d.menuGroup));
     const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf);
   };
 
@@ -1483,7 +1504,7 @@ export default function App() {
         {/* ---------- TOP BAR ---------- */}
         {screen !== "title" && (
           <div className="kk-bar">
-            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily") exitDaily(); else setScreen("mode"); }} aria-label="もどる">‹ もどる</button>
+            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily") exitDaily(); else if (screen === "mode") setScreen("select"); else if (screen === "group") setScreen("mode"); else if (screen === "report") setScreen("mode"); else goMenu(); }} aria-label="もどる">‹ もどる</button>
             <div className="kk-bar-mid">
               <span className="kk-dust">★ {stardust}</span>
             </div>
@@ -1535,28 +1556,22 @@ export default function App() {
         {screen === "mode" && (
           <div className="kk-mode-screen">
             <div className="kk-witch-mini"><DressedCharacter character={charKey} mood="idle" size={108} equipped={myEquipped} /></div>
-            <h2 className="kk-h2">今日は どれを れんしゅうする？</h2>
+            <h2 className="kk-h2">どこから はじめよう？</h2>
 
-            <div className="kk-gametype-grid">
-              {Object.entries(GAMETYPE_INFO).map(([key, info]) => (
-                <button
-                  key={key}
-                  className="kk-gametype-card"
-                  style={{ borderColor: info.accent }}
-                  onClick={() => {
-                    if (key === "daily") { SFX.tap(sound); setScreen("daily"); return; }
-                    if (key === "story") { SFX.tap(sound); setScreen("storyPick"); return; }   // ふつう／むずかしい を えらぶ
-                    startGame(key, key === "kuku" ? "mix" : undefined);
-                  }}
-                >
-                  <span className="kk-gt-icon">{info.icon}</span>
-                  <span className="kk-gt-text"><b>{info.label}</b><small>{info.sub}</small></span>
+            {/* 3つの グループ（前に えらんだ グループは すこし 目立たせる。じどうでは 入らない） */}
+            <div className="mg-groups">
+              {MENU_GROUPS.map((g) => (
+                <button key={g.id} className={"mg-group mg-group-" + g.id + (g.id === menuGroup ? " mg-group-last" : "")}
+                  style={{ "--mg-color": g.color, "--mg-bg": g.bg }} onClick={() => openGroup(g.id)}>
+                  {g.art
+                    ? <span className="mg-art" aria-hidden="true"><img src={MENU_ART.dragon} alt="" className="mg-art-dragon" /><img src={MENU_ART.fairy} alt="" className="mg-art-fairy" /></span>
+                    : <span className="mg-icon" aria-hidden="true">{g.icon}</span>}
+                  <span className="mg-text"><b>{g.label}</b><small>{g.sub}</small></span>
+                  {g.id === menuGroup && <span className="mg-last-badge">まえに えらんだよ</span>}
                 </button>
               ))}
             </div>
 
-            <button className="dr-mode-btn" onClick={() => { SFX.tap(sound); setScreen("dragon"); }}>🐉 ドラゴン</button>
-            <button className="dr-mode-btn fl-mode-btn" onClick={() => { SFX.tap(sound); setScreen("fairy"); }}>🧚 ようせいの くに たんけん</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>あつめた おしゃれを 見る →</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("select"); }}>ほかの こで あそぶ</button>
             <div className="kk-parentmenu-hint">九九の だんの せってい・バックアップが できます</div>
@@ -1608,6 +1623,29 @@ export default function App() {
           </div>
         )}
 
+        {/* ---------- グループの 中（モードカード） ---------- */}
+        {screen === "group" && groupById(menuGroup) && (() => {
+          const g = groupById(menuGroup);
+          return (
+            <div className="kk-mode-screen">
+              <div className="kk-witch-mini"><DressedCharacter character={charKey} mood="idle" size={96} equipped={myEquipped} /></div>
+              <h2 className="kk-h2 mg-group-title" style={{ "--mg-color": g.color }}>{g.art ? "🏆" : g.icon} {g.label}</h2>
+              <div className="kk-gametype-grid">
+                {g.items.map((key) => {
+                  const info = GAMETYPE_INFO[key] || EXTRA_ITEMS[key];
+                  return (
+                    <button key={key} className="kk-gametype-card" style={{ borderColor: info.accent }} data-item={key} onClick={() => openItem(key)}>
+                      <span className="kk-gt-icon">{info.icon}</span>
+                      <span className="kk-gt-text"><b>{info.label}</b><small>{MENU_SUB[key] || info.sub}</small></span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("mode"); }}>‹ どこから はじめよう？ に もどる</button>
+            </div>
+          );
+        })()}
+
         {/* ---------- まいにち けいさん ---------- */}
         {screen === "daily" && (
           <DailyPlay
@@ -1643,7 +1681,7 @@ export default function App() {
                 <span className="kk-gt-text"><b>むずかしい</b><small>よみとり れんしゅう：きかれている ところ・マーカー・2だんかいの しき（ドラゴンも そだつ）</small></span>
               </button>
             </div>
-            <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("mode"); }}>もどる</button>
+            <button className="kk-text-btn" onClick={() => { SFX.tap(sound); goMenu(); }}>もどる</button>
           </div>
         )}
         {screen === "ohanashi" && (
@@ -1664,7 +1702,7 @@ export default function App() {
         {screen === "fairy" && (
           <React.Suspense fallback={<div className="kk-h2" style={{ marginTop: 40 }}>🧚 よみこみちゅう…</div>}>
             <FairyLand fairy={fairy} sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
-              onFairy={updateFairy} onExit={() => { SFX.tap(sound); setScreen("mode"); }} />
+              onFairy={updateFairy} onExit={() => { SFX.tap(sound); goMenu(); }} />
           </React.Suspense>
         )}
 
@@ -1686,7 +1724,7 @@ export default function App() {
             daily={daily}
             sfx={{ tap: () => SFX.tap(sound) }}
             onPickEgg={pickEgg}
-            onExit={() => { SFX.tap(sound); setScreen("mode"); }}
+            onExit={() => { SFX.tap(sound); goMenu(); }}
           />
         )}
 
@@ -1840,7 +1878,7 @@ export default function App() {
             {collectedCount > 0 && (
               <button className="kk-big-btn kk-retry-btn kk-dress-link-btn" onClick={() => { SFX.tap(sound); setScreen("dressup"); }}>👗 {CHARACTERS.find(c=>c.id===charKey).charaName}の コーデを する</button>
             )}
-            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(mode && q ? "play" : "mode"); }}>つづける ♪</button>
+            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(mode && q ? "play" : menuScreen()); }}>つづける ♪</button>
             <button className="kk-text-btn kk-reset" onClick={resetAll}>さいしょから にする</button>
           </div>
         )}
@@ -1872,7 +1910,7 @@ export default function App() {
               })}
             </div>
             <div className="kk-dress-hint">あつめた アイテムを タップして、すきな コーデに しよう♪</div>
-            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(q ? "play" : "mode"); }}>
+            <button className="kk-big-btn" onClick={() => { SFX.tap(sound); setScreen(q ? "play" : menuScreen()); }}>
               ✨ {CHARACTERS.find(c=>c.id===charKey).charaName}の おてつだいを する →
             </button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>図かんに もどる</button>
