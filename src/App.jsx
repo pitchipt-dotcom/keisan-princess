@@ -1158,9 +1158,9 @@ export default function App() {
   const [backupMsg, setBackupMsg] = useState("");
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
   const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
+  const [ohanashi, setOhanashi] = useState({});          // おはなし もんだい「むずかしい」：{ yomiRead:{ stage, streak } }（まいにち けいさん とは べつ）
   const [fairy, setFairy] = useState(() => normalizeFairy());   // 妖精の国（なかよし度・ひらいた エリア）
   const fairyRef = useRef(fairy);
-  const [ohanashi, setOhanashi] = useState({});          // おはなし もんだい「むずかしい」：{ yomiRead:{ stage, streak } }（まいにち けいさん とは べつ）
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1181,8 +1181,8 @@ export default function App() {
             setSeenMilestones(d.seenMilestones || {});
             if (d.character) setCharacterId(d.character);
             if (d.daily) setDaily(normalizeDaily(d.daily));
-            if (d.fairy) { const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf); }
             if (d.ohanashi && typeof d.ohanashi === "object") setOhanashi(d.ohanashi);
+            if (d.fairy) { const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf); }
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1194,7 +1194,7 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, fairy: fairyRef.current, ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
   }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi]);
 
@@ -1395,8 +1395,7 @@ export default function App() {
 
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones, daily, fairy: fairyRef.current,
-    character: characterId, seenMilestones, daily, ohanashi,
+    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current,
   });
 
   const applySnapshot = (d) => {
@@ -1409,8 +1408,8 @@ export default function App() {
     setSeenMilestones(d.seenMilestones || {});
     if (d.character) setCharacterId(d.character);
     setDaily(normalizeDaily(d.daily));
-    const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf);
     setOhanashi(d.ohanashi && typeof d.ohanashi === "object" ? d.ohanashi : {});
+    const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf);
   };
 
   const resetAll = () => {
@@ -1629,12 +1628,6 @@ export default function App() {
           />
         )}
 
-        {/* ---------- 妖精の国 たんけん ---------- */}
-        {screen === "fairy" && (
-          <React.Suspense fallback={<div className="kk-h2" style={{ marginTop: 40 }}>🧚 よみこみちゅう…</div>}>
-            <FairyLand fairy={fairy} sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
-              onFairy={updateFairy} onExit={() => { SFX.tap(sound); setScreen("mode"); }} />
-          </React.Suspense>
         {/* ---------- おはなし もんだい：ふつう／むずかしい ---------- */}
         {screen === "storyPick" && (
           <div className="kk-mode-screen">
@@ -1665,6 +1658,14 @@ export default function App() {
               persist({ daily: nd, ohanashi: no, stardust: nv });
             }}
             onExit={() => { SFX.tap(sound); setScreen("storyPick"); }} />
+        )}
+
+        {/* ---------- 妖精の国 たんけん ---------- */}
+        {screen === "fairy" && (
+          <React.Suspense fallback={<div className="kk-h2" style={{ marginTop: 40 }}>🧚 よみこみちゅう…</div>}>
+            <FairyLand fairy={fairy} sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
+              onFairy={updateFairy} onExit={() => { SFX.tap(sound); setScreen("mode"); }} />
+          </React.Suspense>
         )}
 
         {/* ---------- おうちのひとレポート ---------- */}
