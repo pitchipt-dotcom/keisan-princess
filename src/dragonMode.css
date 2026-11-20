@@ -66,3 +66,4 @@
 /* ポイントの でどころ（まいにち けいさん／おはなし もんだい） */
 .dr-src{display:flex; flex-wrap:wrap; justify-content:center; gap:4px 10px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px; color:#7A5C98; margin-top:4px;}
 .dr-src b{color:#3A2A6B; font-size:13px;}
+.fl-mode-btn{border-color:#9EE6B8; box-shadow:0 5px 0 rgba(158,230,184,.6);}
