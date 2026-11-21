@@ -2156,8 +2156,6 @@ const STAR_POS = [
 function Style() {
   return (
     <style>{`
-@import url('https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Yomogi&display=swap');
-
 .kk-root{
   --night:${C.night}; --night-deep:${C.nightDeep}; --rose:${C.rose}; --rose-deep:${C.roseDeep};
   --gold:${C.gold}; --mint:${C.mint}; --lav:${C.lav}; --plum:${C.plum}; --cream:${C.cream};
