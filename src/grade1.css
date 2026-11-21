@@ -6,18 +6,18 @@
 .g1-thing-on{background:rgba(95,199,154,.18); box-shadow:0 0 0 2px #2FAF8E;}
 .g1-no{position:absolute; right:-4px; top:-6px; min-width:18px; height:18px; line-height:18px; padding:0 3px; border-radius:999px; background:#2FAF8E; color:#fff;
   font-family:'Mochiy Pop One'; font-size:11px; text-align:center;}
-.g1-count{display:flex; align-items:center; gap:10px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#3A2A6B; min-height:26px;}
+.g1-count{display:flex; align-items:center; gap:10px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:var(--night); min-height:26px;}
 .g1-count b{font-family:'Mochiy Pop One'; font-weight:400; font-size:18px; color:#2FAF8E;}
-.g1-clear{font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#7A5C98; background:#F3ECFB; border:none; border-radius:999px; padding:3px 10px; cursor:pointer;}
-.g1-tip{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#7A5C98; text-align:center;}
+.g1-clear{font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:var(--plum-soft); background:var(--tc-f3ecfb); border:none; border-radius:999px; padding:3px 10px; cursor:pointer;}
+.g1-tip{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:var(--plum-soft); text-align:center;}
 /* 数字は 3つ よこに（ほかの モードの 2れつ より つよく） */
 .kk-opts.g1-opts{grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px;}
 .kk-opts.g1-opts .kk-opt{padding:16px 0;}
-.g1-big-num{display:inline-block; font-family:'Mochiy Pop One'; font-size:44px; color:var(--rose-deep, #E85FA3); line-height:1; vertical-align:middle; margin-right:6px;}
+.g1-big-num{display:inline-block; font-family:'Mochiy Pop One'; font-size:44px; color:var(--rose-deep, var(--rose-deep)); line-height:1; vertical-align:middle; margin-right:6px;}
 /* ならべよう：お皿 と のせる もの */
 .g1-plate{display:flex; flex-wrap:wrap; justify-content:center; align-content:center; gap:4px; width:100%; min-height:118px; padding:10px 14px; box-sizing:border-box;
-  background:radial-gradient(ellipse at 50% 45%, #fff 0 58%, #F4F0FB 60% 100%); border:3px solid #E3D6F2; border-radius:50% / 40%;}
-.g1-plate-empty{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#B9A6D6;}
+  background:radial-gradient(ellipse at 50% 45%, #fff 0 58%, var(--tc-f4f0fb) 60% 100%); border:3px solid var(--tc-e3d6f2); border-radius:50% / 40%;}
+.g1-plate-empty{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:var(--tc-b9a6d6);}
 .g1-thing.g1-on-plate, .g1-thing.g1-in-pool{position:relative; transform:none; width:40px; height:40px; animation:g1-pop .2s ease-out;}
 @keyframes g1-pop{from{transform:scale(.6);} to{transform:scale(1);}}
 .g1-pool{display:grid; grid-template-columns:repeat(6, 1fr); gap:2px; width:100%; justify-items:center; background:#FFF6E3; border-radius:14px; padding:4px;}
@@ -35,23 +35,23 @@
 .g1-case-grid{display:grid; grid-template-columns:repeat(5, 30px); grid-template-rows:repeat(2, 34px); gap:2px; padding:5px; background:#E8F4FF; border:3px solid #7FB2E8; border-radius:10px;}
 .g1-cell{position:relative; display:flex; align-items:center; justify-content:center; background:#fff; border:1px solid #CFE2F6; border-radius:6px; padding:0; cursor:pointer; touch-action:manipulation;}
 .g1-case-label{font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px; color:#4A86C5; margin-top:2px;}
-.g1-plus{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#7A5C98;}
+.g1-plus{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:var(--plum-soft);}
 .g1-ones{flex:1; min-width:0; display:flex; flex-direction:column; align-items:center;}
 /* おはじきの ヒント */
-.g1-ohajiki{width:100%; background:#FFFDF7; border:2px dashed #E3C8F5; border-radius:16px; padding:10px 8px 6px; box-sizing:border-box;}
+.g1-ohajiki{width:100%; background:#FFFDF7; border:2px dashed var(--tc-e3c8f5); border-radius:16px; padding:10px 8px 6px; box-sizing:border-box;}
 .g1-oh-row{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:5px; min-height:30px;}
 .g1-oh{width:24px; height:24px; border-radius:50%; box-shadow:inset 0 -3px 0 rgba(0,0,0,.12); transition:transform .6s ease, opacity .6s ease, margin .6s ease;}
-.g1-oh-a{background:radial-gradient(circle at 35% 35%, #fff 0 18%, #FF8FC4 22%);}
+.g1-oh-a{background:radial-gradient(circle at 35% 35%, #fff 0 18%, var(--rose) 22%);}
 .g1-oh-b{background:radial-gradient(circle at 35% 35%, #fff 0 18%, #7FB2E8 22%);}
-.g1-oh-take{background:radial-gradient(circle at 35% 35%, #fff 0 18%, #FF8FC4 22%);}
+.g1-oh-take{background:radial-gradient(circle at 35% 35%, #fff 0 18%, var(--rose) 22%);}
 .g1-oh-gapl{margin-left:34px;}                                 /* たしざん：はじめは 2つの まとまりの あいだを あける */
 .g1-go .g1-oh-gapl{margin-left:0;}                              /* → くっついて あわさる */
 .g1-go .g1-oh-take{transform:translateY(-26px) scale(.7); opacity:.15;}   /* ひきざん：とって へらす */
-.g1-oh-zero{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#7A5C98;}
-.g1-oh-cap{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:6px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B;}
-.g1-oh-again{font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px; color:#7A5C98; background:#F3ECFB; border:none; border-radius:999px; padding:2px 8px; cursor:pointer;}
+.g1-oh-zero{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:var(--plum-soft);}
+.g1-oh-cap{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:6px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:var(--night);}
+.g1-oh-again{font-family:'Zen Maru Gothic'; font-weight:900; font-size:11px; color:var(--plum-soft); background:var(--tc-f3ecfb); border:none; border-radius:999px; padding:2px 8px; cursor:pointer;}
 /* 10もん の すすみ と おわり */
-.g1-round{font-family:'Mochiy Pop One'; font-size:14px; color:#3A2A6B; background:#fff; border-radius:999px; padding:3px 12px; box-shadow:0 2px 0 rgba(201,168,240,.5); align-self:center; margin-top:8px;}
-.g1-finish-line{font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:#3A2A6B; margin:2px 0;}
-.g1-finish-line b{font-family:'Mochiy Pop One'; font-weight:400; color:#E85FA3; font-size:20px;}
+.g1-round{font-family:'Mochiy Pop One'; font-size:14px; color:var(--night); background:#fff; border-radius:999px; padding:3px 12px; box-shadow:0 2px 0 rgba(var(--lav-rgb),.5); align-self:center; margin-top:8px;}
+.g1-finish-line{font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:var(--night); margin:2px 0;}
+.g1-finish-line b{font-family:'Mochiy Pop One'; font-weight:400; color:var(--rose-deep); font-size:20px;}
 @media (prefers-reduced-motion: reduce){.g1-oh{transition:none;} .g1-thing.g1-on-plate, .g1-thing.g1-in-pool{animation:none;}}

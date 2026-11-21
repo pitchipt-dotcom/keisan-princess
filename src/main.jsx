@@ -5,6 +5,8 @@ import App from "./App.jsx";
 // src/fonts/ の 中身は Google Fonts が 配っている ファイルと 同じもの（SIL OFL）
 import "./fonts/fonts.css";
 import "./index.css";
+// テーマの 色（プリンセス／プリンス）の 変数
+import "./themeColors.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

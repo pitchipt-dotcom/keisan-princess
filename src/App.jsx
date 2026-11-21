@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
-import { THEMES, normalizeTheme, getTheme, setTheme, useThemeId, themedArtKey, themedChar, themedItem, themedMilestone, renameDeep } from "./theme.js";
+import { THEMES, normalizeTheme, getTheme, setTheme, useThemeId, themedArtKey, themedChar, themedItem, themedMilestone, renameDeep, themedColor } from "./theme.js";
 import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
 import { DragonScreen } from "./DragonMode.jsx";
 import { ParentReport } from "./ParentReport.jsx";
@@ -731,7 +731,7 @@ function GroupVisual({ a, b, scene, view }) {
   return (
     <div className="kk-groups">
       {Array.from({ length: a }).map((_, gi) => (
-        <div key={gi} className="kk-group-card" style={{ background: scene.color }}>
+        <div key={gi} className="kk-group-card" style={{ background: themedColor(scene.color) }}>
           {view === "dots"
             ? <div className="kk-dots">{Array.from({ length: b }).map((_, i) => <MiniItem key={i} type={scene.item} size={15} />)}</div>
             : <div className="kk-badge"><MiniItem type={scene.item} size={20} /><span>{b}</span></div>}
@@ -745,11 +745,11 @@ function GroupVisual({ a, b, scene, view }) {
 function TwoClusterVisual({ a, b, scene }) {
   return (
     <div className="kk-twocluster">
-      <div className="kk-cluster-box" style={{ background: scene.color }}>
+      <div className="kk-cluster-box" style={{ background: themedColor(scene.color) }}>
         {Array.from({ length: a }).map((_, i) => <MiniItem key={i} type={scene.item} size={17} />)}
       </div>
       <div className="kk-cluster-op">＋</div>
-      <div className="kk-cluster-box" style={{ background: scene.color }}>
+      <div className="kk-cluster-box" style={{ background: themedColor(scene.color) }}>
         {Array.from({ length: b }).map((_, i) => <MiniItem key={i} type={scene.item} size={17} />)}
       </div>
     </div>
@@ -759,7 +759,7 @@ function TwoClusterVisual({ a, b, scene }) {
 /* ---- ひきざん：とった分に ×を つける ようす ---- */
 function CrossOutVisual({ a, b, scene }) {
   return (
-    <div className="kk-cluster-box kk-crossout-box" style={{ background: scene.color }}>
+    <div className="kk-cluster-box kk-crossout-box" style={{ background: themedColor(scene.color) }}>
       {Array.from({ length: a }).map((_, i) => (
         <div key={i} className={"kk-crossout-item" + (i < b ? " kk-crossed" : "")}>
           <MiniItem type={scene.item} size={17} />
@@ -772,7 +772,7 @@ function CrossOutVisual({ a, b, scene }) {
 /* ---- 10づくり：あといくつで 10こに なるか ---- */
 function FillToTenVisual({ a, scene }) {
   return (
-    <div className="kk-cluster-box kk-fillten-box" style={{ background: scene.color }}>
+    <div className="kk-cluster-box kk-fillten-box" style={{ background: themedColor(scene.color) }}>
       {Array.from({ length: 10 }).map((_, i) => (
         i < a
           ? <div key={i} className="kk-fillten-item"><MiniItem type={scene.item} size={17} /></div>
@@ -836,7 +836,7 @@ function MagicMemo({ q, onClose }) {
 
         {/* ── 今のもんだいカード（常に見える） ── */}
         {q && (
-          <div className="kk-memo-qcard" style={{ background: q.scene.color }}>
+          <div className="kk-memo-qcard" style={{ background: themedColor(q.scene.color) }}>
             <div className="kk-memo-qlabel">今のもんだい 📌</div>
             <div className="kk-memo-qtext">{q.scene.ask(q.a, q.b)}</div>
             <div className="kk-memo-qrow">
@@ -1684,13 +1684,13 @@ export default function App() {
                 <button
                   key={c.id}
                   className={"kk-char-card" + (characterId === c.id ? " kk-char-card-active" : "")}
-                  style={{ borderColor: c.accent }}
+                  style={{ borderColor: themedColor(c.accent) }}
                   onClick={() => { SFX.tap(sound); setCharacterId(c.id); persist({ character: c.id }); setScreen("mode"); }}
                 >
                   <div className="kk-char-preview"><c.Comp mood="happy" size={88} /></div>
                   <div className="kk-char-text">
                     <div className="kk-char-name">{c.label}</div>
-                    <div className="kk-char-title" style={{ color: c.accent }}>{c.title}</div>
+                    <div className="kk-char-title" style={{ color: themedColor(c.accent, "text") }}>{c.title}</div>
                     <div className="kk-char-sub">{c.sub}</div>
                   </div>
                 </button>
@@ -1709,7 +1709,7 @@ export default function App() {
             <div className="mg-groups">
               {MENU_GROUPS.map((g) => (
                 <button key={g.id} className={"mg-group mg-group-" + g.id + (g.id === menuGroup ? " mg-group-last" : "")}
-                  style={{ "--mg-color": g.color, "--mg-bg": g.bg }} onClick={() => openGroup(g.id)}>
+                  style={{ "--mg-color": themedColor(g.color), "--mg-bg": themedColor(g.bg) }} onClick={() => openGroup(g.id)}>
                   {g.art
                     ? <span className="mg-art" aria-hidden="true"><img src={MENU_ART_BY_THEME[themeId].dragon} alt="" className="mg-art-dragon" /><img src={MENU_ART_BY_THEME[themeId].fairy} alt="" className="mg-art-fairy" /></span>
                     : <span className="mg-icon" aria-hidden="true">{g.icon}</span>}
@@ -1802,12 +1802,12 @@ export default function App() {
           return (
             <div className="kk-mode-screen">
               <div className="kk-witch-mini"><DressedCharacter character={charKey} mood="idle" size={96} equipped={myEquipped} /></div>
-              <h2 className="kk-h2 mg-group-title" style={{ "--mg-color": g.color }}>{g.art ? "🏆" : g.icon} {g.label}</h2>
+              <h2 className="kk-h2 mg-group-title" style={{ "--mg-color": themedColor(g.color) }}>{g.art ? "🏆" : g.icon} {g.label}</h2>
               <div className="kk-gametype-grid">
                 {g.items.map((key) => {
                   const info = GAMETYPE_INFO[key] || EXTRA_ITEMS[key];
                   return (
-                    <button key={key} className="kk-gametype-card" style={{ borderColor: info.accent }} data-item={key} onClick={() => openItem(key)}>
+                    <button key={key} className="kk-gametype-card" style={{ borderColor: themedColor(info.accent) }} data-item={key} onClick={() => openItem(key)}>
                       <span className="kk-gt-icon">{info.icon}</span>
                       <span className="kk-gt-text"><b>{info.label}</b><small>{MENU_SUB[key] || info.sub}</small></span>
                     </button>
@@ -1883,7 +1883,7 @@ export default function App() {
             <div className="oh-pick">
               {(g1Pick === "kazu" ? KAZU_STAGES.map((st) => ({ key: st.stage, label: `${st.stage}. ${st.name}`, sub: st.sub, icon: st.icon }))
                 : TASHI_KINDS.map((k) => ({ key: k.kind, label: k.name, sub: k.sub, icon: k.icon }))).map((it) => (
-                <button key={it.key} className="kk-gametype-card oh-pick-card" style={{ borderColor: GAMETYPE_INFO[g1Pick].accent }} data-pick={it.key}
+                <button key={it.key} className="kk-gametype-card oh-pick-card" style={{ borderColor: themedColor(GAMETYPE_INFO[g1Pick].accent) }} data-pick={it.key}
                   onClick={() => startGame(g1Pick, it.key)}>
                   <span className="kk-gt-icon">{it.icon}</span>
                   <span className="kk-gt-text"><b>{it.label}</b><small>{it.sub}{g1Pick === "tashi10" ? `（${ROUND_SIZE}もん）` : ""}</small></span>
@@ -1900,11 +1900,11 @@ export default function App() {
             <div className="kk-witch-mini"><DressedCharacter character={charKey} mood="idle" size={96} equipped={myEquipped} /></div>
             <h2 className="kk-h2">📖 おはなし もんだい</h2>
             <div className="oh-pick">
-              <button className="kk-gametype-card oh-pick-card" style={{ borderColor: "#FFB3C7" }} onClick={() => startGame("story")}>
+              <button className="kk-gametype-card oh-pick-card" style={{ borderColor: themedColor("#FFB3C7") }} onClick={() => startGame("story")}>
                 <span className="kk-gt-icon">🌸</span>
                 <span className="kk-gt-text"><b>ふつう</b><small>ぶんしょうだいを ペンで とこう</small></span>
               </button>
-              <button className="kk-gametype-card oh-pick-card oh-pick-hard" style={{ borderColor: "#B48CE8" }} onClick={() => { SFX.tap(sound); setScreen("ohanashi"); }}>
+              <button className="kk-gametype-card oh-pick-card oh-pick-hard" style={{ borderColor: themedColor("#B48CE8") }} onClick={() => { SFX.tap(sound); setScreen("ohanashi"); }}>
                 <span className="kk-gt-icon">🔍</span>
                 <span className="kk-gt-text"><b>むずかしい</b><small>よみとり れんしゅう：きかれている ところ・マーカー・2だんかいの しき（ドラゴンも そだつ）</small></span>
               </button>
@@ -2253,12 +2253,10 @@ function Style() {
   return (
     <style>{`
 .kk-root{
-  --night:${C.night}; --night-deep:${C.nightDeep}; --rose:${C.rose}; --rose-deep:${C.roseDeep};
-  --gold:${C.gold}; --mint:${C.mint}; --lav:${C.lav}; --plum:${C.plum}; --cream:${C.cream};
   position:relative; min-height:100vh; width:100%;
   font-family:'Zen Maru Gothic',sans-serif; color:var(--plum);
   background:
-    radial-gradient(120% 80% at 50% -10%, #FFE7F4 0%, #F3DEFB 38%, #E7D2F7 70%, #DCC6F2 100%);
+    radial-gradient(120% 80% at 50% -10%, var(--tc-ffe7f4) 0%, var(--tc-f3defb) 38%, var(--tc-e7d2f7) 70%, var(--tc-dcc6f2) 100%);
   display:flex; justify-content:center; align-items:flex-start;
   overflow-x:hidden; padding:0 0 40px;
 }
@@ -2270,24 +2268,24 @@ function Style() {
 
 .kk-bar{display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 4px 12px;}
 .kk-bar-mid{flex:1; display:flex; justify-content:center;}
-.kk-dust{font-family:'Mochiy Pop One'; background:var(--night); color:var(--gold); padding:7px 18px; border-radius:999px; box-shadow:0 4px 0 rgba(74,45,107,.35); font-size:18px; letter-spacing:.5px;}
-.kk-icon-btn{font-family:'Zen Maru Gothic'; font-weight:700; border:none; background:rgba(255,255,255,.85); color:var(--plum); padding:8px 12px; border-radius:14px; box-shadow:0 3px 0 rgba(124,92,152,.3); cursor:pointer; font-size:14px;}
-.kk-icon-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(124,92,152,.3);}
+.kk-dust{font-family:'Mochiy Pop One'; background:var(--night); color:var(--gold); padding:7px 18px; border-radius:999px; box-shadow:0 4px 0 rgba(var(--plum-rgb),.35); font-size:18px; letter-spacing:.5px;}
+.kk-icon-btn{font-family:'Zen Maru Gothic'; font-weight:700; border:none; background:rgba(255,255,255,.85); color:var(--plum); padding:8px 12px; border-radius:14px; box-shadow:0 3px 0 rgba(var(--tc-7c5c98-rgb),.3); cursor:pointer; font-size:14px;}
+.kk-icon-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(var(--tc-7c5c98-rgb),.3);}
 
 /* ---- title ---- */
 .kk-title-screen{display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:6vh;}
-.kk-witch-float{animation:kk-bob 3.2s ease-in-out infinite; filter:drop-shadow(0 12px 14px rgba(74,45,107,.25));}
+.kk-witch-float{animation:kk-bob 3.2s ease-in-out infinite; filter:drop-shadow(0 12px 14px rgba(var(--plum-rgb),.25));}
 @keyframes kk-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
 .kk-logo{font-family:'Mochiy Pop One'; font-size:36px; margin:6px 0 2px; color:var(--night);
-  text-shadow:2px 2px 0 var(--gold), 4px 4px 0 rgba(255,143,196,.6); letter-spacing:1px; line-height:1.3; max-width:300px;}
+  text-shadow:2px 2px 0 var(--gold), 4px 4px 0 rgba(var(--logo-shadow-rgb),.6); letter-spacing:1px; line-height:1.3; max-width:300px;}
 .kk-sub{font-size:15px; color:var(--plum); margin:4px 16px 26px; font-weight:700; line-height:1.7;}
 
 .kk-big-btn{font-family:'Mochiy Pop One'; font-size:22px; color:#fff; border:none; cursor:pointer;
   background:linear-gradient(180deg,var(--rose),var(--rose-deep)); padding:16px 40px; border-radius:999px;
-  box-shadow:0 6px 0 ${C.roseDeep}, 0 10px 18px rgba(232,95,163,.4); margin:6px 0; letter-spacing:1px;
+  box-shadow:0 6px 0 var(--rose-deep), 0 10px 18px rgba(var(--rose-deep-rgb),.4); margin:6px 0; letter-spacing:1px;
   transition:transform .08s;}
-.kk-big-btn:active{transform:translateY(4px); box-shadow:0 2px 0 ${C.roseDeep}, 0 6px 10px rgba(232,95,163,.4);}
-.kk-text-btn{background:none; border:none; color:var(--plum); font-family:'Zen Maru Gothic'; font-weight:700; font-size:14px; cursor:pointer; margin-top:14px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--rose);}
+.kk-big-btn:active{transform:translateY(4px); box-shadow:0 2px 0 var(--rose-deep), 0 6px 10px rgba(var(--rose-deep-rgb),.4);}
+.kk-text-btn{background:none; border:none; color:var(--plum); font-family:'Zen Maru Gothic'; font-weight:700; font-size:14px; cursor:pointer; margin-top:14px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--link-line);}
 
 /* ---- mode ---- */
 .kk-mode-screen{display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:1vh;}
@@ -2296,16 +2294,16 @@ function Style() {
 .kk-gametype-card{
   display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
   background:#fff; border:3px solid var(--lav); border-radius:20px;
-  padding:16px 10px; cursor:pointer; box-shadow:0 5px 0 rgba(201,168,240,.45);
+  padding:16px 10px; cursor:pointer; box-shadow:0 5px 0 rgba(var(--lav-rgb),.45);
 }
-.kk-gametype-card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(201,168,240,.45);}
+.kk-gametype-card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(var(--lav-rgb),.45);}
 .kk-gt-icon{font-size:30px;}
 .kk-gt-text{display:flex; flex-direction:column; gap:3px;}
 .kk-gt-text b{font-family:'Mochiy Pop One'; font-size:14px; color:var(--night); line-height:1.3;}
-.kk-gt-text small{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,#7A5C98); line-height:1.3;}
+.kk-gt-text small{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,var(--plum-soft)); line-height:1.3;}
 .kk-dan-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; width:100%; max-width:380px;}
-.kk-dan-btn{font-family:'Mochiy Pop One'; font-size:19px; color:var(--night); background:#fff; border:3px solid var(--lav); border-radius:18px; padding:16px 0; cursor:pointer; box-shadow:0 5px 0 rgba(201,168,240,.9);}
-.kk-dan-btn:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(201,168,240,.9);}
+.kk-dan-btn{font-family:'Mochiy Pop One'; font-size:19px; color:var(--night); background:#fff; border:3px solid var(--lav); border-radius:18px; padding:16px 0; cursor:pointer; box-shadow:0 5px 0 rgba(var(--lav-rgb),.9);}
+.kk-dan-btn:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(var(--lav-rgb),.9);}
 
 /* ---- play ---- */
 .kk-play{display:flex; flex-direction:column; align-items:center;}
@@ -2321,8 +2319,8 @@ function Style() {
 .kk-sparkle{position:absolute; top:60%; z-index:1; color:var(--gold); animation:kk-rise linear forwards; pointer-events:none; text-shadow:0 0 8px var(--gold);}
 @keyframes kk-rise{0%{opacity:0; transform:translateY(0) scale(.4) rotate(0)}20%{opacity:1}100%{opacity:0; transform:translateY(-160px) scale(1.2) rotate(180deg)}}
 
-.kk-qbox{background:#fff; border-radius:24px; padding:18px 20px 20px; margin:16px 0; width:100%; text-align:center; box-shadow:0 6px 0 rgba(201,168,240,.5);}
-.kk-q-sub{font-size:14px; color:var(--plum-soft,#7A5C98); font-weight:700; margin-bottom:6px; font-family:'Yomogi';}
+.kk-qbox{background:#fff; border-radius:24px; padding:18px 20px 20px; margin:16px 0; width:100%; text-align:center; box-shadow:0 6px 0 rgba(var(--lav-rgb),.5);}
+.kk-q-sub{font-size:14px; color:var(--plum-soft,var(--plum-soft)); font-weight:700; margin-bottom:6px; font-family:'Yomogi';}
 .kk-q-main{font-family:'Mochiy Pop One'; font-size:46px; color:var(--night); line-height:1;}
 .kk-x{color:var(--rose-deep); margin:0 4px;}
 .kk-eq{color:var(--plum); margin-left:6px;}
@@ -2332,13 +2330,13 @@ function Style() {
 .kk-opt:hover{background:#F4FFFB;}
 .kk-opt:active{transform:translateY(4px); box-shadow:0 2px 0 #57c9b0;}
 
-.kk-feedback{width:100%; background:#fff; border-radius:24px; padding:22px 18px; margin:16px 0 6px; text-align:center; box-shadow:0 6px 0 rgba(201,168,240,.5); animation:kk-pop .3s ease;}
+.kk-feedback{width:100%; background:#fff; border-radius:24px; padding:22px 18px; margin:16px 0 6px; text-align:center; box-shadow:0 6px 0 rgba(var(--lav-rgb),.5); animation:kk-pop .3s ease;}
 @keyframes kk-pop{0%{transform:scale(.85); opacity:0}100%{transform:scale(1); opacity:1}}
 .kk-fb-right .kk-fb-big{color:var(--rose-deep);}
-.kk-fb-wrong .kk-fb-big{color:var(--plum-soft,#7A5C98);}
+.kk-fb-wrong .kk-fb-big{color:var(--plum-soft,var(--plum-soft));}
 .kk-fb-big{font-family:'Mochiy Pop One'; font-size:34px; margin-bottom:6px;}
-.kk-retry-btn{background:linear-gradient(180deg,var(--lav),#A98ED0); box-shadow:0 6px 0 #8A6BB8, 0 10px 18px rgba(169,142,208,.4);}
-.kk-retry-btn:active{box-shadow:0 2px 0 #8A6BB8, 0 6px 10px rgba(169,142,208,.4);}
+.kk-retry-btn{background:linear-gradient(180deg,var(--lav),var(--tc-a98ed0)); box-shadow:0 6px 0 var(--tc-8a6bb8), 0 10px 18px rgba(var(--tc-a98ed0-rgb),.4);}
+.kk-retry-btn:active{box-shadow:0 2px 0 var(--tc-8a6bb8), 0 6px 10px rgba(var(--tc-a98ed0-rgb),.4);}
 .kk-fb-eq{font-family:'Mochiy Pop One'; font-size:26px; color:var(--night); margin-bottom:8px;}
 .kk-fb-eq b{color:var(--rose-deep);}
 .kk-fb-msg{font-size:14px; font-weight:700; color:var(--plum); margin-bottom:14px; font-family:'Yomogi';}
@@ -2346,62 +2344,62 @@ function Style() {
 .kk-coll-link{margin-top:4px;}
 
 /* ---- scene (おてつだいの場面) ---- */
-.kk-scene{background:#fff; border-radius:24px; padding:16px 14px 18px; margin:16px 0; width:100%; box-shadow:0 6px 0 rgba(201,168,240,.5); display:flex; flex-direction:column; align-items:center;}
+.kk-scene{background:#fff; border-radius:24px; padding:16px 14px 18px; margin:16px 0; width:100%; box-shadow:0 6px 0 rgba(var(--lav-rgb),.5); display:flex; flex-direction:column; align-items:center;}
 .kk-scene-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:16px; color:var(--plum); text-align:center; line-height:1.7; margin-bottom:14px;}
 .kk-scene-text b{font-family:'Mochiy Pop One'; color:var(--rose-deep); font-size:20px;}
 .kk-groups{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
-.kk-group-card{border-radius:14px; padding:8px; min-width:46px; min-height:46px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 0 2px rgba(74,45,107,.12);}
+.kk-group-card{border-radius:14px; padding:8px; min-width:46px; min-height:46px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 0 2px rgba(var(--plum-rgb),.12);}
 .kk-dots{display:flex; flex-wrap:wrap; gap:3px; max-width:57px; justify-content:center;}
 .kk-badge{display:flex; flex-direction:column; align-items:center; gap:1px;}
 .kk-badge span{font-family:'Mochiy Pop One'; font-size:20px; color:var(--night); line-height:1;}
-.kk-hint-btn{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:var(--plum-soft,#7A5C98); background:#F3ECFB; border:2px dashed var(--lav); border-radius:14px; padding:9px 18px; cursor:pointer;}
+.kk-hint-btn{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:var(--plum-soft,var(--plum-soft)); background:var(--tc-f3ecfb); border:2px dashed var(--lav); border-radius:14px; padding:9px 18px; cursor:pointer;}
 .kk-hint-btn:active{transform:translateY(2px);}
 .kk-fb-total{font-family:'Mochiy Pop One'; font-size:24px; color:var(--night); margin-bottom:2px;}
 .kk-fb-total b{color:var(--rose-deep); font-size:30px;}
-.kk-fb-echo{font-family:'Yomogi'; font-size:13px; color:var(--plum-soft,#7A5C98); opacity:.75; margin-bottom:10px;}
+.kk-fb-echo{font-family:'Yomogi'; font-size:13px; color:var(--plum-soft,var(--plum-soft)); opacity:.75; margin-bottom:10px;}
 .kk-witch-mini{margin-bottom:2px; animation:kk-bob2 3s ease-in-out infinite;}
-.kk-parentmenu-hint{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,#7A5C98); opacity:.7; margin-top:18px; text-align:center;}
-.kk-tiny-btn{background:none; border:none; color:var(--plum-soft,#7A5C98); font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; cursor:pointer; margin-top:4px; opacity:.7; text-decoration:underline; text-underline-offset:3px;}
+.kk-parentmenu-hint{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,var(--plum-soft)); opacity:.7; margin-top:18px; text-align:center;}
+.kk-tiny-btn{background:none; border:none; color:var(--plum-soft,var(--plum-soft)); font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; cursor:pointer; margin-top:4px; opacity:.7; text-decoration:underline; text-underline-offset:3px;}
 .kk-dan-wrap{width:100%; max-width:380px; margin-top:10px;}
 .kk-dan-note{font-size:11.5px; color:var(--plum); font-weight:700; margin-bottom:10px; line-height:1.6;}
 
 /* ---- テーマ（プリンセス／プリンス） ---- */
 .kk-theme{display:flex; gap:10px; justify-content:center; margin:2px 0 12px;}
-.kk-theme-btn{display:flex; align-items:center; gap:6px; font-family:'Mochiy Pop One'; font-size:15px; color:var(--night); background:#fff; border:3px solid #E6D9F5; border-radius:18px; padding:8px 16px; cursor:pointer; box-shadow:0 3px 0 rgba(201,168,240,.5);}
+.kk-theme-btn{display:flex; align-items:center; gap:6px; font-family:'Mochiy Pop One'; font-size:15px; color:var(--night); background:#fff; border:3px solid var(--tc-e6d9f5); border-radius:18px; padding:8px 16px; cursor:pointer; box-shadow:0 3px 0 rgba(var(--lav-rgb),.5);}
 .kk-theme-icon{font-size:20px;}
-.kk-theme-princess.kk-theme-on{border-color:#F06AAE; background:#FFEAF4; box-shadow:0 3px 0 #E39BC1;}
+.kk-theme-princess.kk-theme-on{border-color:var(--tc-f06aae); background:var(--tc-ffeaf4); box-shadow:0 3px 0 var(--tc-e39bc1);}
 .kk-theme-prince.kk-theme-on{border-color:#4A86C5; background:#EAF3FF; box-shadow:0 3px 0 #8DB5E0;}
 .kk-theme-btn:active{transform:translateY(2px);}
 .kk-theme-compact{justify-content:flex-start; margin:6px 0 0;}
 .kk-theme-compact .kk-theme-btn{font-size:13px; padding:6px 12px;}
 
 /* ---- バックアップ ---- */
-.kk-backup-section{margin-top:20px; padding-top:16px; border-top:2px dashed rgba(201,168,240,.5); text-align:left;}
+.kk-backup-section{margin-top:20px; padding-top:16px; border-top:2px dashed rgba(var(--lav-rgb),.5); text-align:left;}
 .kk-backup-title{font-family:'Mochiy Pop One'; font-size:14px; color:var(--night); margin-bottom:8px;}
 .kk-backup-btn{
   display:block; width:100%; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px;
   color:#fff; background:var(--lav); border:none; border-radius:14px; padding:11px 0;
-  cursor:pointer; margin:6px 0; box-shadow:0 3px 0 #A98ED0;
+  cursor:pointer; margin:6px 0; box-shadow:0 3px 0 var(--tc-a98ed0);
 }
-.kk-backup-btn:active{transform:translateY(2px); box-shadow:0 1px 0 #A98ED0;}
+.kk-backup-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--tc-a98ed0);}
 .kk-backup-btn-copy{background:var(--mint); box-shadow:0 3px 0 #57c9b0;}
 .kk-backup-btn-copy:active{box-shadow:0 1px 0 #57c9b0;}
-.kk-backup-btn-restore{background:var(--rose-deep); box-shadow:0 3px 0 #C0568A;}
-.kk-backup-btn-restore:active{box-shadow:0 1px 0 #C0568A;}
+.kk-backup-btn-restore{background:var(--rose-deep); box-shadow:0 3px 0 var(--tc-c0568a);}
+.kk-backup-btn-restore:active{box-shadow:0 1px 0 var(--tc-c0568a);}
 .kk-backup-textarea{
   width:100%; min-height:64px; font-size:11px; font-family:monospace; color:var(--plum);
-  background:#fff; border:2px solid #EADCF9; border-radius:12px; padding:8px; margin:6px 0;
+  background:#fff; border:2px solid var(--tc-eadcf9); border-radius:12px; padding:8px; margin:6px 0;
   resize:vertical; box-sizing:border-box; word-break:break-all;
 }
 .kk-privacy-link{display:block; text-align:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:var(--night); text-decoration:underline; margin:4px 0 14px;}
-.kk-first-played{margin-top:14px; text-align:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:11px; color:var(--plum-soft,#7A5C98); opacity:.8;}
+.kk-first-played{margin-top:14px; text-align:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:11px; color:var(--plum-soft,var(--plum-soft)); opacity:.8;}
 .kk-wipe-open{display:block; margin:8px auto 0; opacity:.75;}
 .kk-wipe-panel{background:#FFF4F4; border:2px solid #F3C2C2; border-radius:14px; padding:12px; margin-top:8px;}
 .kk-wipe-label{display:block; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:var(--plum);}
-.kk-wipe-input{display:block; width:100%; box-sizing:border-box; margin:6px 0 4px; font-size:16px; padding:8px 10px; border:2px solid #EADCF9; border-radius:10px; font-family:'Zen Maru Gothic';}
+.kk-wipe-input{display:block; width:100%; box-sizing:border-box; margin:6px 0 4px; font-size:16px; padding:8px 10px; border:2px solid var(--tc-eadcf9); border-radius:10px; font-family:'Zen Maru Gothic';}
 .kk-wipe-btn{background:#D9534F; box-shadow:0 3px 0 #A94442;}
-.kk-wipe-btn:disabled{background:#D8CCE3; box-shadow:none; cursor:not-allowed;}
-.kk-backup-divider{height:1px; background:rgba(201,168,240,.4); margin:16px 0;}
+.kk-wipe-btn:disabled{background:var(--tc-d8cce3); box-shadow:none; cursor:not-allowed;}
+.kk-backup-divider{height:1px; background:rgba(var(--lav-rgb),.4); margin:16px 0;}
 .kk-backup-undo{display:block; width:100%; text-align:center; margin-top:10px;}
 .kk-backup-msg{font-family:'Yomogi'; font-size:12.5px; color:var(--rose-deep); font-weight:700; margin-top:8px; text-align:center;}
 
@@ -2409,12 +2407,12 @@ function Style() {
 .kk-coll{display:flex; flex-direction:column; align-items:center; text-align:center;}
 .kk-coll-count{font-family:'Mochiy Pop One'; color:var(--rose-deep); font-size:16px; margin-bottom:14px;}
 .kk-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%;}
-.kk-cell{position:relative; background:#fff; border-radius:20px; padding:14px 10px 12px; min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(74,45,107,.12);}
-.kk-cell.locked{background:#EFE6F7;}
-.kk-cell-icon{filter:drop-shadow(0 4px 5px rgba(74,45,107,.18));}
+.kk-cell{position:relative; background:#fff; border-radius:20px; padding:14px 10px 12px; min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(var(--plum-rgb),.12);}
+.kk-cell.locked{background:var(--tc-efe6f7);}
+.kk-cell-icon{filter:drop-shadow(0 4px 5px rgba(var(--plum-rgb),.18));}
 .kk-silhouette{filter:brightness(0) opacity(.18);}
 .kk-cell-name{font-family:'Mochiy Pop One'; font-size:13px; color:var(--night); margin-top:8px;}
-.kk-cell-flavor{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,#7A5C98); margin-top:3px; line-height:1.4;}
+.kk-cell-flavor{font-family:'Yomogi'; font-size:11px; color:var(--plum-soft,var(--plum-soft)); margin-top:3px; line-height:1.4;}
 .kk-rarity{position:absolute; top:8px; left:8px; font-size:10px; font-weight:900; color:#fff; padding:2px 8px; border-radius:999px;}
 .kk-dup{position:absolute; top:8px; right:8px; font-family:'Mochiy Pop One'; font-size:12px; color:var(--rose-deep);}
 
@@ -2422,10 +2420,10 @@ function Style() {
 .kk-stats div{background:rgba(255,255,255,.7); border-radius:16px; padding:10px 4px; display:flex; flex-direction:column;}
 .kk-stats b{font-family:'Mochiy Pop One'; color:var(--rose-deep); font-size:18px;}
 .kk-stats small{font-size:10.5px; color:var(--plum); font-weight:700; margin-top:2px;}
-.kk-reset{color:var(--plum-soft,#7A5C98); text-decoration-color:var(--lav); margin-top:8px; font-size:12px;}
+.kk-reset{color:var(--plum-soft,var(--plum-soft)); text-decoration-color:var(--lav); margin-top:8px; font-size:12px;}
 
 /* ---- reveal modal ---- */
-.kk-modal{position:fixed; inset:0; z-index:30; background:rgba(36,24,72,.7); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:20px; animation:kk-fade .25s;}
+.kk-modal{position:fixed; inset:0; z-index:30; background:rgba(var(--night-deep-rgb),.7); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:20px; animation:kk-fade .25s;}
 @keyframes kk-fade{from{opacity:0}to{opacity:1}}
 .kk-modal-card{background:linear-gradient(180deg,#fff,#FFF1F8); border-radius:28px; padding:22px 22px 24px; text-align:center; max-width:340px; width:100%; box-shadow:0 14px 40px rgba(0,0,0,.4); animation:kk-pop .35s ease;}
 .kk-modal-title{font-family:'Mochiy Pop One'; color:var(--night); font-size:16px; margin-bottom:6px;}
@@ -2435,11 +2433,11 @@ function Style() {
 .kk-reveal-rays{position:absolute; width:200px; height:200px; border-radius:50%;
   background:conic-gradient(from 0deg, rgba(255,201,77,.0) 0deg, rgba(255,201,77,.35) 18deg, rgba(255,201,77,0) 36deg, rgba(255,201,77,.35) 54deg, rgba(255,201,77,0) 72deg, rgba(255,201,77,.35) 90deg, rgba(255,201,77,0) 108deg, rgba(255,201,77,.35) 126deg, rgba(255,201,77,0) 144deg, rgba(255,201,77,.35) 162deg, rgba(255,201,77,0) 180deg, rgba(255,201,77,.35) 198deg, rgba(255,201,77,0) 216deg, rgba(255,201,77,.35) 234deg, rgba(255,201,77,0) 252deg, rgba(255,201,77,.35) 270deg, rgba(255,201,77,0) 288deg, rgba(255,201,77,.35) 306deg, rgba(255,201,77,0) 324deg, rgba(255,201,77,.35) 342deg, rgba(255,201,77,0) 360deg);
   animation:kk-spin 6s linear infinite reverse; opacity:.7;}
-.kk-reveal-item{position:relative; z-index:2; animation:kk-itempop .6s cubic-bezier(.2,1.4,.4,1); filter:drop-shadow(0 6px 10px rgba(74,45,107,.3));}
+.kk-reveal-item{position:relative; z-index:2; animation:kk-itempop .6s cubic-bezier(.2,1.4,.4,1); filter:drop-shadow(0 6px 10px rgba(var(--plum-rgb),.3));}
 @keyframes kk-itempop{0%{transform:scale(0) rotate(-40deg); opacity:0}60%{transform:scale(1.2) rotate(8deg)}100%{transform:scale(1) rotate(0); opacity:1}}
 .kk-reveal-rarity{font-family:'Mochiy Pop One'; font-size:14px; letter-spacing:1px;}
 .kk-reveal-name{font-family:'Mochiy Pop One'; font-size:24px; color:var(--night); margin:2px 0 4px;}
-.kk-reveal-flavor{font-family:'Yomogi'; font-size:14px; color:var(--plum-soft,#7A5C98); margin-bottom:8px;}
+.kk-reveal-flavor{font-family:'Yomogi'; font-size:14px; color:var(--plum-soft,var(--plum-soft)); margin-bottom:8px;}
 .kk-reveal-get{color:var(--rose-deep); font-weight:900; font-size:14px; margin-bottom:12px;}
 .kk-reveal-dup{color:var(--goldDeep,#F2A93B); font-weight:900; font-size:13px; margin-bottom:12px;}
 
@@ -2450,24 +2448,24 @@ function Style() {
 .kk-memo-btn{
   display:inline-flex; align-items:center; margin-top:14px;
   font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px;
-  color:var(--plum-soft,#7A5C98); background:rgba(201,168,240,.18);
+  color:var(--plum-soft,var(--plum-soft)); background:rgba(var(--lav-rgb),.18);
   border:2px solid var(--lav); border-radius:14px; padding:8px 16px;
   cursor:pointer; transition:background .15s;
 }
-.kk-memo-btn:hover{background:rgba(201,168,240,.34);}
+.kk-memo-btn:hover{background:rgba(var(--lav-rgb),.34);}
 .kk-memo-btn:active{transform:translateY(2px);}
 
 .kk-memo-backdrop{
   position:fixed; inset:0; z-index:40;
-  background:rgba(36,24,72,.55); backdrop-filter:blur(4px);
+  background:rgba(var(--night-deep-rgb),.55); backdrop-filter:blur(4px);
   display:flex; align-items:flex-end; justify-content:center;
   animation:kk-fade .2s;
 }
 .kk-memo-sheet{
   width:100%; max-width:500px;
-  background:linear-gradient(170deg,#FFF8FE 0%,#F3E8FD 60%,#EDE0F9 100%);
+  background:linear-gradient(170deg,#FFF8FE 0%,var(--tc-f3e8fd) 60%,var(--tc-ede0f9) 100%);
   border-radius:26px 26px 0 0;
-  box-shadow:0 -8px 32px rgba(74,45,107,.28);
+  box-shadow:0 -8px 32px rgba(var(--plum-rgb),.28);
   max-height:82vh; display:flex; flex-direction:column;
   animation:kk-slideup .28s cubic-bezier(.2,1,.4,1);
   border-top:4px solid var(--lav);
@@ -2476,7 +2474,7 @@ function Style() {
 
 .kk-memo-head{
   display:flex; align-items:center; gap:8px;
-  padding:14px 16px 10px; border-bottom:1.5px solid rgba(201,168,240,.5);
+  padding:14px 16px 10px; border-bottom:1.5px solid rgba(var(--lav-rgb),.5);
   flex-shrink:0;
 }
 .kk-memo-title{
@@ -2485,10 +2483,10 @@ function Style() {
 }
 .kk-memo-badge{
   font-size:11px; font-weight:700; color:var(--rose-deep);
-  background:#FFE8F4; border-radius:999px; padding:3px 10px; white-space:nowrap;
+  background:var(--tc-ffe8f4); border-radius:999px; padding:3px 10px; white-space:nowrap;
 }
 .kk-memo-close{
-  border:none; background:rgba(201,168,240,.3); color:var(--plum);
+  border:none; background:rgba(var(--lav-rgb),.3); color:var(--plum);
   font-weight:700; font-size:12px; border-radius:14px;
   cursor:pointer; flex-shrink:0; padding:6px 10px;
   display:flex; align-items:center; gap:3px; white-space:nowrap;
@@ -2498,11 +2496,11 @@ function Style() {
 /* 今のもんだいカード */
 .kk-memo-qcard{
   margin:0 12px 10px; border-radius:16px; padding:10px 14px;
-  border:2px solid rgba(74,45,107,.12);
-  box-shadow:0 2px 8px rgba(74,45,107,.1);
+  border:2px solid rgba(var(--plum-rgb),.12);
+  box-shadow:0 2px 8px rgba(var(--plum-rgb),.1);
 }
 .kk-memo-qlabel{
-  font-family:'Mochiy Pop One'; font-size:11px; color:var(--plum-soft,#7A5C98);
+  font-family:'Mochiy Pop One'; font-size:11px; color:var(--plum-soft,var(--plum-soft));
   margin-bottom:4px; letter-spacing:.3px;
 }
 .kk-memo-qtext{
@@ -2532,9 +2530,9 @@ function Style() {
   display:flex; gap:10px; padding:6px 16px 8px; flex-shrink:0; flex-wrap:wrap;
 }
 .kk-leg-row,.kk-leg-col,.kk-leg-cross{font-size:10.5px; font-weight:700; color:var(--plum); display:flex; align-items:center; gap:4px;}
-.kk-leg-row::before{content:''; display:inline-block; width:14px; height:14px; background:rgba(255,143,196,.5); border-radius:4px;}
+.kk-leg-row::before{content:''; display:inline-block; width:14px; height:14px; background:rgba(var(--rose-rgb),.5); border-radius:4px;}
 .kk-leg-col::before{content:''; display:inline-block; width:14px; height:14px; background:rgba(125,224,200,.5); border-radius:4px;}
-.kk-leg-cross::before{content:''; display:inline-block; width:14px; height:14px; background:linear-gradient(135deg,#FFC94D,#FF8FC4); border-radius:4px;}
+.kk-leg-cross::before{content:''; display:inline-block; width:14px; height:14px; background:linear-gradient(135deg,#FFC94D,var(--rose)); border-radius:4px;}
 
 .kk-memo-body{
   overflow-y:auto; padding:0 12px 8px; flex:1;
@@ -2543,11 +2541,11 @@ function Style() {
 .kk-memo-colhead{
   display:grid; grid-template-columns:36px repeat(9,1fr);
   gap:3px; padding:4px 0 2px; position:sticky; top:0;
-  background:linear-gradient(170deg,#FFF8FE,#F3E8FD);
-  z-index:2; border-bottom:1.5px dashed rgba(201,168,240,.5);
+  background:linear-gradient(170deg,#FFF8FE,var(--tc-f3e8fd));
+  z-index:2; border-bottom:1.5px dashed rgba(var(--lav-rgb),.5);
 }
 .kk-memo-colnum{
-  font-family:'Mochiy Pop One'; font-size:12px; color:var(--plum-soft,#7A5C98);
+  font-family:'Mochiy Pop One'; font-size:12px; color:var(--plum-soft,var(--plum-soft));
   text-align:center; padding:3px 0;
 }
 .kk-memo-colhi{color:var(--rose-deep);}
@@ -2557,9 +2555,9 @@ function Style() {
   gap:3px; margin:2px 0; border-radius:10px;
   transition:background .1s;
 }
-.kk-memo-rowhi{ background:rgba(255,143,196,.08); }
+.kk-memo-rowhi{ background:rgba(var(--rose-rgb),.08); }
 .kk-memo-danlabel{
-  font-family:'Mochiy Pop One'; font-size:12px; color:var(--plum-soft,#7A5C98);
+  font-family:'Mochiy Pop One'; font-size:12px; color:var(--plum-soft,var(--plum-soft));
   display:flex; align-items:center; justify-content:center; gap:1px;
   padding:6px 2px;
 }
@@ -2570,10 +2568,10 @@ function Style() {
   position:relative; display:flex; align-items:center; justify-content:center;
   gap:1px; min-width:0; background:rgba(255,255,255,.4);
 }
-.kk-cell-row{ background:rgba(255,143,196,.32); }
+.kk-cell-row{ background:rgba(var(--rose-rgb),.32); }
 .kk-cell-col{ background:rgba(125,224,200,.34); }
 .kk-cell-cross{
-  background:linear-gradient(135deg, rgba(255,201,77,.55), rgba(255,143,196,.55));
+  background:linear-gradient(135deg, rgba(255,201,77,.55), rgba(var(--rose-rgb),.55));
 }
 .kk-cell-flash{ animation:kk-cellflash .9s ease; }
 @keyframes kk-cellflash{
@@ -2584,8 +2582,8 @@ function Style() {
 
 .kk-memo-footer{
   text-align:center; font-family:'Yomogi'; font-size:12px;
-  color:var(--plum-soft,#7A5C98); padding:8px 16px 16px; flex-shrink:0;
-  border-top:1px dashed rgba(201,168,240,.4); margin-top:4px;
+  color:var(--plum-soft,var(--plum-soft)); padding:8px 16px 16px; flex-shrink:0;
+  border-top:1px dashed rgba(var(--lav-rgb),.4); margin-top:4px;
 }
 
 /* ---- きせかえ：ルナにつけたアイテムのバッジ ---- */
@@ -2593,7 +2591,7 @@ function Style() {
   position:absolute; transform:translate(-50%,-50%);
   background:rgba(255,255,255,.92); border:2px solid #fff;
   border-radius:50%; display:flex; align-items:center; justify-content:center;
-  box-shadow:0 3px 8px rgba(74,45,107,.3);
+  box-shadow:0 3px 8px rgba(var(--plum-rgb),.3);
   animation:kk-badgepop .35s ease;
 }
 @keyframes kk-badgepop{0%{transform:translate(-50%,-50%) scale(0)}70%{transform:translate(-50%,-50%) scale(1.25)}100%{transform:translate(-50%,-50%) scale(1)}}
@@ -2610,22 +2608,22 @@ function Style() {
 .kk-slot-btn{
   display:flex; flex-direction:column; align-items:center; gap:4px;
   background:#fff; border:3px solid var(--lav); border-radius:16px;
-  padding:10px 2px 8px; cursor:pointer; box-shadow:0 4px 0 rgba(201,168,240,.7);
+  padding:10px 2px 8px; cursor:pointer; box-shadow:0 4px 0 rgba(var(--lav-rgb),.7);
 }
-.kk-slot-btn:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(201,168,240,.7);}
-.kk-slot-filled{border-color:var(--rose-deep); box-shadow:0 4px 0 rgba(232,95,163,.5);}
+.kk-slot-btn:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(var(--lav-rgb),.7);}
+.kk-slot-filled{border-color:var(--rose-deep); box-shadow:0 4px 0 rgba(var(--rose-deep-rgb),.5);}
 .kk-slot-empty-disabled{opacity:.45; border-color:#ccc; box-shadow:none; cursor:default;}
 .kk-slot-icon{height:32px; display:flex; align-items:center; justify-content:center;}
 .kk-slot-plus{font-size:18px; color:var(--lav); font-weight:900;}
 .kk-slot-label{font-family:'Mochiy Pop One'; font-size:10.5px; color:var(--night);}
-.kk-dress-hint{font-family:'Yomogi'; font-size:12.5px; color:var(--plum-soft,#7A5C98); margin:4px 0 18px;}
+.kk-dress-hint{font-family:'Yomogi'; font-size:12.5px; color:var(--plum-soft,var(--plum-soft)); margin:4px 0 18px;}
 .kk-dress-link-btn{font-size:18px; padding:13px 32px;}
 
 /* ---- アイテム選択シート ---- */
 .kk-picker-sheet{
   width:100%; max-width:500px;
-  background:linear-gradient(170deg,#FFF8FE 0%,#F3E8FD 60%,#EDE0F9 100%);
-  border-radius:26px 26px 0 0; box-shadow:0 -8px 32px rgba(74,45,107,.28);
+  background:linear-gradient(170deg,#FFF8FE 0%,var(--tc-f3e8fd) 60%,var(--tc-ede0f9) 100%);
+  border-radius:26px 26px 0 0; box-shadow:0 -8px 32px rgba(var(--plum-rgb),.28);
   max-height:78vh; display:flex; flex-direction:column;
   animation:kk-slideup .28s cubic-bezier(.2,1,.4,1); border-top:4px solid var(--lav);
 }
@@ -2635,16 +2633,16 @@ function Style() {
 }
 .kk-picker-chip{
   display:flex; flex-direction:column; align-items:center; gap:4px;
-  background:#fff; border:3px solid #EADCF9; border-radius:16px;
+  background:#fff; border:3px solid var(--tc-eadcf9); border-radius:16px;
   padding:10px 4px; cursor:pointer; min-height:90px; justify-content:center;
 }
 .kk-picker-chip:active{transform:translateY(2px);}
-.kk-picker-selected{border-color:var(--rose-deep); background:#FFF0F7; box-shadow:0 0 0 3px rgba(232,95,163,.25);}
+.kk-picker-selected{border-color:var(--rose-deep); background:#FFF0F7; box-shadow:0 0 0 3px rgba(var(--rose-deep-rgb),.25);}
 .kk-picker-name{font-family:'Zen Maru Gothic'; font-weight:700; font-size:10.5px; color:var(--night); text-align:center; line-height:1.3;}
-.kk-picker-none{font-family:'Mochiy Pop One'; font-size:14px; color:var(--plum-soft,#7A5C98);}
+.kk-picker-none{font-family:'Mochiy Pop One'; font-size:14px; color:var(--plum-soft,var(--plum-soft));}
 
 /* ---- レーベル名（タイトル画面の 下） ---- */
-.kk-label{margin:28px 0 0; font-family:'Yomogi'; font-size:11px; letter-spacing:.12em; color:var(--plum-soft,#7A5C98); opacity:.55; pointer-events:none; user-select:none;}
+.kk-label{margin:28px 0 0; font-family:'Yomogi'; font-size:11px; letter-spacing:.12em; color:var(--plum-soft,var(--plum-soft)); opacity:.55; pointer-events:none; user-select:none;}
 
 /* ---- キャラクター せんたく ---- */
 .kk-select-screen{display:flex; flex-direction:column; align-items:center; text-align:center;}
@@ -2652,10 +2650,10 @@ function Style() {
 .kk-char-card{
   display:flex; align-items:center; gap:14px; text-align:left;
   background:#fff; border:3px solid var(--lav); border-radius:22px;
-  padding:12px 16px; cursor:pointer; box-shadow:0 5px 0 rgba(201,168,240,.5);
+  padding:12px 16px; cursor:pointer; box-shadow:0 5px 0 rgba(var(--lav-rgb),.5);
 }
-.kk-char-card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(201,168,240,.5);}
-.kk-char-card-active{background:#FFF6FB;}
+.kk-char-card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(var(--lav-rgb),.5);}
+.kk-char-card-active{background:var(--cream);}
 /* 横向き（スマホ・タブレット）：4人を 2×2 に ならべる */
 @media (orientation: landscape) and (min-width:600px){
   .kk-char-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
@@ -2668,7 +2666,7 @@ function Style() {
 .kk-char-text{flex:1; min-width:0; display:flex; flex-direction:column; word-break:keep-all; overflow-wrap:anywhere;}
 .kk-char-name{font-family:'Mochiy Pop One'; font-size:18px; color:var(--night); line-height:1.3;}
 .kk-char-title{font-family:'Mochiy Pop One'; font-size:12.5px; margin-top:2px;}
-.kk-char-sub{font-family:'Yomogi'; font-size:11.5px; color:var(--plum-soft,#7A5C98); margin-top:3px; line-height:1.4;}
+.kk-char-sub{font-family:'Yomogi'; font-size:11.5px; color:var(--plum-soft,var(--plum-soft)); margin-top:3px; line-height:1.4;}
 
 /* ---- リビール：コーデへの導線 ---- */
 .kk-reveal-prompt{font-family:'Mochiy Pop One'; font-size:14px; color:var(--plum); margin:2px 0 12px;}
@@ -2689,7 +2687,7 @@ function Style() {
 }
 .kk-fillten-box{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; max-width:220px; margin:0 auto; padding:10px; border-radius:16px;}
 .kk-fillten-item{display:flex; align-items:center; justify-content:center;}
-.kk-fillten-slot{width:17px; height:17px; border-radius:50%; border:2px dashed rgba(74,45,107,.35); margin:auto;}
+.kk-fillten-slot{width:17px; height:17px; border-radius:50%; border:2px dashed rgba(var(--plum-rgb),.35); margin:auto;}
 
 /* ---- ひっさんメモ ---- */
 .kk-colmemo-sheet{max-height:88vh; overflow-y:auto;}
@@ -2699,15 +2697,15 @@ function Style() {
 .kk-fivesplit-row{display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;}
 .kk-fivesplit-block{display:flex; flex-direction:column; align-items:center; gap:6px;}
 .kk-fivesplit-plus{font-family:'Mochiy Pop One'; font-size:22px; color:var(--rose-deep);}
-.kk-fivesplit-label{font-family:'Mochiy Pop One'; font-size:13px; color:var(--night); background:#F3ECFB; border-radius:10px; padding:3px 10px;}
+.kk-fivesplit-label{font-family:'Mochiy Pop One'; font-size:13px; color:var(--night); background:var(--tc-f3ecfb); border-radius:10px; padding:3px 10px;}
 .kk-fivesplit-label b{color:var(--rose-deep);}
 .kk-fivesplit-caption{margin-bottom:16px !important;}
-.kk-fiveframe{display:flex; flex-direction:column; gap:4px; background:#fff; border-radius:14px; padding:8px 10px; box-shadow:0 3px 0 rgba(201,168,240,.4);}
+.kk-fiveframe{display:flex; flex-direction:column; gap:4px; background:#fff; border-radius:14px; padding:8px 10px; box-shadow:0 3px 0 rgba(var(--lav-rgb),.4);}
 .kk-fiveframe-row{display:flex; gap:4px;}
-.kk-fiveframe-row2{padding-top:2px; border-top:1px dashed rgba(74,45,107,.25);}
+.kk-fiveframe-row2{padding-top:2px; border-top:1px dashed rgba(var(--plum-rgb),.25);}
 .kk-fiveframe-dot{width:14px; height:14px; border-radius:50%; display:inline-block;}
 .kk-fiveframe-dot-main{background:var(--gold); box-shadow:0 1px 2px rgba(242,169,59,.6);}
-.kk-fiveframe-dot-empty{border:2px dashed rgba(74,45,107,.3); width:10px; height:10px; margin:2px;}
+.kk-fiveframe-dot-empty{border:2px dashed rgba(var(--plum-rgb),.3); width:10px; height:10px; margin:2px;}
 .kk-fiveframe-dot-extra{background:var(--rose-deep);}
 .kk-col-grid{display:flex; flex-direction:column; align-items:flex-end; gap:2px; margin-bottom:14px;}
 .kk-col-row{display:flex; gap:6px;}
@@ -2723,7 +2721,7 @@ function Style() {
 .kk-col-line{width:108px; height:3px; background:var(--plum); border-radius:2px; margin:2px 0;}
 .kk-col-answer .kk-col-cell{color:var(--rose-deep);}
 .kk-col-mystery{color:var(--gold); -webkit-text-stroke:1.5px var(--goldDeep,#F2A93B); font-size:26px;}
-.kk-col-strike{text-decoration:line-through; text-decoration-color:rgba(74,45,107,.6); text-decoration-thickness:2px;}
+.kk-col-strike{text-decoration:line-through; text-decoration-color:rgba(var(--plum-rgb),.6); text-decoration-thickness:2px;}
 .kk-col-small{position:absolute; top:-4px; right:-2px; font-size:14px; color:var(--rose-deep); text-decoration:none; font-weight:900;}
 .kk-colmemo-caption{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13.5px; color:var(--plum); text-align:center; line-height:1.8; max-width:280px;}
 .kk-colmemo-caption b{color:var(--rose-deep); font-family:'Mochiy Pop One'; font-size:15px;}
@@ -2736,12 +2734,12 @@ function Style() {
 
 /* ---- ものがたりの たっせい イベント ---- */
 .kk-milestone-card{
-  background:linear-gradient(180deg,#fff,#FFF6FB); border-radius:28px;
+  background:linear-gradient(180deg,#fff,var(--cream)); border-radius:28px;
   padding:18px 18px 22px; text-align:center; max-width:340px; width:100%;
   box-shadow:0 14px 40px rgba(0,0,0,.4); animation:kk-pop .35s ease;
 }
 .kk-milestone-title{font-family:'Mochiy Pop One'; font-size:17px; color:var(--night); margin-bottom:10px;}
-.kk-milestone-stage{position:relative; border-radius:18px; overflow:hidden; margin-bottom:12px; box-shadow:0 3px 10px rgba(74,45,107,.2);}
+.kk-milestone-stage{position:relative; border-radius:18px; overflow:hidden; margin-bottom:12px; box-shadow:0 3px 10px rgba(var(--plum-rgb),.2);}
 .kk-milestone-char{position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); filter:drop-shadow(0 4px 6px rgba(0,0,0,.25));}
 .kk-milestone-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:14.5px; color:var(--plum); line-height:1.7; margin-bottom:8px;}
 .kk-milestone-bonus{font-family:'Mochiy Pop One'; font-size:15px; color:var(--rose-deep); margin-bottom:14px;}
