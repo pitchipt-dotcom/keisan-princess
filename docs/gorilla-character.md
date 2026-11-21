@@ -19,5 +19,19 @@
 | `src/art/chars/gorilla_happy.webp` | 640×640 | よろこび（にっこり、むねの 前で こぶし） | いまは idle と 同じ 絵（正解の ドラミングで 表情の ちがいを おぎなう） |
 | `src/art/chars/gorilla_oops.webp` | 640×640 | ざんねん（こまり顔、でも やさしい） | いまは idle と 同じ 絵 |
 | `src/art/chars/gorilla_{idle,happy,oops}_prince.webp` | 640×640 | ゴリラの プリンス（3表情） | **本番の 絵**（Moss-image 1まい。3表情とも 同じ 絵。ぬき方は 姫と 同じ） |
-| `src/art/items/g_*.webp`（16こ） | 320×320 | 下の アイテム | ロゼの おなじ スロットの アイテムの コピー |
+| `src/art/items/g_*.webp`（16こ） | 320×320 | 下の アイテム | 5こは **本番の 絵**（下の 表）。のこり 11こは ロゼの おなじ スロットの アイテムの コピー |
 | `src/art/items/g_*_prince.webp`（任意） | 320×320 | プリンス用の そうび | 無ければ 上の 共通の 絵 |
+
+## 本番の 絵に した アイテム（各スロット 1こずつ。id は そのまま）
+
+白い 背景は tools/art/process.py の ぬき方（items）で 透明に。バナナの ブローチだけ、白い 花が 消えないよう 囲まれた すきまは 抜いていない。
+
+| スロット | id | 姫 | 王子 | 王子用の 絵 |
+|---|---|---|---|---|
+| 頭 | `g_forestcrown` | はっぱの ティアラ | はっぱの かんむり | 共通 |
+| ふく | `g_mossdress` | ジャングルの ドレス | ジャングルの うわぎ | **あり**（`g_mossdress_prince.webp`：ジャングルの うわぎ） |
+| あし | `g_vinesocks` | つたの サンダル | つたの サンダル | 共通 |
+| もちもの | `g_banana` | バナナの ステッキ | バナナの つえ | 共通 |
+| かざり | `g_leafnecklace` | バナナの ブローチ | バナナの ブローチ | 共通 |
+
+まだ 仮の 絵（ロゼの コピー）：g_leafband, g_flowerpin, g_acornclip, g_leafcape, g_forestboots, g_honeypot, g_bigacorn, g_drum, g_sunstone, g_bird, g_leafwings
