@@ -9,6 +9,8 @@
 :root{
   /* テーマで かわらない 色 */
   --gold:#FFC94D; --gold-deep:#F2A93B; --mint:#7DE0C8;
+  /* アプリ全体の 背景の グラデーション（.kk-root）。ゴリラの ときは 下で 森の 緑に かわる */
+  --app-bg-1:var(--tc-ffe7f4); --app-bg-2:var(--tc-f3defb); --app-bg-3:var(--tc-e7d2f7); --app-bg-4:var(--tc-dcc6f2);
   /* タイトルの 字の かげ・リンクの 下線（プリンスは 若草） */
   --logo-shadow-rgb:255,143,196; --link-line:#FF8FC4;
   --night-deep:#241848; --night-deep-rgb:36,24,72;
@@ -164,4 +166,11 @@ html[data-theme="prince"]{
   --tc-ffe9f3:#DFF1FC; --tc-ffe9f3-rgb:223,241,252;
   --tc-ffeaf4:#E1F2FD; --tc-ffeaf4-rgb:225,242,253;
   --cream:#F4FAFF; --cream-rgb:244,250,255;
+}
+
+/* ゴリラを えらんで いる とき：背景だけ やわらかい 森の 緑（プリンセス・プリンス どちらでも 同じ）
+   html[data-chara] は :root より 強く、プリンスの 指定には 背景の 変数が 無いので、
+   html[data-theme="prince"][data-chara="gorilla"] でも この 緑に なる。ボタン・カード・字の 色は かえない */
+html[data-chara="gorilla"]{
+  --app-bg-1:#F2FAE8; --app-bg-2:#E0F2D2; --app-bg-3:#CCE7BC; --app-bg-4:#B7DBA6;
 }
