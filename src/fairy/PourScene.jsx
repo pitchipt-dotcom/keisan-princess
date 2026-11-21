@@ -24,8 +24,8 @@ function Marks({ v, T, glowL1, glowMl }) {
   if (T.shape === "masu" && !T.fine) {
     for (const m of T.marks) out.push(<line key={m} x1={w - (m % 500 ? 9 : 16)} x2={w} y1={y(m)} y2={y(m)} stroke="#7A4E22" strokeWidth={m % 500 ? 1.2 : 2} />);
     if (glowMl) out.push(<line key="glow" x1={0} x2={w} y1={y(glowMl)} y2={y(glowMl)} stroke="#FFC21A" strokeWidth={3.5} className="jc-glow-line" />,
-      <text key="glowt" x={4} y={y(glowMl) - 4} fontSize={10} fontWeight={900} fill="#C77700">{glowMl / 100}dL</text>);
-    if (T.marks.length) { out.push(<text key="t5" x={w - 18} y={y(500) + 3} textAnchor="end" fontSize={8} fontWeight={900} fill="#7A4E22">5dL</text>); }
+      <text key="glowt" x={4} y={y(glowMl) - 4} fontSize={10} fontWeight={900} fill="#C77700">{T.dec ? `${glowMl / 1000}L` : `${glowMl / 100}dL`}</text>);
+    if (T.marks.length) { out.push(<text key="t5" x={w - 18} y={y(500) + 3} textAnchor="end" fontSize={8} fontWeight={900} fill="#7A4E22">{T.dec ? "0.5L" : "5dL"}</text>); }
   }
   if (T.fine) {
     for (const m of T.marks) {

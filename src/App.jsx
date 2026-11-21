@@ -20,6 +20,10 @@ import { normalizeDaily, chooseEgg, setTodayOverride } from "./dragon.js";
 import { normalizeFairy } from "./fairy/fairy.js";
 // 妖精の国（Three.js を つかう）は 入った ときだけ 読みこむ
 const FairyLand = React.lazy(() => import("./fairy/FairyLand.jsx"));
+// 3年生（わり算・小数・分数・毎日計算）
+import { normalizeGrade3 } from "./grade3/g3.js";
+const Grade3Unit = React.lazy(() => import("./grade3/Grade3Unit.jsx").then((m) => ({ default: m.Grade3Unit })));
+const Daily3Play = React.lazy(() => import("./grade3/Daily3.jsx").then((m) => ({ default: m.Daily3Play })));
 
 // 開発時だけ：?today=YYYY-MM-DD か window.__setToday("YYYY-MM-DD") で「きょう」を さしかえて テストできる
 if (import.meta.env.DEV && typeof window !== "undefined") {
@@ -1258,6 +1262,8 @@ export default function App() {
   const [ohanashi, setOhanashi] = useState({});          // おはなし もんだい「むずかしい」：{ yomiRead:{ stage, streak } }（まいにち けいさん とは べつ）
   const [fairy, setFairy] = useState(() => normalizeFairy());   // 妖精の国（なかよし度・ひらいた エリア）
   const fairyRef = useRef(fairy);
+  const [grade3, setGrade3] = useState(() => normalizeGrade3());   // 3年生：単元の すすみ（三択→入力）・毎日計算の きろく
+  const [g3Unit, setG3Unit] = useState(null);                       // いま ひらいている 3年生の 単元：div | dec | frac
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1282,6 +1288,7 @@ export default function App() {
             if (d.ohanashi && typeof d.ohanashi === "object") setOhanashi(d.ohanashi);
             setMenuGroup(normalizeGroup(d.menuGroup));
             if (d.fairy) { const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf); }
+            setGrade3(normalizeGrade3(d.grade3));   // 無い セーブは さいしょから
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1293,9 +1300,9 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, theme: getTheme(), ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, grade3, theme: getTheme(), ...patch };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi, menuGroup]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi, menuGroup, grade3]);
 
   /* ---- メニュー：グループ → モード。モードから もどる ときは 入ってきた グループへ ---- */
   const openGroup = (id) => { SFX.tap(sound); setMenuGroup(id); persist({ menuGroup: id }); setScreen("group"); };
@@ -1357,7 +1364,7 @@ export default function App() {
   const openItem = (key) => {
     const t = ITEM_TARGET[key];
     if (!t) return;
-    if (t.screen) { SFX.tap(sound); if (t.pick) setG1Pick(t.pick); setScreen(t.screen); return; }
+    if (t.screen) { SFX.tap(sound); if (t.pick) setG1Pick(t.pick); if (t.unit) setG3Unit(t.unit); setScreen(t.screen); return; }
     startGame(t.game, t.mode);
   };
 
@@ -1518,7 +1525,7 @@ export default function App() {
 
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, theme: getTheme(),
+    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, grade3, theme: getTheme(),
   });
 
   const applySnapshot = (d) => {
@@ -1535,6 +1542,7 @@ export default function App() {
     setOhanashi(d.ohanashi && typeof d.ohanashi === "object" ? d.ohanashi : {});
     setMenuGroup(normalizeGroup(d.menuGroup));
     const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf);
+    setGrade3(normalizeGrade3(d.grade3));      // 古い バックアップコード（grade3 なし）でも エラーに しない
   };
 
   const resetAll = () => {
@@ -1565,7 +1573,7 @@ export default function App() {
     if (!d) { setBackupMsg("コードが ただしくないみたい。もう一度 たしかめてね。"); return; }
     if (typeof window !== "undefined" && !window.confirm("今の データの うえに 上書きします。よろしいですか？")) return;
     applySnapshot(d);
-    persist(d);
+    persist({ ...d, grade3: normalizeGrade3(d.grade3) });   // grade3 の ない 古い コードでも、いまの 3年生の きろくを のこさない
     setBackupMsg("もとに 戻しました！");
   };
   const handleUndoReset = async () => {
@@ -1576,7 +1584,7 @@ export default function App() {
       const d = JSON.parse(r.value);
       if (!window.confirm("リセットの まえの データに もどします。よろしいですか？")) return;
       applySnapshot(d);
-      persist(d);
+      persist({ ...d, grade3: normalizeGrade3(d.grade3) });
       setBackupMsg("リセットまえの データに もどしました！");
     } catch (e) { setBackupMsg("もどせる データが ないみたい。"); }
   };
@@ -1608,7 +1616,7 @@ export default function App() {
         {/* ---------- TOP BAR ---------- */}
         {screen !== "title" && (
           <div className="kk-bar">
-            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily") exitDaily(); else if (screen === "mode") setScreen("select"); else if (screen === "group") setScreen("mode"); else if (screen === "report") setScreen("mode"); else goMenu(); }} aria-label="もどる">‹ もどる</button>
+            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily" || screen === "daily3" || screen === "g3unit") exitDaily(); else if (screen === "mode") setScreen("select"); else if (screen === "group") setScreen("mode"); else if (screen === "report") setScreen("mode"); else goMenu(); }} aria-label="もどる">‹ もどる</button>
             <div className="kk-bar-mid">
               <span className="kk-dust">★ {stardust}</span>
             </div>
@@ -1777,6 +1785,42 @@ export default function App() {
             onPickEgg={pickEgg}
             onExit={() => { SFX.tap(sound); exitDaily(); }}
           />
+        )}
+
+        {/* ---------- 3年生：わり算・小数・分数（★と コーデだけ。ドラゴンは そだたない） ---------- */}
+        {screen === "g3unit" && g3Unit && (
+          <React.Suspense fallback={<div className="kk-h2" style={{ marginTop: 40 }}>よみこみちゅう…</div>}>
+            <Grade3Unit key={g3Unit} unit={g3Unit} grade3={grade3}
+              character={(mood, size = 104, cheer = false) => <DressedCharacter character={charKey} mood={mood} size={size} equipped={myEquipped} cheer={cheer} />}
+              sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
+              onSave={(ng) => { setGrade3(ng); persist({ grade3: ng }); }}
+              onComplete={(ng, gain) => {
+                const nv = stardust + gain;
+                const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
+                if (owed > 0) setPulls((p) => p + owed);
+                setGrade3(ng); setStardust(nv);
+                persist({ grade3: ng, stardust: nv });
+              }}
+              onExit={() => { SFX.tap(sound); exitDaily(); }} />
+          </React.Suspense>
+        )}
+
+        {/* ---------- 3年生：毎日計算（ドラゴン・れんぞくは 2年生と 共通の daily。そだつのは 1日1かい） ---------- */}
+        {screen === "daily3" && (
+          <React.Suspense fallback={<div className="kk-h2" style={{ marginTop: 40 }}>よみこみちゅう…</div>}>
+            <Daily3Play daily={daily} grade3={grade3}
+              character={(mood, size = 104, cheer = false) => <DressedCharacter character={charKey} mood={mood} size={size} equipped={myEquipped} cheer={cheer} />}
+              sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
+              onComplete={(nd, ng, gain) => {
+                const nv = stardust + gain;
+                const owed = Math.floor(nv / PULL_COST) - Math.floor(stardust / PULL_COST);
+                if (owed > 0) setPulls((p) => p + owed);
+                setDaily(nd); setGrade3(ng); setStardust(nv);
+                persist({ daily: nd, grade3: ng, stardust: nv });
+              }}
+              onPickEgg={pickEgg}
+              onExit={() => { SFX.tap(sound); exitDaily(); }} />
+          </React.Suspense>
         )}
 
         {/* ---------- 1ねんせい：段階（かずと すうじ）・しゅるい（たしざん・ひきざん）を えらぶ ---------- */}

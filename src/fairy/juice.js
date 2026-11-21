@@ -20,6 +20,9 @@ export const TYPES = {
   tank: { name: "水そう",   cap: 2000, w: 124, h: 112, rate: 380, marks: range(100, 2000, 100), snaps: [], shape: "tank" },
   mcup: { name: "けいりょうカップ", cap: 500, w: 62, h: 120, rate: 160, marks: range(10, 500, 10), snaps: range(100, 500, 100), shape: "mcup" },
   mjug: { name: "1Lの けいりょうカップ", cap: 1000, w: 80, h: 128, rate: 300, marks: range(50, 1000, 50), snaps: [], shape: "mcup" },
+  // 3年生「小数」用：目もりの 字を L で 出す（0.5L）。中身・すいつきは 1Lます・1dLますと 同じ
+  Ld:   { name: "1Lます",   cap: 1000, w: 78, h: 100, rate: 380, marks: range(100, 1000, 100), snaps: range(100, 1000, 100), shape: "masu", dec: true },
+  dld:  { name: "0.1Lます", cap: 100,  w: 40, h: 40,  rate: 90,  marks: [], snaps: [100], shape: "masu", dec: true },
 };
 
 /* ---------- あらわし方 ---------- */

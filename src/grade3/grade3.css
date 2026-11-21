@@ -1,0 +1,145 @@
+/* ===== 3年生（わり算・小数・分数・毎日計算） ===== */
+.g3-title{margin-bottom:8px;}
+.g3-grade-chip{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#fff; background:#7C5CC4; border-radius:999px; padding:2px 10px; vertical-align:middle;}
+.g3-intro-sub{font-size:13px; color:#7A5C98; line-height:1.6;}
+.g3-unit-tag{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B; background:#fff; border-radius:999px; padding:4px 10px;}
+.g3-mode-toggle{margin-top:8px;}
+.g3-unlock{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#2FAF8E; background:#EAFBF5; border-radius:14px; padding:8px 12px; line-height:1.6;}
+.g3-parts{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12.5px; color:#3A2A6B;}
+.g3-parts span{background:#FBF7FF; border:2px solid #E7D2F7; border-radius:999px; padding:2px 10px;}
+.g3-parts b{color:#E85FA3;}
+.g3-img{display:block; object-fit:contain;}
+
+/* ---- もんだい ---- */
+.g3-q{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px 8px; white-space:normal; font-size:34px;}
+.g3-q-frac{font-size:30px;}
+.g3-q-div{font-size:28px; flex-wrap:nowrap; gap:4px;}
+.g3-q-div .g3-box{font-size:26px; min-width:1.5em;}
+.g3-q-div .g3-amari{font-size:15px;}
+.g3-ans-done{min-width:auto; padding:0 4px;}
+.g3-ans-done small, .g3-amari{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:#7A5C98;}
+.g3-box{font-family:'Mochiy Pop One'; font-size:30px; min-width:1.7em; height:1.5em; line-height:1.4em; padding:0 4px; color:#E85FA3; background:#fff;
+  border:3px solid #E7D2F7; border-radius:12px; cursor:pointer; touch-action:manipulation;}
+.g3-box-on{border-color:#FF8FC4; box-shadow:0 0 0 3px rgba(255,143,196,.25);}
+.g3-box-empty{color:#C9A8F0;}
+.g3-box:disabled{cursor:default;}
+.g3-small-note{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12.5px; color:#7A5C98; display:flex; align-items:center; gap:4px; justify-content:center;}
+.g3-q-text{font-family:'Zen Maru Gothic'; font-weight:900; font-size:17px; color:#3A2A6B; line-height:1.6;}
+.g3-fairy-q{display:flex; flex-direction:column; align-items:center; gap:6px;}
+.g3-fairy-tag{font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#2C8A66; background:#EAFBF5; border-radius:999px; padding:2px 10px;}
+.g3-net{max-width:100%; height:auto;}
+.g3-juice{max-width:100%; height:auto;}
+
+/* 分数の 字 */
+.g3-frac{display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; line-height:1.05; font-size:.62em; margin:0 2px;}
+.g3-frac > span{display:block;}
+.g3-frac-bar{width:100%; min-width:1em; height:3px; background:currentColor; border-radius:2px; margin:2px 0;}
+.g3-frac-big{font-size:26px; font-family:'Mochiy Pop One'; color:#3A2A6B;}
+.g3-frac-in{font-size:30px;}
+.g3-frac-in .g3-box{font-size:26px; min-width:1.5em;}
+.dm-msg .g3-frac, .g3-fig-note .g3-frac, .g3-result-body .g3-frac{font-size:1em; font-family:'Mochiy Pop One'; margin:0 3px;}
+.g3-wall .g3-frac{font-size:15px;}
+
+/* 三択 */
+.g3-choices{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%;}
+.g3-choices-wide{grid-template-columns:1fr;}
+.g3-choice{font-family:'Mochiy Pop One'; font-size:26px; color:#3A2A6B; background:#fff; border:3px solid #C9A8F0; border-radius:18px; padding:14px 4px; min-height:72px;
+  cursor:pointer; box-shadow:0 5px 0 #a98bd6; touch-action:manipulation; display:flex; align-items:center; justify-content:center; gap:4px;}
+.g3-choice small{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:#7A5C98;}
+.g3-choices-wide .g3-choice{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; min-height:56px; padding:10px;}
+.g3-choice:active{transform:translateY(4px); box-shadow:0 1px 0 #a98bd6;}
+.g3-choice-tried{opacity:.38; box-shadow:none; transform:none;}
+.g3-keys{grid-template-columns:repeat(3,1fr);}
+.g3-key-wide{grid-column:1 / -1;}
+
+/* ヒントの 図 */
+.g3-hint-fig{display:flex; flex-direction:column; align-items:center; gap:8px; background:#FBF7FF; border:2px dashed #C9A8F0; border-radius:14px; padding:10px; width:100%;}
+.g3-fig-note{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13.5px; color:#3A2A6B; line-height:1.7;}
+.g3-fig-note b{color:#E85FA3;}
+.g3-fig-sub{font-size:12px; color:#7A5C98;}
+.g3-fig-msg{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13.5px; line-height:1.6; padding:6px 10px; border-radius:12px;}
+.g3-fig-msg-ng{color:#C0568A; background:#FFF0F6;}
+.g3-fig-acts{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+.g3-fig-acts .ts-act{padding:10px 14px; font-size:14px; min-height:44px;}
+
+/* クッキー */
+.g3-cookies{display:flex; flex-direction:column; align-items:center; gap:8px; width:100%;}
+.g3-jar-row{display:flex; align-items:center; justify-content:center; gap:12px;}
+.g3-jar{display:flex; flex-direction:column; align-items:center; background:none; border:none; padding:0; cursor:pointer; touch-action:manipulation; color:#3A2A6B;}
+.g3-jar:disabled{cursor:default; color:#3A2A6B;}
+.g3-jar-img{width:64px; height:72px; object-fit:contain;}
+.g3-cookies-small .g3-jar-img{width:48px; height:54px;}
+.g3-jar-count{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px;}
+.g3-jar-count b{font-family:'Mochiy Pop One'; font-size:18px; color:#E85FA3;}
+.g3-rest{display:flex; flex-direction:column; align-items:center; gap:2px; font-family:'Zen Maru Gothic'; font-size:13px; color:#C0568A; background:#FFF0F6; border:2px dashed #FF8FC4; border-radius:12px; padding:6px 10px;}
+.g3-rest-cookies{display:flex; flex-wrap:wrap; gap:2px; max-width:110px; justify-content:center;}
+.g3-plates{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%;}
+.g3-plate{position:relative; width:84px; height:64px; padding:0; background:none; border:none; cursor:pointer; touch-action:manipulation;}
+.g3-cookies-small .g3-plate{width:70px; height:54px;}
+.g3-plate-img{position:absolute; inset:0; width:100%; height:100%;}
+.g3-plate-cookies{position:absolute; inset:8px 10px 10px; display:grid; gap:1px; justify-content:center; align-content:center; justify-items:center;}
+.g3-plate-n{position:absolute; right:-2px; top:-6px; font-family:'Mochiy Pop One'; font-size:12px; color:#fff; background:#B48CE8; border-radius:999px; min-width:20px; padding:0 5px;}
+.g3-plate-full .g3-plate-n{background:#2FAF8E;}
+.g3-plate:active{transform:scale(.96);}
+.g3-plate-empty{font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#7A5C98; padding:16px 0;}
+
+/* 小数ブロック */
+.g3-dec-cols{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.g3-dec-col{display:flex; flex-direction:column; align-items:center; gap:2px; font-family:'Zen Maru Gothic'; font-weight:900; color:#7A4E22;}
+.g3-dec-cells{display:flex; flex-direction:column; border:3px solid #B98A52; border-radius:3px; background:#FFF6E6;}
+.g3-dec-cell{position:relative; width:42px; height:13px; border-top:1px solid #E5CFA8;}
+.g3-dec-cell:first-child{border-top:none;}
+.g3-dec-a{background:#FFA94D;}
+.g3-dec-b{background:#7FC8F8;}
+.g3-dec-gone{background:#FFE0BF;}
+.g3-dec-gone::after{content:"✕"; position:absolute; inset:0; font-size:10px; line-height:12px; text-align:center; color:#C0568A;}
+
+/* 分数 */
+.g3-frac-shape{display:block; max-width:100%; height:auto; touch-action:manipulation;}
+.g3-frac-stage{display:flex; flex-direction:column; align-items:center; gap:10px;}
+.g3-compare{display:flex; gap:12px; justify-content:center;}
+.g3-compare-btn{display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff; border:3px solid #E7D2F7; border-radius:18px; padding:8px; cursor:pointer; touch-action:manipulation;}
+.g3-compare-btn.g3-ok{border-color:#2FAF8E; box-shadow:0 0 0 4px rgba(47,175,142,.2);}
+.g3-compare-btn.g3-ng{border-color:#FF8FC4;}
+.g3-wall{display:flex; flex-direction:column; gap:3px; width:100%; max-width:300px; margin-top:6px;}
+.g3-wall-row{display:flex; gap:3px;}
+.g3-wall-row > span{flex:1; display:flex; align-items:center; justify-content:center; min-height:30px; background:#FFF1D6; border:2px solid #D9A35B; border-radius:6px; font-family:'Mochiy Pop One'; font-size:18px; color:#7A4E22;}
+.g3-wall-hi > span.g3-wall-one{background:#FF8FC4; color:#fff;}
+
+/* うごかして わかる */
+.g3-explore{display:flex; flex-direction:column; align-items:center; gap:10px; width:100%;}
+.g3-steps{display:flex; gap:6px;}
+.g3-steps i{width:12px; height:12px; border-radius:50%; background:#F3E6FA; border:2px solid #E7C6E6;}
+.g3-steps i.on{background:#2FAF8E; border-color:#2FAF8E;}
+.g3-steps i.now{background:#FF8FC4; border-color:#E85FA3;}
+.g3-goal{display:flex; flex-direction:column; gap:2px; width:100%; background:#fff; border-radius:18px; padding:10px 14px; box-shadow:0 4px 0 rgba(201,168,240,.45);
+  font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#3A2A6B; line-height:1.6;}
+.g3-goal small{font-size:11px; color:#7A5C98;}
+.g3-goal b{font-family:'Mochiy Pop One'; font-weight:400; font-size:18px; color:#E85FA3;}
+.g3-result{display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; background:#EAFBF5; border:3px solid #9FE6D6; border-radius:18px; padding:10px 12px;}
+.g3-result-body{font-family:'Zen Maru Gothic'; font-weight:700; font-size:14px; color:#3A2A6B; line-height:1.7; display:flex; flex-direction:column; align-items:center;}
+.g3-result-body b{color:#E85FA3;}
+.g3-eq{font-family:'Mochiy Pop One'; font-size:26px; color:#2C8A66; display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center;}
+.g3-eq b{color:#E85FA3;}
+.g3-next{font-size:18px; padding:12px 28px;}
+.g3-pour{width:100%; background:#fff; border-radius:18px; padding:6px; box-shadow:0 4px 0 rgba(201,168,240,.45);}
+.g3-pour-amounts{display:flex; flex-wrap:wrap; gap:6px 12px; justify-content:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#3A2A6B; padding:2px 0 4px;}
+.g3-pour-amounts b{font-family:'Mochiy Pop One'; font-weight:400; color:#C77700;}
+.g3-howto{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#7A5C98; line-height:1.6;}
+
+@media (max-width:360px){
+  .g3-q{font-size:28px;}
+  .g3-q-div{font-size:24px;}
+  .g3-q-div .g3-box{font-size:22px;}
+  .g3-choice{font-size:22px;}
+  .g3-plate{width:72px; height:56px;}
+}
+/* よこむきの タブレット：図と もんだいを ならべやすく 少し 大きく */
+@media (orientation: landscape) and (min-width:700px){
+  .g3-plate{width:96px; height:72px;}
+}
+/* よこむき：そそぐ 図が 画面を うめないように 高さを おさえる（けっかと ボタンが 見えるように） */
+@media (orientation: landscape){
+  .g3-pour .jc-scene{max-height:52vh;}
+  .g3-frac-stage .g3-frac-shape{max-height:42vh; width:auto;}
+}
