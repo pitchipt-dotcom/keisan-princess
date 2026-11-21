@@ -1768,7 +1768,7 @@ export default function App() {
                     <button className="kk-tiny-btn kk-wipe-open" onClick={() => { SFX.tap(sound); setWipeOpen(true); setWipeText(""); }}>データを すべて けす…</button>
                   ) : (
                     <div className="kk-wipe-panel" role="group" aria-label="データを すべて けす">
-                      <div className="kk-dan-note">おうちの 方へ：ほし・あつめた おしゃれ・コーデ・ドラゴン・まいにちけいさんの きろく・テーマなど、この 端末に ある データを すべて けします。「さいしょから」の 控えも けすので、バックアップコードが ないと もとに 戻せません。</div>
+                      <div className="kk-dan-note">おうちの 方へ：ほし・あつめた おしゃれ・コーデ・ドラゴン・まいにちけいさんや 3年生の きろく・テーマなど、この 端末に ある データを すべて けします。「さいしょから」の 控えも けすので、バックアップコードが ないと もとに 戻せません。</div>
                       <label className="kk-wipe-label">けす ときは、下に「けす」と 入力してください
                         <input className="kk-wipe-input" type="text" value={wipeText} onChange={(e) => setWipeText(e.target.value)} placeholder="けす" autoComplete="off" />
                       </label>
