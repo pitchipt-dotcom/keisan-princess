@@ -8,13 +8,15 @@ export const MENU_GROUPS = [
   // 1ねんせいは 学ぶ じゅんばん：かずと すうじ → 10までの けいさん → 10を つくろう → くりあがり → くりさがり
   { id: "g1", label: "1ねんせい", sub: "かずと すうじ・10までの けいさん・10を つくろう・くりあがり・くりさがり", icon: "🌱", color: "#3FB37F", bg: "#E8FAF0",
     items: ["kazu", "tashi10", "make10", "addCarry", "subBorrow"] },
-  { id: "g2", label: "2ねんせい", sub: "くりあがり・くりさがり・九九・ひっさん・おはなし", icon: "📘", color: "#4A86C5", bg: "#EAF3FF",
-    items: ["addCarry", "subBorrow", "kuku", "write", "story"] },
+  // まいにち けいさん（2年生）は チャレンジから ここへ うつした（中身・セーブ・ドラゴン・スタンプは そのまま）
+  { id: "g2", label: "2ねんせい", sub: "まいにち けいさん・くりあがり・くりさがり・九九・ひっさん・おはなし", icon: "📘", color: "#4A86C5", bg: "#EAF3FF",
+    items: ["daily", "addCarry", "subBorrow", "kuku", "write", "story"] },
   // 3年生：ボタンの 字は 漢字（1・2年生の 字は かえない）
   { id: "g3", label: "3年生", sub: "わり算・小数・分数・毎日計算", icon: "📗", color: "#7C5CC4", bg: "#F3EEFF",
     items: ["div", "dec", "frac", "daily3"] },
-  { id: "challenge", label: "チャレンジ", sub: "まいにち けいさん・ようせいの くに・ドラゴン", icon: "🏆", color: "#E8721C", bg: "#FFF3E6", art: true,
-    items: ["daily", "fairy", "dragon"] },
+  // id は "challenge" の まま（セーブの menuGroup を こわさない）。名前だけ かえた
+  { id: "challenge", label: "かたち・かさ チャレンジ", sub: "ようせいの くに・ドラゴン", icon: "🏆", color: "#E8721C", bg: "#FFF3E6", art: true,
+    items: ["fairy", "dragon"] },
 ];
 
 /* GAMETYPE_INFO に ない もの（もとは メニューの 下の ボタン）。カードの 見た目は 同じ */

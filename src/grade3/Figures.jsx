@@ -50,7 +50,7 @@ function JarPic() {
    mode "group"：per こずつ おさらに のせる（いくつ分？）。びんを タップ → 1こ のせる（いっぱいに なったら つぎの おさら）
    おわり：share … のこりが おさらの 数より 少なく、ぜんぶ 同じ数  → onDone({ each, rest })
            group … さいごの おさらが いっぱいで、のこりが per より 少ない → onDone({ groups, rest }) */
-export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, onDone, small = false }) {
+export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, onDone, small = false, frozen = false }) {
   const init = () => ({ jar: total, on: mode === "share" ? Array(plates).fill(0) : [] });
   const [st, setSt] = useState(init);
   const [done, setDone] = useState(null);
@@ -75,6 +75,7 @@ export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, on
     else setDone(null);
   };
   const addTo = (i) => {
+    if (frozen) return;
     if (done && !done.uneven) return;
     if (st.jar <= 0) return;
     tap();
@@ -82,12 +83,14 @@ export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, on
     apply({ jar: st.jar - 1, on });
   };
   const dealRound = () => {
+    if (frozen) return;
     if (done && !done.uneven) return;
     if (st.jar < plates) return;
     tap();
     apply({ jar: st.jar - plates, on: st.on.map((n) => n + 1) });
   };
   const putGroup = () => {
+    if (frozen) return;
     if (done && !done.uneven) return;
     if (st.jar <= 0) return;
     const last = st.on[st.on.length - 1];
@@ -170,8 +173,10 @@ export function DecBlocks({ x, y, op }) {
    d こに わけた まる。painted（ぬった）・extra（2つめの 色）・eaten（✕）は きれの ばんごうの Set */
 const SHAPE_COLORS = {
   cake: { base: "#FFF1D6", line: "#D9A35B", paint: "#FF8FC4", extra: "#FFD34D", rim: "#F5C9A0" },
-  pizza: { base: "#FFE2A8", line: "#C9822E", paint: "#F26B5B", extra: "#7ACB6E", rim: "#E3A04F" },
+  pizza: { base: "#FFE2A8", line: "#C9822E", paint: "#5B8DEF", extra: "#FFD34D", rim: "#E3A04F" },   // ぬる 色は ピザの 赤と まざらない 青
 };
+// 絵（512×512）の 中で、ケーキ・ピザの まるの 半径が しめる わりあい（tools なしで はかった 値：ケーキ 446/453、ピザ 467/471）
+const ART_FILL = { cake: 0.985, pizza: 0.992 };
 export function FracShape({ d, kind = "cake", painted = new Set(), extra = new Set(), eaten = new Set(), onTap, size = 170, cut = true }) {
   const C = SHAPE_COLORS[kind] || SHAPE_COLORS.cake;
   const art = g3Art(kind === "pizza" ? "pizza-top" : "cake-top");
@@ -179,23 +184,27 @@ export function FracShape({ d, kind = "cake", painted = new Set(), extra = new S
   const pt = (a) => [cx + R * Math.sin(a), cy - R * Math.cos(a)];
   const slices = [];
   const n = cut ? d : 1;
+  // ケーキの ふちの かざり（いちご 8こ・クリーム 8こ。いちごが 0°・45°…）の あいだに 切れめが くるよう 11.25° まわす
+  // （2・4・8 に わけた ときは かざりの とちゅうで 切れない）
+  const rot = kind === "cake" ? (11.25 * Math.PI) / 180 : 0;
   for (let i = 0; i < n; i++) {
-    const a0 = (i / n) * Math.PI * 2, a1 = ((i + 1) / n) * Math.PI * 2;
+    const a0 = rot + (i / n) * Math.PI * 2, a1 = rot + ((i + 1) / n) * Math.PI * 2;
     const [x0, y0] = pt(a0), [x1, y1] = pt(a1);
     const path = n === 1 ? `M${cx} ${cy - R} A${R} ${R} 0 1 1 ${cx - 0.01} ${cy - R} Z` : `M${cx} ${cy} L${x0} ${y0} A${R} ${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1} ${y1} Z`;
     const fill = eaten.has(i) ? (art ? "rgba(255,255,255,.7)" : C.base) : painted.has(i) ? C.paint : extra.has(i) ? C.extra : art ? "transparent" : C.base;
     const am = (a0 + a1) / 2, [mx, my] = [cx + R * 0.58 * Math.sin(am), cy - R * 0.58 * Math.cos(am)];
     slices.push(
       <g key={i} onClick={onTap ? () => onTap(i) : undefined} style={onTap ? { cursor: "pointer" } : undefined} data-slice={i}>
-        <path d={path} fill={fill} fillOpacity={art && (painted.has(i) || extra.has(i)) ? 0.75 : 1} stroke={C.line} strokeWidth={1.4} />
+        <path d={path} fill={fill} fillOpacity={art && (painted.has(i) || extra.has(i)) ? 0.62 : 1} stroke={C.line} strokeWidth={art ? 1.8 : 1.4} />
         {eaten.has(i) && <text x={mx} y={my + 5} textAnchor="middle" fontSize={16} fontWeight={900} fill="#C0568A" pointerEvents="none">✕</text>}
       </g>
     );
   }
   return (
     <svg className="g3-frac-shape" viewBox="0 0 100 100" width={size} height={size} role="img" aria-label={kind === "pizza" ? "ピザ" : "ケーキ"}>
-      <circle cx={cx} cy={cy} r={R + 3} fill={C.rim} />
-      {art && <image href={art} x={cx - R} y={cy - R} width={R * 2} height={R * 2} style={{ clipPath: "circle(50%)" }} preserveAspectRatio="xMidYMid slice" />}
+      {!art && <circle cx={cx} cy={cy} r={R + 3} fill={C.rim} />}
+      {/* 絵の まるが R に ぴったり かさなるよう 少し 大きく おく（絵の ふちの かざりが まるから すこし はみだす ぶん） */}
+      {art && <image href={art} x={cx - R / ART_FILL[kind]} y={cy - R / ART_FILL[kind]} width={(R * 2) / ART_FILL[kind]} height={(R * 2) / ART_FILL[kind]} />}
       {slices}
     </svg>
   );
@@ -239,6 +248,7 @@ export function DivHint({ q, sfx }) {
   return (
     <div className="g3-hint-fig">
       <div className="g3-fig-note">{q.a}この クッキーを {q.b}まいの おさらに 同じ数ずつ くばると、1さら 何こ？{q.r ? " あまりは？" : ""}</div>
+      <div className="g3-fig-note g3-fig-sub">わかったら くばりおわる まえでも こたえて いいよ</div>
       <CookieDeal total={q.a} plates={q.b} mode="share" sfx={sfx} small />
       <div className="g3-fig-note g3-fig-sub">{q.r ? `${q.b}の だんの 九九で、${q.a}を こえない いちばん 大きい 答えを さがそう` : `${q.b}の だんの 九九：${q.b} × □ ＝ ${q.a}`}</div>
     </div>

@@ -1,6 +1,6 @@
 /* 3年生（わり算・小数・分数）の 絵。名前で よぶ。同じ 名前の .webp → .png → .svg の じゅんに さがす
-   いまは 絵が ないので、画面の ほうで かりの 絵（SVG）を かく。ここに ファイルを おけば じどうで さしかわる
-   ほしい 絵の 一覧：docs/grade3-art.md（画像の 中に 日本語の 文字は 入れない） */
+   絵が 無い ときは、画面の ほうで かりの 絵（SVG）を かく
+   絵の 一覧・つくり方：docs/grade3.md（画像の 中に 日本語の 文字は 入れない） */
 import { getTheme, themedArtKey } from "../../theme.js";
 const files = import.meta.glob("./*.{svg,png,webp}", { eager: true, query: "?url", import: "default" });
 const RANK = { webp: 3, png: 2, svg: 1 };

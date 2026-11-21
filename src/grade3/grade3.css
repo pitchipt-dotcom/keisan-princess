@@ -143,3 +143,19 @@
   .g3-pour .jc-scene{max-height:52vh;}
   .g3-frac-stage .g3-frac-shape{max-height:42vh; width:auto;}
 }
+
+/* 分数：いみの ことば・おなじ 大きさ ボタン */
+.g3-meaning{display:flex; align-items:center; gap:10px; text-align:left; font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#3A2A6B; line-height:1.6;}
+.g3-meaning small{font-size:12px; font-weight:700; color:#7A5C98;}
+.g3-meaning-frac{flex:0 0 auto;}
+.g3-same-btn{font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:#3A2A6B; background:#fff; border:3px solid #E7D2F7; border-radius:999px; padding:10px 24px; cursor:pointer; touch-action:manipulation; min-height:48px;}
+.g3-same-btn.g3-ok{border-color:#2FAF8E; box-shadow:0 0 0 4px rgba(47,175,142,.2);}
+.g3-same-btn.g3-ng{border-color:#FF8FC4;}
+.g3-goal .g3-frac{font-size:1em; font-family:'Mochiy Pop One'; margin:0 3px;}
+/* わり算：数字で こたえる */
+.g3-numans{display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; background:#fff; border-radius:18px; padding:10px; box-shadow:0 4px 0 rgba(201,168,240,.45);}
+.g3-numans-row{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:#3A2A6B;}
+.g3-numans-field{display:inline-flex; align-items:center; gap:4px;}
+.g3-numans .g3-box{font-size:24px; min-width:1.6em;}
+.g3-numans-keys{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:100%; max-width:320px;}
+.g3-numans-keys .jc-digit{min-height:44px;}

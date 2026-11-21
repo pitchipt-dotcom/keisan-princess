@@ -16,6 +16,7 @@ import { todayStr, addDays } from "../dragon.js";
 import { G2, makeOne } from "../dailyCore.js";
 const REVIEW_MAX = 4;                   // 毎日計算：1日に まぜる ノートの おさらい（さいだい。2年生と おなじ）
 import { growNet, pickDims, CUBE } from "../fairy/hako.js";
+import { makeYomi3 } from "./yomi3.js";
 
 export const UNITS = ["div", "dec", "frac"];
 export const UNIT_INFO = {
@@ -206,9 +207,10 @@ export function markExplored(g3, unit) {
 }
 
 /* ============================ 毎日計算（3年生） ============================ */
-// 10もん：3年生 6（わり算・小数・分数 2もんずつ）／2年生 3（まいにち けいさんの しきの もんだい）／ようせいの くに 1
+// 10もん：3年生 6（しき 4 ＋ よみとりチェック 2）／2年生 3（まいにち けいさんの しきの もんだい）／ようせいの くに 1
+//   しき 4：わり算・小数・分数 1もんずつ ＋ どれか 1もん。よみとり 2：ちがう 単元から 2つ
 export const DAILY3_COUNT = 10;
-export const DAILY3_MIX = { g3: 6, g2: 3, fairy: 1 };
+export const DAILY3_MIX = { g3: 6, g3calc: 4, g3yomi: 2, g2: 3, fairy: 1 };
 const REVIEW_GAPS = [1, 3, 7];
 export const g2Key = (q) => `${q.a}${q.op}${q.b}`;
 export function toG2(q) { return { unit: "g2", kind: q.kind, a: q.a, b: q.b, op: q.op, ans: q.ans, key: g2Key(q) }; }
@@ -216,11 +218,11 @@ export function toG2(q) { return { unit: "g2", kind: q.kind, a: q.a, b: q.b, op:
 export function buildDaily3Set(g3, r = Math.random) {
   const g = normalizeGrade3(g3), today = todayStr();
   const due = Object.values(g.daily.notebook).filter((n) => n.due <= today).sort((x, y) => (x.due < y.due ? -1 : 1)).slice(0, REVIEW_MAX);
-  const dueG3 = due.filter((n) => n.q.unit !== "g2").slice(0, DAILY3_MIX.g3).map((n) => ({ ...n.q, review: true }));
+  const dueG3 = due.filter((n) => n.q.unit !== "g2").slice(0, DAILY3_MIX.g3calc).map((n) => ({ ...n.q, review: true }));
   const dueG2 = due.filter((n) => n.q.unit === "g2").slice(0, DAILY3_MIX.g2).map((n) => ({ ...n.q, review: true }));
   const used = new Set([...dueG3, ...dueG2].map((q) => q.key));
   const g3q = [...dueG3];
-  const order = shuffle(["div", "div", "dec", "dec", "frac", "frac"], r);
+  const order = shuffle(["div", "dec", "frac", pick(UNITS, r)], r);
   // おさらいで うまった ぶんは、その 単元から へらす
   for (const q of dueG3) { const i = order.indexOf(q.unit); if (i >= 0) order.splice(i, 1); else order.pop(); }
   for (const u of order) {
@@ -234,7 +236,8 @@ export function buildDaily3Set(g3, r = Math.random) {
     if (used.has(q.key)) continue;
     used.add(q.key); g2q.push(q);
   }
-  const out = shuffle([...g3q, ...g2q, makeFairy(r)], r);
+  const yomi = shuffle(UNITS, r).slice(0, DAILY3_MIX.g3yomi).map((u) => makeYomi3(u));
+  const out = shuffle([...g3q, ...yomi, ...g2q, makeFairy(r)], r);
   return out;
 }
 

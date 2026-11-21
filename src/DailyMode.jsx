@@ -151,6 +151,8 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
   const dueCount = useMemo(() => Object.values(daily.notebook || {}).filter((n) => n.due <= today).length, [daily, today]);
   const noteCount = Object.keys(daily.notebook || {}).length;
   const doneToday = daily.lastDate === today;
+  // daily.history は 2年生の きろくだけ（3年生は grade3 に べつに もつ）。lastDate が きょうでも、ここに きょうが 無ければ 3年生で やった 日
+  const g2Today = (daily.history || []).some((h) => h && h.date === today);
 
   useEffect(() => {
     if (stage !== "play") return;
@@ -260,7 +262,9 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
             <div><b>{daily.bestSec != null ? fmtSec(daily.bestSec) : "—"}</b><small>ぜんもん せいかいの<br />さいこう タイム</small></div>
             <div><b>{noteCount}</b><small>ノートの もんだい</small></div>
           </div>
-          {doneToday && <div className="dm-intro-done">きょうの ぶんは もう できたよ！ もういちど やっても いいよ♪</div>}
+          {doneToday && (g2Today
+            ? <div className="dm-intro-done">きょうの ぶんは もう できたよ！ もういちど やっても いいよ♪</div>
+            : <div className="dm-intro-done">🐉 ドラゴンの ポイントは 3年生の 毎日計算で もう もらったよ。<br />2年生の けいさんも やって いいよ♪</div>)}
         </div>
         {needsEgg(daily) ? (
           <div className="dm-card">

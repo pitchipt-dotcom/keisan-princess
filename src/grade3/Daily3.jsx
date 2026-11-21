@@ -1,6 +1,7 @@
 /* =====================================================================
    毎日計算（3年生）
-   - 10もん：3年生（わり算・小数・分数）6 ／ 2年生の まいにち けいさん（しき）3 ／ ようせいの くに 1
+   - 10もん：3年生 6（しき 4 ＋ よみとりチェック 2）／ 2年生の まいにち けいさん（しき）3 ／ ようせいの くに 1
+     よみとりチェックは 2年生と おなじ 画面（YomitoriQuestion）。読み方の だんかい（daily.yomiRead）も 2年生と 共通
    - まちがえた もんだいは 3年生の「まちがいノート」に たまり、1日後・3日後・7日後に もういちど（ようせいの くには 入れない）
    - ヒント・けっか画面・れんぞく日数・ドラゴンは 2年生の まいにち けいさん と おなじ 作り
      ドラゴン・れんぞく日数・スタンプ（カレンダー）・その日の ボーナス★ は 2年生と おなじ daily（applyCompletion）で きめる
@@ -12,11 +13,13 @@ import "./grade3.css";
 import "../dailyMode.css";
 import { todayStr, applyCompletion, needsEgg, currentStreak } from "../dragon.js";
 import { DragonMini, EggPicker, StageUpCelebration, DRAGONS } from "../DragonMode.jsx";
-import { fmtSec, STAR_PER_RIGHT, STAR_DAILY_BONUS, REVIEW_MAX } from "../DailyMode.jsx";
+import { fmtSec, STAR_PER_RIGHT, STAR_DAILY_BONUS, REVIEW_MAX, Keypad } from "../DailyMode.jsx";
+import { YomitoriQuestion } from "../YomitoriQuestion.jsx";
+import { normalizeReadProgress, applyReadResults } from "../yomitori.js";
 import { DAILY3_COUNT, DAILY3_MIX, buildDaily3Set, makeChoices, noteWrong3, noteRight3, normalizeGrade3, UNIT_INFO } from "./g3.js";
 import { G3Question } from "./Question.jsx";
 
-const TAG = { div: "🍪 わり算", dec: "🧃 小数", frac: "🍰 分数", g2: "📘 2年生", fairy: "🧚 ようせいの くに" };
+const TAG = { div: "🍪 わり算", dec: "🧃 小数", frac: "🍰 分数", yomi: "📖 よみとり", g2: "📘 2年生", fairy: "🧚 ようせいの くに" };
 
 export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEgg, onExit }) {
   const g = normalizeGrade3(grade3);
@@ -27,6 +30,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   const [sec, setSec] = useState(0);
   const [summary, setSummary] = useState(null);
   const startRef = useRef(0);
+  const [readStage, setReadStage] = useState("A");      // 読み方の 手つだいの だんかい（2年生の よみとりチェックと 共通）
   const nbRef = useRef(g.daily.notebook);
 
   const today = todayStr();
@@ -43,7 +47,8 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   const start = () => {
     sfx.tap();
     nbRef.current = g.daily.notebook;
-    const ns = buildDaily3Set(g).map((q) => (q.unit === "fairy" || q.unit === "g2" ? q : { ...q, choices: makeChoices(q) }));
+    const ns = buildDaily3Set(g).map((q) => (q.wp || q.unit === "fairy" || q.unit === "g2" ? q : { ...q, choices: makeChoices(q) }));
+    setReadStage(normalizeReadProgress(daily.yomiRead).stage);
     if (import.meta.env.DEV) window.__daily3Set = ns;   // ブラウザ テスト用（本番には 入らない）
     setSet(ns); setIdx(0); setResults([]); setSec(0); startRef.current = Date.now();
     setStage("play");
@@ -54,7 +59,9 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
     const correct = res.filter((r) => r.right).length;
     const hints = res.filter((r) => r.hint).length;
     // れんぞく・ドラゴン・その日の ボーナスは 2年生と 共通の daily で（その日 はじめての ときだけ）
-    const { daily: nd, report } = applyCompletion(daily, { correct, hints, total: DAILY3_COUNT }, today);
+    const { daily: nd0, report } = applyCompletion(daily, { correct, hints, total: DAILY3_COUNT }, today);
+    // 読み方の だんかい（いっぱつで 見つけた かず）は 2年生と 共通の daily.yomiRead に つみあげる
+    const nd = { ...nd0, yomiRead: applyReadResults(daily.yomiRead, res.filter((x) => x.wp)) };
     const firstToday = report.firstToday;
     const prevBest = g.daily.bestSec;
     const isBest = correct === DAILY3_COUNT && (prevBest == null || total < prevBest);
@@ -69,7 +76,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
     onComplete(nd, ng, stars);
     const by = (u) => res.filter((r) => r.unit === u);
     setSummary({ correct, hints, total, isBest, stars, firstToday, streakDays: nd.streakDays || 0, noteCount: Object.keys(nbRef.current).length,
-      dragon: report, dragonNow: nd.dragon, parts: ["div", "dec", "frac", "g2", "fairy"].map((u) => ({ u, n: by(u).length, ok: by(u).filter((r) => r.right).length })).filter((p) => p.n > 0) });
+      dragon: report, dragonNow: nd.dragon, parts: ["div", "dec", "frac", "yomi", "g2", "fairy"].map((u) => ({ u, n: by(u).length, ok: by(u).filter((r) => r.right).length })).filter((p) => p.n > 0) });
     setStage("done");
   };
 
@@ -81,7 +88,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
         <h2 className="kk-h2">📅 毎日計算 <small className="g3-grade-chip">3年生</small></h2>
         <div className="dm-card">
           <div className="dm-intro-line">きょうの もんだい <b>{DAILY3_COUNT}もん</b></div>
-          <div className="dm-intro-line g3-intro-sub">わり算・小数・分数が {DAILY3_MIX.g3}もん、2年生の けいさんが {DAILY3_MIX.g2}もん、ようせいの くにから {DAILY3_MIX.fairy}もん</div>
+          <div className="dm-intro-line g3-intro-sub">わり算・小数・分数が {DAILY3_MIX.g3}もん（そのうち 📖 よみとりチェックが {DAILY3_MIX.g3yomi}もん）、2年生の けいさんが {DAILY3_MIX.g2}もん、ようせいの くにから {DAILY3_MIX.fairy}もん</div>
           <div className="dm-intro-line">じかんは はかるけど、<b>あわてなくて だいじょうぶ</b>。</div>
           {!needsEgg(daily) && <DragonMini daily={daily} />}
           {dueCount > 0 && <div className="dm-intro-line dm-intro-review">📒 まちがいノートの おさらいが <b>{Math.min(dueCount, REVIEW_MAX)}もん</b> まざってるよ</div>}
@@ -150,21 +157,36 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   const q = set[idx];
   if (!q) return null;
   const inputMode = q.unit in UNIT_INFO ? g.units[q.unit].input : true;
-  return (
-    <div className="dm-wrap">
+  const top = (
+    <>
       <div className="dm-top">
         <span className="dm-count">{idx + 1} / {set.length}</span>
-        {q.review ? <span className="dm-review-tag">📒 おさらい</span> : <span className="g3-unit-tag">{TAG[q.unit]}</span>}
-        <span className="dm-timer">⏱ {fmtSec(sec)}</span>
+        {q.review ? <span className="dm-review-tag">📒 おさらい</span> : <span className="g3-unit-tag">{q.wp ? `${TAG.yomi}（${UNIT_INFO[q.g3unit].label}）` : TAG[q.unit]}</span>}
+        {!q.wp && <span className="dm-timer">⏱ {fmtSec(sec)}</span>}
       </div>
       <div className="dm-progress"><div className="dm-progress-fill" style={{ width: (idx / set.length) * 100 + "%" }} /></div>
+    </>
+  );
+  const done1 = (r, unit) => {
+    const res = [...results, { ...r, unit }];
+    setResults(res);
+    if (idx + 1 >= set.length) finish(res); else setIdx(idx + 1);
+  };
+  if (q.wp) {
+    return (
+      <div className="dm-wrap">
+        {top}
+        <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
+          onFinish={(r) => done1({ ...r, wp: true }, "yomi")} />
+      </div>
+    );
+  }
+  return (
+    <div className="dm-wrap">
+      {top}
       <G3Question key={idx} q={q} choices={q.choices} inputMode={inputMode} notebook sfx={sfx} character={character} isLast={idx + 1 >= set.length}
         onFirst={(right) => { nbRef.current = right ? noteRight3(nbRef.current, q) : noteWrong3(nbRef.current, q); }}
-        onDone={(r) => {
-          const res = [...results, { ...r, unit: q.unit }];
-          setResults(res);
-          if (idx + 1 >= set.length) finish(res); else setIdx(idx + 1);
-        }} />
+        onDone={(r) => done1(r, q.unit)} />
     </div>
   );
 }
