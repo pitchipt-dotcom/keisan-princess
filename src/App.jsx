@@ -22,6 +22,8 @@ import { normalizeFairy } from "./fairy/fairy.js";
 const FairyLand = React.lazy(() => import("./fairy/FairyLand.jsx"));
 // 3年生（わり算・小数・分数・毎日計算）
 import { normalizeGrade3 } from "./grade3/g3.js";
+// はじめて あそんだ 日（セーブの firstPlayedAt。docs/first-played.md）
+import { resolveFirstPlayed, firstPlayedFromSave, earlierFirstPlayed, fmtFirstPlayed } from "./firstPlayed.js";
 const Grade3Unit = React.lazy(() => import("./grade3/Grade3Unit.jsx").then((m) => ({ default: m.Grade3Unit })));
 const Daily3Play = React.lazy(() => import("./grade3/Daily3.jsx").then((m) => ({ default: m.Daily3Play })));
 
@@ -1266,7 +1268,8 @@ export default function App() {
   const [fairy, setFairy] = useState(() => normalizeFairy());   // 妖精の国（なかよし度・ひらいた エリア）
   const fairyRef = useRef(fairy);
   const [grade3, setGrade3] = useState(() => normalizeGrade3());   // 3年生：単元の すすみ（三択→入力）・毎日計算の きろく
-  const [g3Unit, setG3Unit] = useState(null);                       // いま ひらいている 3年生の 単元：div | dec | frac
+  const [g3Unit, setG3Unit] = useState(null);
+  const [firstPlayedAt, setFirstPlayedAt] = useState(() => new Date().toISOString());   // はじめて あそんだ 日時（セーブが あれば 読みこみで さしかえる）                       // いま ひらいている 3年生の 単元：div | dec | frac
 
   /* ---- load save ---- */
   useEffect(() => preloadArt(), []);
@@ -1292,6 +1295,10 @@ export default function App() {
             setMenuGroup(normalizeGroup(d.menuGroup));
             if (d.fairy) { const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf); }
             setGrade3(normalizeGrade3(d.grade3));   // 無い セーブは さいしょから
+            // はじめて あそんだ 日：まだ 無い セーブは、いちばん古い きろくの 日（無ければ 今）を 入れて すぐ 保存
+            const fp = resolveFirstPlayed(d);
+            setFirstPlayedAt(fp);
+            if (d.firstPlayedAt !== fp) { try { storage.set(SAVE_KEY, JSON.stringify({ ...d, firstPlayedAt: fp })); } catch (e) {} }
           }
         }
       } catch (e) { /* ignore -> in-memory */ }
@@ -1303,9 +1310,9 @@ export default function App() {
   /* ---- persist ---- */
   const persist = useCallback((patch) => {
     if (typeof window === "undefined" || !storage) return;
-    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, grade3, theme: getTheme(), ...patch };
+    const data = { stardust, collection, mastery, stats, sound, equipped, character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, grade3, theme: getTheme(), ...patch, firstPlayedAt: (patch && patch.firstPlayedAt) || firstPlayedAt };
     try { storage.set(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
-  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi, menuGroup, grade3]);
+  }, [stardust, collection, mastery, stats, sound, equipped, characterId, seenMilestones, daily, ohanashi, menuGroup, grade3, firstPlayedAt]);
 
   /* ---- メニュー：グループ → モード。モードから もどる ときは 入ってきた グループへ ---- */
   const openGroup = (id) => { SFX.tap(sound); setMenuGroup(id); persist({ menuGroup: id }); setScreen("group"); };
@@ -1528,7 +1535,7 @@ export default function App() {
 
   const buildSnapshot = () => ({
     stardust, collection, mastery, stats, sound, equipped,
-    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, grade3, theme: getTheme(),
+    character: characterId, seenMilestones, daily, ohanashi, fairy: fairyRef.current, menuGroup, grade3, theme: getTheme(), firstPlayedAt,
   });
 
   const applySnapshot = (d) => {
@@ -1546,6 +1553,10 @@ export default function App() {
     setMenuGroup(normalizeGroup(d.menuGroup));
     const nf = normalizeFairy(d.fairy); fairyRef.current = nf; setFairy(nf);
     setGrade3(normalizeGrade3(d.grade3));      // 古い バックアップコード（grade3 なし）でも エラーに しない
+    // はじめた 日は 上書きしない：今の 値と コードの 値（無い 古い コードは コードの きろくの 日）の 古い ほう
+    const fp = earlierFirstPlayed(firstPlayedAt, firstPlayedFromSave(d)) || firstPlayedAt;
+    setFirstPlayedAt(fp);
+    return fp;
   };
 
   const resetAll = () => {
@@ -1575,8 +1586,8 @@ export default function App() {
     const d = decodeSave(importCode);
     if (!d) { setBackupMsg("コードが ただしくないみたい。もう一度 たしかめてね。"); return; }
     if (typeof window !== "undefined" && !window.confirm("今の データの うえに 上書きします。よろしいですか？")) return;
-    applySnapshot(d);
-    persist({ ...d, grade3: normalizeGrade3(d.grade3) });   // grade3 の ない 古い コードでも、いまの 3年生の きろくを のこさない
+    const fp = applySnapshot(d);
+    persist({ ...d, grade3: normalizeGrade3(d.grade3), firstPlayedAt: fp });   // grade3 の ない 古い コードでも、いまの 3年生の きろくを のこさない
     setBackupMsg("もとに 戻しました！");
   };
   const handleUndoReset = async () => {
@@ -1586,8 +1597,8 @@ export default function App() {
       if (!r || !r.value) { setBackupMsg("もどせる データが ないみたい。"); return; }
       const d = JSON.parse(r.value);
       if (!window.confirm("リセットの まえの データに もどします。よろしいですか？")) return;
-      applySnapshot(d);
-      persist({ ...d, grade3: normalizeGrade3(d.grade3) });
+      const fp = applySnapshot(d);
+      persist({ ...d, grade3: normalizeGrade3(d.grade3), firstPlayedAt: fp });
       setBackupMsg("リセットまえの データに もどしました！");
     } catch (e) { setBackupMsg("もどせる データが ないみたい。"); }
   };
@@ -1779,6 +1790,7 @@ export default function App() {
                     </div>
                   )}
                 </div>
+                {fmtFirstPlayed(firstPlayedAt) && <div className="kk-first-played">はじめた日: {fmtFirstPlayed(firstPlayedAt)}</div>}
               </div>
             )}
           </div>
@@ -2382,6 +2394,7 @@ function Style() {
   resize:vertical; box-sizing:border-box; word-break:break-all;
 }
 .kk-privacy-link{display:block; text-align:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:var(--night); text-decoration:underline; margin:4px 0 14px;}
+.kk-first-played{margin-top:14px; text-align:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:11px; color:var(--plum-soft,#7A5C98); opacity:.8;}
 .kk-wipe-open{display:block; margin:8px auto 0; opacity:.75;}
 .kk-wipe-panel{background:#FFF4F4; border:2px solid #F3C2C2; border-radius:14px; padding:12px; margin-top:8px;}
 .kk-wipe-label{display:block; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:var(--plum);}
