@@ -21,7 +21,16 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function Marks({ v, T, glowL1, glowMl }) {
   const { w, h, cap } = T, y = (ml) => h - (ml / cap) * h;
   const out = [];
-  if (T.shape === "masu" && !T.fine) {
+  if (T.shape === "masu" && T.dec) {
+    // 3年生「小数」：0.1L ごとの 線だけ（もっと こまかい 線は 出さない）。どの 線にも 数字
+    for (const m of T.marks) {
+      out.push(<line key={m} x1={w - 22} x2={w} y1={y(m)} y2={y(m)} stroke="#7A4E22" strokeWidth={m === 500 ? 2.2 : 1.5} />);
+      out.push(<text key={"t" + m} x={w - 25} y={y(m) + 3.5} textAnchor="end" fontSize={10} fontWeight={900} fill="#7A4E22">{m / 1000}</text>);
+    }
+    if (glowMl) out.push(<line key="glow" x1={0} x2={w} y1={y(glowMl)} y2={y(glowMl)} stroke="#FFC21A" strokeWidth={3.5} className="jc-glow-line" />);
+    if (T.marks.length) out.push(<text key="unit" x={4} y={11} fontSize={9} fontWeight={900} fill="#7A4E22">L</text>);
+  }
+  if (T.shape === "masu" && !T.fine && !T.dec) {
     for (const m of T.marks) out.push(<line key={m} x1={w - (m % 500 ? 9 : 16)} x2={w} y1={y(m)} y2={y(m)} stroke="#7A4E22" strokeWidth={m % 500 ? 1.2 : 2} />);
     if (glowMl) out.push(<line key="glow" x1={0} x2={w} y1={y(glowMl)} y2={y(glowMl)} stroke="#FFC21A" strokeWidth={3.5} className="jc-glow-line" />,
       <text key="glowt" x={4} y={y(glowMl) - 4} fontSize={10} fontWeight={900} fill="#C77700">{glowMl / 100}dL</text>);

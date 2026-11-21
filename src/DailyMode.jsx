@@ -18,63 +18,21 @@ import { todayStr, addDays, EMPTY_DAILY, applyCompletion, needsEgg, currentStrea
 import { DragonMini, EggPicker, StageUpCelebration, DRAGONS } from "./DragonMode.jsx";
 import { buildYomitoriSet, normalizeUnitProgress, applyUnitResults, normalizeReadProgress, applyReadResults, READ_STREAK_UP, pickPraise } from "./yomitori.js";
 import { YomitoriQuestion } from "./YomitoriQuestion.jsx";
+import { G2, makeOne, qKey } from "./dailyCore.js";
 
-export { todayStr, EMPTY_DAILY };
+export { todayStr, EMPTY_DAILY, qKey };
 
 export const DAILY_COUNT = 10;          // 1日の もんだい数
-const REVIEW_MAX = 4;                   // 1日に まぜる ノートの おさらい（さいだい）
+export const REVIEW_MAX = 4;                   // 1日に まぜる ノートの おさらい（さいだい）
 const REVIEW_GAPS = [1, 3, 7];          // せいかい するたびに つぎに 出す までの 日数
-const STAR_PER_RIGHT = 10;
-const STAR_DAILY_BONUS = 30;            // その日 はじめて 10もん やりきった ボーナス
+export const STAR_PER_RIGHT = 10;
+export const STAR_DAILY_BONUS = 30;            // その日 はじめて 10もん やりきった ボーナス
 
-const rnd = (lo, hi) => lo + ((Math.random() * (hi - lo + 1)) | 0);
 
 /* 日付（todayStr／addDays）と セーブの 初期値は dragon.js に まとめてある */
 
-/* ======================= 2年生の もんだい ============================== */
-// それぞれ { a, b, op, ans }
-const G2 = [
-  // 2けた＋2けた（くりあがり あり）  例 38＋27
-  { id: "add2c", w: 3, make() { const a = rnd(11, 89), b = rnd(11, 99 - a); if ((a % 10) + (b % 10) < 10) return null; return { a, b, op: "+" }; } },
-  // 2けた＋2けた（くりあがり なし）  例 34＋25
-  { id: "add2", w: 1, make() { const a = rnd(11, 88), b = rnd(10, 99 - a); if ((a % 10) + (b % 10) >= 10) return null; return { a, b, op: "+" }; } },
-  // 2けた−2けた（くりさがり あり）  例 72−35
-  { id: "sub2b", w: 3, make() { const a = rnd(21, 98), b = rnd(11, a - 1); if ((a % 10) >= (b % 10)) return null; return { a, b, op: "-" }; } },
-  // 2けた−2けた（くりさがり なし）
-  { id: "sub2", w: 1, make() { const a = rnd(21, 99), b = rnd(10, a - 1); if ((a % 10) < (b % 10)) return null; return { a, b, op: "-" }; } },
-  // こたえが 3けたに なる たしざん  例 76＋58
-  { id: "add3", w: 2, make() { const a = rnd(41, 99), b = rnd(21, 99); if (a + b < 100 || a + b > 198) return null; return { a, b, op: "+" }; } },
-  // 百いくつ − 2けた  例 125−43 / 104−8
-  { id: "sub3", w: 2, make() { const a = rnd(101, 180), b = rnd(5, 99); if (a - b >= 100 || a - b <= 0) return null; return { a, b, op: "-" }; } },
-  // 何十・何百の けいさん  例 70＋50 / 130−80 / 300＋500 / 800−300
-  { id: "tens", w: 1, make() {
-      if (Math.random() < 0.5) {
-        if (Math.random() < 0.5) { const a = rnd(2, 9) * 10, b = rnd(2, 9) * 10; return { a, b, op: "+" }; }
-        const a = rnd(11, 18) * 10, b = rnd(2, 9) * 10; if (a - b <= 0) return null; return { a, b, op: "-" };
-      }
-      if (Math.random() < 0.5) { const a = rnd(1, 8) * 100, b = rnd(1, 9 - a / 100) * 100; return { a, b, op: "+" }; }
-      const a = rnd(3, 10) * 100, b = rnd(1, a / 100 - 1) * 100; return { a, b, op: "-" };
-    } },
-  // 九九
-  { id: "kuku", w: 3, make() { return { a: rnd(2, 9), b: rnd(1, 9), op: "×" }; } },
-];
-
 export const GRADE_SETS = { 2: { label: "2年生", kinds: G2, yomitori: 3 } };
 
-function calc(a, b, op) { return op === "+" ? a + b : op === "-" ? a - b : a * b; }
-export const qKey = (q) => `${q.a}${q.op}${q.b}`;
-
-function makeOne(kinds) {
-  const total = kinds.reduce((s, k) => s + k.w, 0);
-  let r = Math.random() * total, kind = kinds[kinds.length - 1];
-  for (const k of kinds) { r -= k.w; if (r <= 0) { kind = k; break; } }
-  // しゅるいを きめてから 作りなおす（しゅるいごとの でやすさを w の とおりに するため）
-  for (let tries = 0; tries < 200; tries++) {
-    const q = kind.make();
-    if (q) return { ...q, ans: calc(q.a, q.b, q.op), kind: kind.id };
-  }
-  return { a: 2, b: 3, op: "×", ans: 6, kind: "kuku" };
-}
 
 /* きょうの 10もんを つくる：ノートの おさらい（きょうが きじつ）→ よみとりチェック → のこりは あたらしい もんだい */
 export function buildDailySet(daily, grade = 2) {
@@ -120,7 +78,7 @@ function noteRight(notebook, q) {
 const OP_JA = { "+": "＋", "-": "－", "×": "×" };
 
 /* ---- ヒント：ひっさんの かたち（こたえは 見せない） ---- */
-function ColumnHint({ q }) {
+export function ColumnHint({ q }) {
   if (q.op === "×") {
     return <div className="dm-hint-kuku">{q.a}の だんだよ。<br />{q.a} を {q.b}かい たすと…？</div>;
   }
@@ -142,7 +100,7 @@ function ColumnHint({ q }) {
 }
 
 /* ---- すうじ キー ---- */
-function Keypad({ onKey, disabled }) {
+export function Keypad({ onKey, disabled }) {
   const keys = ["7", "8", "9", "4", "5", "6", "1", "2", "3", "けす", "0", "こたえる"];
   return (
     <div className="dm-keys">
@@ -155,7 +113,7 @@ function Keypad({ onKey, disabled }) {
   );
 }
 
-const fmtSec = (s) => (s >= 60 ? `${Math.floor(s / 60)}ふん ${s % 60}びょう` : `${s}びょう`);
+export const fmtSec = (s) => (s >= 60 ? `${Math.floor(s / 60)}ふん ${s % 60}びょう` : `${s}びょう`);
 
 /* 終わりの 画面：正解数とは べつに「よみとりの わざ」（読み方の 手順）を ほめる */
 const STAGE_NAME = { A: "レベル1", B: "レベル2", C: "レベル3" };
@@ -193,6 +151,8 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
   const dueCount = useMemo(() => Object.values(daily.notebook || {}).filter((n) => n.due <= today).length, [daily, today]);
   const noteCount = Object.keys(daily.notebook || {}).length;
   const doneToday = daily.lastDate === today;
+  // daily.history は 2年生の きろくだけ（3年生は grade3 に べつに もつ）。lastDate が きょうでも、ここに きょうが 無ければ 3年生で やった 日
+  const g2Today = (daily.history || []).some((h) => h && h.date === today);
 
   useEffect(() => {
     if (stage !== "play") return;
@@ -302,7 +262,9 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
             <div><b>{daily.bestSec != null ? fmtSec(daily.bestSec) : "—"}</b><small>ぜんもん せいかいの<br />さいこう タイム</small></div>
             <div><b>{noteCount}</b><small>ノートの もんだい</small></div>
           </div>
-          {doneToday && <div className="dm-intro-done">きょうの ぶんは もう できたよ！ もういちど やっても いいよ♪</div>}
+          {doneToday && (g2Today
+            ? <div className="dm-intro-done">きょうの ぶんは もう できたよ！ もういちど やっても いいよ♪</div>
+            : <div className="dm-intro-done">🐉 ドラゴンの ポイントは 3年生の 毎日計算で もう もらったよ。<br />2年生の けいさんも やって いいよ♪</div>)}
         </div>
         {needsEgg(daily) ? (
           <div className="dm-card">
