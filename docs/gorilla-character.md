@@ -15,9 +15,9 @@
 
 | ファイル | サイズ | 中身 | いまの 仮の 絵 |
 |---|---|---|---|
-| `src/art/chars/gorilla_idle.webp` | 640×640 | ゴリラの プリンセス 立ち絵（ふつう） | ロゼの 絵を みどりに 色がえ |
-| `src/art/chars/gorilla_happy.webp` | 640×640 | よろこび（にっこり、むねの 前で こぶし） | 同上 |
-| `src/art/chars/gorilla_oops.webp` | 640×640 | ざんねん（こまり顔、でも やさしい） | 同上 |
+| `src/art/chars/gorilla_idle.webp` | 640×640 | ゴリラの プリンセス 立ち絵（ふつう） | **本番の 絵**（Moss-image 1まい。白い 背景を tools/art/process.py の 抜き方で 透明に） |
+| `src/art/chars/gorilla_happy.webp` | 640×640 | よろこび（にっこり、むねの 前で こぶし） | いまは idle と 同じ 絵（正解の ドラミングで 表情の ちがいを おぎなう） |
+| `src/art/chars/gorilla_oops.webp` | 640×640 | ざんねん（こまり顔、でも やさしい） | いまは idle と 同じ 絵 |
 | `src/art/chars/gorilla_{idle,happy,oops}_prince.webp` | 640×640 | ゴリラの プリンス（3表情） | レオの 絵を みどりに 色がえ |
 | `src/art/items/g_*.webp`（16こ） | 320×320 | 下の アイテム | ロゼの おなじ スロットの アイテムの コピー |
 | `src/art/items/g_*_prince.webp`（任意） | 320×320 | プリンス用の そうび | 無ければ 上の 共通の 絵 |
