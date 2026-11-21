@@ -1631,6 +1631,8 @@ export default function App() {
                 )}
               </>
             )}
+            {/* レーベル名：タイトル画面の いちばん下に 小さく ひかえめに（さわれない ただの 文字） */}
+            <p className="kk-label">ぴっちキッズラボ</p>
           </div>
         )}
 
@@ -2538,6 +2540,9 @@ function Style() {
 .kk-picker-selected{border-color:var(--rose-deep); background:#FFF0F7; box-shadow:0 0 0 3px rgba(232,95,163,.25);}
 .kk-picker-name{font-family:'Zen Maru Gothic'; font-weight:700; font-size:10.5px; color:var(--night); text-align:center; line-height:1.3;}
 .kk-picker-none{font-family:'Mochiy Pop One'; font-size:14px; color:var(--plum-soft,#7A5C98);}
+
+/* ---- レーベル名（タイトル画面の 下） ---- */
+.kk-label{margin:28px 0 0; font-family:'Yomogi'; font-size:11px; letter-spacing:.12em; color:var(--plum-soft,#7A5C98); opacity:.55; pointer-events:none; user-select:none;}
 
 /* ---- キャラクター せんたく ---- */
 .kk-select-screen{display:flex; flex-direction:column; align-items:center; text-align:center;}
