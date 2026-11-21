@@ -163,12 +163,25 @@ const subs = new Set();
 // 色の 変数（src/themeColors.css）を きりかえる しるし：<html data-theme="prince">
 // ブラウザの 上の バーの 色（index.html の theme-color）も プリンスは 紺に
 const BAR_COLOR = { princess: "#3A2A6B", prince: "#1E3F73" };
+// ゴリラを えらんで いる ときだけ <html data-chara="gorilla">（背景が 森の 緑・バーは 深い 緑。テーマに かかわらず 同じ）
+const CHARA_BAR_COLOR = { gorilla: "#3F6B45" };
+let chara = null;
 const markHtml = (t) => {
   if (typeof document === "undefined") return;
-  document.documentElement.dataset.theme = t;
+  const root = document.documentElement;
+  root.dataset.theme = t;
+  if (chara && CHARA_BAR_COLOR[chara]) root.dataset.chara = chara;
+  else delete root.dataset.chara;
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.setAttribute("content", BAR_COLOR[t]);
+  if (m) m.setAttribute("content", (chara && CHARA_BAR_COLOR[chara]) || BAR_COLOR[t]);
 };
+/* いまの キャラ（App が きめる。キャラえらびの 画面では null を わたして テーマの 背景に もどす） */
+export function setChara(id) {
+  const n = id && CHARA_BAR_COLOR[id] ? id : null;
+  if (n === chara) return;
+  chara = n;
+  markHtml(current);
+}
 markHtml(current);
 export const getTheme = () => current;
 export function setTheme(t) {

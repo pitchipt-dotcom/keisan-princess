@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { makeStoryQuestion, makeWriteQuestion, StoryPlay, WritePlay } from "./WriteModes.jsx";
-import { THEMES, normalizeTheme, getTheme, setTheme, useThemeId, themedArtKey, themedChar, themedItem, themedMilestone, renameDeep, themedColor } from "./theme.js";
+import { THEMES, normalizeTheme, getTheme, setTheme, useThemeId, themedArtKey, themedChar, themedItem, themedMilestone, renameDeep, themedColor, setChara } from "./theme.js";
 import { DailyPlay, EMPTY_DAILY } from "./DailyMode.jsx";
 import { DragonScreen } from "./DragonMode.jsx";
 import { ParentReport } from "./ParentReport.jsx";
@@ -1262,6 +1262,9 @@ export default function App() {
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess | gorilla
   const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
   const [menuGroup, setMenuGroup] = useState(null);
+  // ゴリラの ときだけ 背景を 森の 緑に（<html data-chara>）。キャラが きまる 3か所（セーブ・バックアップコード・キャラえらびの タップ）は
+  // どれも setCharacterId を とおるので、ここで まとめて つける。キャラえらびの 画面では テーマの 背景に もどす
+  useEffect(() => { setChara(screen === "select" ? null : characterId); }, [characterId, screen]);
   const [round, setRound] = useState(null);              // 10もんで くぎる モードの すすみ { n:できた数, first:1かいめで せいかい, stars, miss }
   const [g1Pick, setG1Pick] = useState(null);           // 段階・しゅるいを えらぶ 画面：kazu | tashi10     // 「どこから はじめよう？」で えらんだ グループ（セーブの menuGroup）
   const [ohanashi, setOhanashi] = useState({});          // おはなし もんだい「むずかしい」：{ yomiRead:{ stage, streak } }（まいにち けいさん とは べつ）
@@ -2256,7 +2259,7 @@ function Style() {
   position:relative; min-height:100vh; width:100%;
   font-family:'Zen Maru Gothic',sans-serif; color:var(--plum);
   background:
-    radial-gradient(120% 80% at 50% -10%, var(--tc-ffe7f4) 0%, var(--tc-f3defb) 38%, var(--tc-e7d2f7) 70%, var(--tc-dcc6f2) 100%);
+    radial-gradient(120% 80% at 50% -10%, var(--app-bg-1) 0%, var(--app-bg-2) 38%, var(--app-bg-3) 70%, var(--app-bg-4) 100%);
   display:flex; justify-content:center; align-items:flex-start;
   overflow-x:hidden; padding:0 0 40px;
 }

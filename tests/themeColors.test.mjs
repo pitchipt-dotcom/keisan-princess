@@ -44,6 +44,7 @@ test("プリンセス（:root）の --tc-xxxxxx は 名前の とおりの 色",
 test("プリンスは プリンセスの 色を ぜんぶ 上書きして いて、ピンク・紫が のこって いない", () => {
   for (const k of Object.keys(root)) {
     if (/^(gold|gold-deep|mint)$/.test(k)) continue;   // テーマで かわらない 色
+    if (/^app-bg-/.test(k)) continue;                   // 背景は --tc-xxxxxx を さす だけ（プリンスでは さき の 色が かわる）
     assert.ok(k in prince, "プリンスに --" + k + " が ある");
   }
   for (const [k, v] of Object.entries(prince)) {
@@ -69,4 +70,11 @@ test("画面の CSS に ピンク・紫の 色が 直書きされて いない�
     }
   }
   assert.deepEqual(bad, []);
+});
+
+test("ゴリラの 背景：html[data-chara=\"gorilla\"] で 背景の 4色だけを 緑に", () => {
+  const g = vars(block('html[data-chara="gorilla"]'));
+  assert.deepEqual(Object.keys(g).sort(), ["app-bg-1", "app-bg-2", "app-bg-3", "app-bg-4"]);
+  for (const v of Object.values(g)) assert.ok(!isPinkPurple(v), v);
+  for (const k of Object.keys(g)) assert.ok(!(k in prince), "プリンスが --" + k + " を 上書きしない");
 });
