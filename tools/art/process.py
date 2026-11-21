@@ -30,6 +30,9 @@ BG_NEAR = 26.0      # この距離までは背景とみなす(囲まれた穴は
 # フォルダごとの BG_NEAR。ドラゴン(MOSS-Image)は 足もとに うすい灰色の かげが 出るので 広めに 抜く
 # (太い りんかく線で 止まるので、白っぽい ひかりドラゴンの 体は のこる)
 BG_NEAR_BY_FOLDER = {"dragons": 60.0}
+# キャラは 囲まれた すきまを ふだんは 抜かない(白い リボンなどが 消える)。そこで 絵ごとに 場所(わりあい：上, 下, 左, 右)を きめて、
+# その 中から 背景色に ごく近い 面だけを 抜く。カイ(プリンス版)：うでと トライデントと マントの あいだ
+HOLE_BOXES = {f"chars/mermaid_{m}_prince": (0.40, 0.62, 0.60, 0.74) for m in ("idle", "happy", "oops")}
 EDGE_FULL = 70.0    # ふち 2px で、これ以上はなれた色は完全に不透明
 MARGIN = 0.06       # 仕上がりの余白(1 辺あたり)
 WEBP_QUALITY = 90
@@ -64,7 +67,7 @@ def fill_touching(candidate, seed):
         region = bigger
 
 
-def cut_out(rgb, holes=True, bg_near=BG_NEAR):
+def cut_out(rgb, holes=True, bg_near=BG_NEAR, hole_box=None):
     """(RGBA の配列, 問題の一覧) を返す。"""
     pixels = rgb.astype(np.float32)
     h, w, _ = pixels.shape
@@ -80,6 +83,13 @@ def cut_out(rgb, holes=True, bg_near=BG_NEAR):
         tight = (distance < BG_NEAR / 2) & ~background
         core = ~grow(~tight, max(2, round(min(h, w) * 0.012)))
         background |= fill_touching(tight, core)
+    elif hole_box:
+        top, bottom, left, right = hole_box
+        tight = (distance < BG_NEAR / 2) & ~background
+        core = ~grow(~tight, max(2, round(min(h, w) * 0.012)))
+        box = np.zeros_like(tight)
+        box[int(top * h):int(bottom * h), int(left * w):int(right * w)] = True
+        background |= fill_touching(tight, core & box)
     nearest = np.where(background, 0.0, distance)  # 背景でないところの、背景色との距離
 
     # 色つき外わく+白い角丸タイル: ふちの色が白でなく、残りが画面のほとんどを占めるとき、
@@ -184,7 +194,8 @@ def main():
             except OSError:  # generate.py が書いている途中の絵は、次の回にまわす
                 print(f"skip {key} (読めない)")
                 continue
-            rgba, problems, tile = cut_out(rgb, holes=(folder == "items"), bg_near=BG_NEAR_BY_FOLDER.get(folder, BG_NEAR))
+            rgba, problems, tile = cut_out(rgb, holes=(folder == "items"), bg_near=BG_NEAR_BY_FOLDER.get(folder, BG_NEAR),
+                                           hole_box=HOLE_BOXES.get(key))
             image = square(rgba, size)
             image.save(OUT / folder / f"{source.stem}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
             wanted.add(f"{source.stem}.webp")

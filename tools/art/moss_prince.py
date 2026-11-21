@@ -22,6 +22,7 @@
   そのあと  tools/art/.venv/bin/python tools/art/process.py chars
     python3 tools/art/moss_prince.py chars                   # 9 枚(ある 絵は とばす)
     python3 tools/art/moss_prince.py chars witch_idle        # その 1 枚だけ 作りなおす(idle を かえたら happy・oops も)
+    python3 tools/art/moss_prince.py chars mermaid_happy     # カイ：もとの 絵(source)を happy に し、idle・oops を 表情の 編集で 作る
 
   妖精：{mint, ramune, poppy, peta} → art-raw/fairy/fairy-{id}_prince.png(1024px)
   元の 絵(~/moss-mcp/outputs/20261120_001〜004)の さいごの プロンプトと seed に HEROIC と マントか たてを 1つ たす(顔は 同じ)。
@@ -107,10 +108,13 @@ CHARS = {
         "keep": "lavender hair, wizard hat, robe, cape and staff",
     },
     "mermaid": {
-        "seed": 8202,
-        "subject": ("A cute chibi little merman boy with short wavy aqua blue hair and a small seashell badge on his chest, wearing a turquoise vest, "
-                    "with a turquoise mint fish tail. Big round plum-colored eyes, pink cheeks. Full body including the whole tail, facing front"),
-        "keep": "aqua hair, seashell badge, turquoise vest and turquoise mint tail",
+        # 2026-11-21 差し替え：人魚の しっぽ・はだかの 上半身を やめ、足の ある 立ち絵に。
+        # 元の 絵は ~/moss-mcp/outputs/20261120_005.png（目を とじた 笑顔）→ そのまま happy に つかい、
+        # idle・oops は その 絵を もとに flux-klein で 表情だけ かえる（generate は しない）
+        "source": "~/moss-mcp/outputs/20261120_005.png",
+        "source_mood": "happy",
+        "keep": ("fluffy aqua hair, silver seashell tiara, white sailor-style jacket with gold buttons, turquoise cape, "
+                 "white shorts, white boots, gold trident, hand on hip, big round plum-colored eyes"),
     },
     "princess": {
         "seed": 8303,
@@ -120,6 +124,9 @@ CHARS = {
         "keep": "blonde hair, gold crown, white prince jacket and pink cape",
     },
 }
+IDLE = ("Keep the character, {keep}, pose, outline style and background exactly unchanged. Change only the facial expression: "
+        "open both eyes into big round plum-colored eyes with determined slightly sharp eyebrows, and a confident closed-mouth smile. "
+        "No sweat drops, no tears, no water drops anywhere. Keep the pink cheeks.")
 HAPPY = ("Keep the character, {keep}, pose, outline style and background exactly unchanged. Change only the facial expression: "
          "make both eyes into happy closed upturned arcs (like ^ ^), and make the mouth a wide open smile. "
          "No sweat drops, no tears, no water drops anywhere. Keep the pink cheeks.")
@@ -158,10 +165,20 @@ def char_idle(api, cid, soft):
     print(f"ok   {out} seed={seed} {time.time() - t0:.0f}s", flush=True)
 
 
+def char_source(cid, mood):
+    """もとの 絵(CHARS[cid]["source"])を そのまま その 表情に つかう"""
+    out, src = f"{cid}_{mood}_prince", os.path.expanduser(CHARS[cid]["source"])
+    buf = io.BytesIO(); Image.open(src).convert("RGB").save(buf, "PNG")
+    G.save_raw(f"chars/{out}", buf.getvalue(), 640)
+    log_char(out, {"mode": "source", "source": CHARS[cid]["source"]})
+    print(f"ok   {out} (もとの 絵)", flush=True)
+
+
 def char_edit(api, cid, mood):
     t0, out = time.time(), f"{cid}_{mood}_prince"
-    prompt = (HAPPY if mood == "happy" else OOPS).format(keep=CHARS[cid]["keep"])
-    source = G.ORIG / "chars" / f"{cid}_idle_prince.png"
+    prompt = {"idle": IDLE, "happy": HAPPY, "oops": OOPS}[mood].format(keep=CHARS[cid]["keep"])
+    base = CHARS[cid].get("source_mood", "idle")
+    source = G.ORIG / "chars" / f"{cid}_{base}_prince.png"
     conv = api.call("POST", "/api/images/conversations")["conversation_id"]
     buf = io.BytesIO(); Image.open(source).convert("RGB").save(buf, "PNG")
     image = api.call("POST", f"/api/images/attachments?conversation_id={conv}", body=buf.getvalue(), content_type="image/png")
@@ -169,7 +186,7 @@ def char_edit(api, cid, mood):
         "prompt": prompt, "kind": "image", "backend": "flux-klein", "prompt_mode": "direct",
         "conversation_id": conv, "reference_image_id": image["id"], "preview_only": False})
     G.save_raw(f"chars/{out}", api.result_png(job["job_id"]), 640)
-    log_char(out, {"mode": "edit", "source": f"{cid}_idle_prince", "prompt": prompt, "job": job["job_id"], "sec": round(time.time() - t0, 1)})
+    log_char(out, {"mode": "edit", "source": f"{cid}_{base}_prince", "prompt": prompt, "job": job["job_id"], "sec": round(time.time() - t0, 1)})
     print(f"ok   {out} {time.time() - t0:.0f}s", flush=True)
 
 
@@ -181,9 +198,12 @@ def chars(args):
     if named:
         for n in named:
             cid, mood = n.split("_")
-            todo += [(cid, "idle"), (cid, "happy"), (cid, "oops")] if mood == "idle" else [(cid, mood)]
+            first = CHARS[cid].get("source_mood", "idle")
+            rest = [m for m in ("idle", "happy", "oops") if m != first]
+            todo += [(cid, first)] + [(cid, m) for m in rest] if mood == first else [(cid, mood)]
     else:
-        todo = [(c, "idle") for c in CHARS] + [(c, m) for m in ("happy", "oops") for c in CHARS]   # idle → 表情（MOSS と Klein の 入れかえ 1かい）
+        first = {c: CHARS[c].get("source_mood", "idle") for c in CHARS}
+        todo = [(c, first[c]) for c in CHARS] + [(c, m) for m in ("idle", "happy", "oops") for c in CHARS if m != first[c]]   # idle → 表情（MOSS と Klein の 入れかえ 1かい）
     for cid, mood in todo:
         assert cid in CHARS and mood in ("idle", "happy", "oops"), (cid, mood)
         out = f"{cid}_{mood}_prince"
@@ -191,7 +211,12 @@ def chars(args):
             print(f"skip {out} (ある)")
             continue
         try:
-            char_idle(api, cid, soft) if mood == "idle" else char_edit(api, cid, mood)
+            if mood == CHARS[cid].get("source_mood"):
+                char_source(cid, mood)
+            elif mood == "idle" and "source" not in CHARS[cid]:
+                char_idle(api, cid, soft)
+            else:
+                char_edit(api, cid, mood)
         except DailyLimit as err:
             sys.exit(f"上限に 当たったので 止めます({out} の まえ): {err}")
 
