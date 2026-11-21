@@ -388,7 +388,7 @@ export function DailyPlay({ daily, character, sfx, onComplete, onPickEgg, onExit
     <div className="dm-wrap">
       {top}
 
-      <div className="dm-mini-chara">{character(phase === "right" ? "happy" : phase === "ask" ? "idle" : "oops", 72)}</div>
+      <div className="dm-mini-chara">{character(phase === "right" ? "happy" : phase === "ask" ? "idle" : "oops", 72, phase === "right")}</div>
       <div className="dm-card dm-qcard">
         <div className="dm-q">
           {q.a} {OP_JA[q.op]} {q.b} ＝ <span className={"dm-ans" + (input ? "" : " dm-ans-empty")}>{phase === "reveal" ? q.ans : (input || "？")}</span>

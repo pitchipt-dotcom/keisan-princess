@@ -133,7 +133,27 @@ const PRINCESS_ITEMS = [
   { id: "p_angelwings",  name: "てんしの つばさ",       rarity: "sr", flavor: "空を とべちゃう！" },
 ];
 
-const ITEMS_BY_CHAR = { witch: WITCH_ITEMS, mermaid: MERMAID_ITEMS, princess: PRINCESS_ITEMS };
+// ゴリラの プリンセス（力もちで やさしい 森の プリンセス）。絵は src/art/items/g_*.webp（さいしょは ロゼの 絵の コピー）
+const GORILLA_ITEMS = [
+  { id: "g_leafband",     name: "はっぱの ヘアバンド",   rarity: "n",  flavor: "つけると げんき 100ばい！" },
+  { id: "g_flowerpin",    name: "もりの はなの ピン",     rarity: "n",  flavor: "やさしい においが するよ" },
+  { id: "g_acornclip",    name: "どんぐりの ヘアピン",   rarity: "n",  flavor: "ころんと かわいい" },
+  { id: "g_forestcrown",  name: "もりの ティアラ",       rarity: "sr", flavor: "もりの みんなが あつまって くるよ" },
+  { id: "g_mossdress",    name: "こけいろの ドレス",     rarity: "r",  flavor: "ふかふかで あったかい" },
+  { id: "g_leafcape",     name: "おおきな はっぱの ケープ", rarity: "r", flavor: "あめの 日も へっちゃら" },
+  { id: "g_vinesocks",    name: "つたもようの ソックス", rarity: "n",  flavor: "足もとも オシャレ♪" },
+  { id: "g_forestboots",  name: "もりの ブーツ",         rarity: "r",  flavor: "どこまでも 歩いて いけるよ" },
+  { id: "g_banana",       name: "きんの バナナ",         rarity: "r",  flavor: "みんなで わけっこ しよう" },
+  { id: "g_honeypot",     name: "はちみつの つぼ",       rarity: "n",  flavor: "あまくて やさしい あじ" },
+  { id: "g_bigacorn",     name: "おおきな どんぐり",     rarity: "n",  flavor: "たからものに しよう" },
+  { id: "g_drum",         name: "もりの たいこ",         rarity: "r",  flavor: "たたくと みんな げんきに なる" },
+  { id: "g_leafnecklace", name: "はっぱの ネックレス",   rarity: "r",  flavor: "むねもとで ゆれるよ" },
+  { id: "g_sunstone",     name: "おひさまの いし",       rarity: "sr", flavor: "もりを あたたかく てらすよ" },
+  { id: "g_bird",         name: "ともの ことり",         rarity: "sr", flavor: "かたに のって うたうよ♪" },
+  { id: "g_leafwings",    name: "このはの つばさ",       rarity: "sr", flavor: "もりの 上を とべちゃう！" },
+];
+
+const ITEMS_BY_CHAR = { witch: WITCH_ITEMS, mermaid: MERMAID_ITEMS, princess: PRINCESS_ITEMS, gorilla: GORILLA_ITEMS };
 
 // おてつだいの場面（式を見せず「○が△こ、ぜんぶで?」の形にする）
 const SCENES = [
@@ -164,6 +184,13 @@ const SLOT_DEFS_BY_CHAR = {
     { key: "feet",   label: "あし",   items: ["p_lacesocks", "p_glassshoes"] },
     { key: "hold",   label: "もちもの", items: ["p_wand", "p_candy", "p_rose", "p_mirror"] },
     { key: "acc",    label: "かざり", items: ["p_necklace", "p_moon", "p_kitten", "p_angelwings"] },
+  ],
+  gorilla: [
+    { key: "head",   label: "頭",     items: ["g_leafband", "g_flowerpin", "g_acornclip", "g_forestcrown"] },
+    { key: "outfit", label: "ふく",   items: ["g_mossdress", "g_leafcape"] },
+    { key: "feet",   label: "あし",   items: ["g_vinesocks", "g_forestboots"] },
+    { key: "hold",   label: "もちもの", items: ["g_banana", "g_honeypot", "g_bigacorn", "g_drum"] },
+    { key: "acc",    label: "かざり", items: ["g_leafnecklace", "g_sunstone", "g_bird", "g_leafwings"] },
   ],
 };
 
@@ -529,6 +556,28 @@ function Princess({ mood = "idle", size = 150 }) {
       <circle cx="114" cy="68" r="6" fill="#F5D08A" />
       {/* hair ribbon */}
       <path d="M58 56 q22 -8 44 0" fill="none" stroke="#fff" strokeWidth="3" opacity="0.7" />
+    </svg>
+  );
+}
+
+/* ============== SVG: ゴリラの プリンセス（絵が 読めない ときだけ） ============== */
+function Gorilla({ mood = "idle", size = 150 }) {
+  const happy = mood === "happy";
+  const oops = mood === "oops";
+  return (
+    <svg viewBox="0 0 160 190" width={size} height={size * 190 / 160} aria-label="ゴリラの プリンセス" role="img" style={{ display: "block", overflow: "visible" }}>
+      {happy && [[18, 30], [140, 38], [22, 102], [138, 110]].map(([x, y], i) => (
+        <path key={i} className="kk-pop" d={`M${x} ${y-6} L${x+6} ${y} L${x} ${y+6} L${x-6} ${y} Z`} fill={C.gold} />
+      ))}
+      <ellipse cx="80" cy="140" rx="46" ry="40" fill="#5E6B5A" />
+      <ellipse cx="80" cy="146" rx="28" ry="26" fill="#8FCB8B" />
+      <circle cx="80" cy="78" r="40" fill="#5E6B5A" />
+      <ellipse cx="80" cy="88" rx="28" ry="24" fill="#C9B8A0" />
+      <circle cx="68" cy="78" r="4.5" fill={C.plum} />
+      <circle cx="92" cy="78" r="4.5" fill={C.plum} />
+      {oops ? <circle cx="80" cy="100" r="4" fill="#7A5C4A" />
+        : <path d="M70 98 q10 8 20 0" fill="none" stroke="#7A5C4A" strokeWidth="3" strokeLinecap="round" />}
+      <path d="M62 40 l6 -12 l6 10 l6 -14 l6 14 l6 -10 l6 12 Z" fill={C.gold} stroke={C.goldDeep} strokeWidth="2" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -941,6 +990,8 @@ const CHARACTERS = [
   { id: "witch",    charaName: "ルナ",   label: "まじょ",     title: "まほうの おしゃれ",       sub: "ふしぎな まほうの アイテムを あつめよう",   Comp: charWithArt("witch", Witch, 180 / 160, "まじょのルナ"),          ratio: 180 / 160, accent: "#C9A8F0" },
   { id: "mermaid",  charaName: "マリン", label: "にんぎょ",   title: "うみの たからの おしゃれ", sub: "うみの なかの たからものを あつめよう",     Comp: charWithArt("mermaid", Mermaid, 190 / 160, "にんぎょのマリン"),    ratio: 190 / 160, accent: "#5FD6CB" },
   { id: "princess", charaName: "ロゼ",   label: "プリンセス", title: "おしろの おしゃれ",         sub: "おしろに ぴったりな ドレスを あつめよう",   Comp: charWithArt("princess", Princess, 190 / 160, "プリンセスのロゼ"), ratio: 190 / 160, accent: "#FFC2DA" },
+  // 名前は 仮（ゴリラ姫(仮)）。きまったら charaName と aria の 文字を さしかえる
+  { id: "gorilla",  charaName: "ゴリラ姫(仮)", label: "ゴリラの プリンセス", title: "もりの おしゃれ", sub: "ちからもちで やさしい もりの アイテムを あつめよう", Comp: charWithArt("gorilla", Gorilla, 190 / 160, "ゴリラのプリンセス"), ratio: 190 / 160, accent: "#8FCB8B" },
 ];
 
 /* ============ きせかえ：アイテムをまとった しゅじんこう ============ */
@@ -953,7 +1004,8 @@ const EQUIP_POS = {
 };
 // 画像キャラは 顔が大きいので、「ふく」のバッジが 顔に かぶらない位置にする
 const EQUIP_POS_ART = { ...EQUIP_POS, outfit: { top: "72%", left: "66%" } };
-function DressedCharacter({ character = "witch", mood = "idle", size = 150, equipped = {} }) {
+// cheer：正解した しゅんかん（まいにち けいさん・ふつうの プレイ）だけ true。ゴリラは ドラミングで よろこぶ
+function DressedCharacter({ character = "witch", mood = "idle", size = 150, equipped = {}, cheer = false }) {
   const CHAR = CHARACTERS.find((c) => c.id === character) || CHARACTERS[0];
   const Comp = CHAR.Comp;
   const slots = SLOT_DEFS_BY_CHAR[character] || SLOT_DEFS_BY_CHAR.witch;
@@ -961,8 +1013,9 @@ function DressedCharacter({ character = "witch", mood = "idle", size = 150, equi
   const badge = Math.max(26, size * 0.24);
   useArt(`chars/${character}_idle`);
   const positions = charArtKey(character, mood) ? EQUIP_POS_ART : EQUIP_POS;
+  const drum = cheer && character === "gorilla";
   return (
-    <div style={{ position: "relative", width: size, height: h }}>
+    <div className={drum ? "kk-drum" : undefined} style={{ position: "relative", width: size, height: h }}>
       <Comp mood={mood} size={size} />
       {slots.map((slot) => {
         const itemId = equipped[slot.key];
@@ -1197,7 +1250,7 @@ export default function App() {
   const [exportCode, setExportCode] = useState("");
   const [importCode, setImportCode] = useState("");
   const [backupMsg, setBackupMsg] = useState("");
-  const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess
+  const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess | gorilla
   const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
   const [menuGroup, setMenuGroup] = useState(null);
   const [round, setRound] = useState(null);              // 10もんで くぎる モードの すすみ { n:できた数, first:1かいめで せいかい, stars, miss }
@@ -1708,7 +1761,7 @@ export default function App() {
         {screen === "daily" && (
           <DailyPlay
             daily={daily}
-            character={(mood, size = 104) => <DressedCharacter character={charKey} mood={mood} size={size} equipped={myEquipped} />}
+            character={(mood, size = 104, cheer = false) => <DressedCharacter character={charKey} mood={mood} size={size} equipped={myEquipped} cheer={cheer} />}
             sfx={{ tap: () => SFX.tap(sound), correct: () => SFX.correct(sound), wrong: () => SFX.wrong(sound) }}
             onComplete={(nd, gain) => {
               // きろくと 星のかけらを いっしょに 保存（べつべつに 保存すると 古い方で 上書きされるため）
@@ -1814,7 +1867,7 @@ export default function App() {
               {sparkles.map((s) => (
                 <span key={s.id} className="kk-sparkle" style={{ left: s.left + "%", animationDelay: s.delay + "s", animationDuration: s.dur + "s", fontSize: s.size + "px" }}>★</span>
               ))}
-              <div className="kk-witch-stage"><DressedCharacter character={charKey} mood={phase === "right" ? "happy" : phase === "wrong" ? "oops" : "idle"} size={120} equipped={myEquipped} /></div>
+              <div className="kk-witch-stage"><DressedCharacter character={charKey} mood={phase === "right" ? "happy" : phase === "wrong" ? "oops" : "idle"} size={120} equipped={myEquipped} cheer={phase === "right"} /></div>
               {streak >= 2 && phase === "ask" && <div className="kk-combo">れんぞく {streak}！🔥</div>}
               <div className="kk-progress" aria-label="つぎのとびらまで">
                 <div className="kk-progress-fill" style={{ width: (100 - stardustToNext / PULL_COST * 100) + "%" }} />
@@ -2496,6 +2549,13 @@ function Style() {
 }
 .kk-char-card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(201,168,240,.5);}
 .kk-char-card-active{background:#FFF6FB;}
+/* 横向き（スマホ・タブレット）：4人を 2×2 に ならべる */
+@media (orientation: landscape) and (min-width:600px){
+  .kk-char-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .kk-char-card{flex-direction:column; justify-content:center; gap:2px; text-align:center; padding:8px 10px;}
+  .kk-char-preview{width:auto;}
+  .kk-char-sub{display:none;}
+}
 .kk-char-preview{flex-shrink:0; width:78px; display:flex; justify-content:center;}
 .kk-char-name{font-family:'Mochiy Pop One'; font-size:18px; color:var(--night);}
 .kk-char-title{font-family:'Mochiy Pop One'; font-size:12.5px; margin-top:2px;}
@@ -2587,7 +2647,11 @@ function Style() {
   .kk-col-cell{width:38px; height:42px; font-size:20px;}
   .kk-col-line{width:88px;}
 }
+/* ゴリラの ドラミング：正解の しゅんかんに ドンドコ 小きざみに ゆれる */
+.kk-drum{animation:kk-drum .16s ease-in-out 5 alternate; transform-origin:50% 90%;}
+@keyframes kk-drum{from{transform:translateX(-3px) rotate(-2deg) scale(1.02);} to{transform:translateX(3px) rotate(2deg) scale(1.02);}}
 @media (prefers-reduced-motion: reduce){
+  .kk-drum{animation:none !important;}
   .kk-star,.kk-witch-float,.kk-witch-stage,.kk-magic-circle,.kk-reveal-rays,.kk-pop,.kk-sparkle,.kk-cell-flash,.kk-equip-badge,.kk-col-flash,.kk-milestone-card{animation:none !important;}
 }
 .kk-icon-btn:focus-visible,.kk-big-btn:focus-visible,.kk-opt:focus-visible,.kk-dan-btn:focus-visible,.kk-text-btn:focus-visible,.kk-gametype-card:focus-visible{outline:3px solid var(--rose-deep); outline-offset:3px;}
