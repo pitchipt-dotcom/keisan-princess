@@ -1250,6 +1250,9 @@ export default function App() {
   const [exportCode, setExportCode] = useState("");
   const [importCode, setImportCode] = useState("");
   const [backupMsg, setBackupMsg] = useState("");
+  const [wipeOpen, setWipeOpen] = useState(false);       // 「データを すべて けす」の かくにん パネル
+  const [wipeText, setWipeText] = useState("");          // おうちの ひとが「けす」と 入力する
+
   const [characterId, setCharacterId] = useState(null); // witch | mermaid | princess | gorilla
   const [daily, setDaily] = useState(EMPTY_DAILY);       // まいにち けいさん の きろく・まちがいノート
   const [menuGroup, setMenuGroup] = useState(null);
@@ -1581,6 +1584,22 @@ export default function App() {
     } catch (e) { setBackupMsg("もどせる データが ないみたい。"); }
   };
 
+  // おうちのひとメニュー：この 端末の セーブを すべて けす（リセット前の 控えも ふくむ）
+  const handleWipeAll = () => {
+    if (wipeText.trim() !== "けす") return;
+    if (typeof window === "undefined") return;
+    if (!window.confirm("この 端末の けいさんプリンセスの データを すべて けします。バックアップコードが ないと もとに 戻せません。よろしいですか？")) return;
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("kukumajo:")) keys.push(k);
+      }
+      [SAVE_KEY, RESET_BACKUP_KEY, ...keys].forEach((k) => { try { localStorage.removeItem(k); } catch (e) {} });
+    } catch (e) {}
+    window.location.reload();
+  };
+
   const equip = (slotKey, itemId) => {
     SFX.tap(sound);
     setEquipped((prev) => {
@@ -1681,7 +1700,7 @@ export default function App() {
 
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("collection"); }}>あつめた {TH.words.collection}を 見る →</button>
             <button className="kk-text-btn" onClick={() => { SFX.tap(sound); setScreen("select"); }}>ほかの こで あそぶ</button>
-            <div className="kk-parentmenu-hint">九九の だんの せってい・バックアップが できます</div>
+            <div className="kk-parentmenu-hint">九九の だんの せってい・バックアップ・プライバシーポリシーは ここ</div>
             <button className="kk-tiny-btn" onClick={() => { SFX.tap(sound); setShowDan((v) => !v); }}>{showDan ? "とじる" : "おうちのひとメニュー"}</button>
             {showDan && (
               <div className="kk-dan-wrap">
@@ -1730,6 +1749,25 @@ export default function App() {
                   <button className="kk-tiny-btn kk-backup-undo" onClick={handleUndoReset}>うっかり「さいしょから」を おしちゃった時は ここ</button>
 
                   {backupMsg && <div className="kk-backup-msg">{backupMsg}</div>}
+                </div>
+
+                <div className="kk-backup-section kk-privacy-section">
+                  <div className="kk-backup-title">🔒 プライバシーと データ</div>
+                  <div className="kk-dan-note">この アプリは 名前や メールアドレスなどを あつめません。広告・解析ツールも ありません。あそんだ データは この 端末の 中だけに 保存され、外へは 送りません。</div>
+                  <a className="kk-privacy-link" href="/privacy.html" target="_blank" rel="noopener noreferrer">プライバシーポリシーを 見る</a>
+
+                  {!wipeOpen ? (
+                    <button className="kk-tiny-btn kk-wipe-open" onClick={() => { SFX.tap(sound); setWipeOpen(true); setWipeText(""); }}>データを すべて けす…</button>
+                  ) : (
+                    <div className="kk-wipe-panel" role="group" aria-label="データを すべて けす">
+                      <div className="kk-dan-note">おうちの 方へ：ほし・あつめた おしゃれ・コーデ・ドラゴン・まいにちけいさんの きろく・テーマなど、この 端末に ある データを すべて けします。「さいしょから」の 控えも けすので、バックアップコードが ないと もとに 戻せません。</div>
+                      <label className="kk-wipe-label">けす ときは、下に「けす」と 入力してください
+                        <input className="kk-wipe-input" type="text" value={wipeText} onChange={(e) => setWipeText(e.target.value)} placeholder="けす" autoComplete="off" />
+                      </label>
+                      <button className="kk-backup-btn kk-wipe-btn" disabled={wipeText.trim() !== "けす"} onClick={handleWipeAll}>データを すべて けす</button>
+                      <button className="kk-tiny-btn" onClick={() => { SFX.tap(sound); setWipeOpen(false); setWipeText(""); }}>やめる</button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -2297,6 +2335,13 @@ function Style() {
   background:#fff; border:2px solid #EADCF9; border-radius:12px; padding:8px; margin:6px 0;
   resize:vertical; box-sizing:border-box; word-break:break-all;
 }
+.kk-privacy-link{display:block; text-align:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:var(--night); text-decoration:underline; margin:4px 0 14px;}
+.kk-wipe-open{display:block; margin:8px auto 0; opacity:.75;}
+.kk-wipe-panel{background:#FFF4F4; border:2px solid #F3C2C2; border-radius:14px; padding:12px; margin-top:8px;}
+.kk-wipe-label{display:block; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:var(--plum);}
+.kk-wipe-input{display:block; width:100%; box-sizing:border-box; margin:6px 0 4px; font-size:16px; padding:8px 10px; border:2px solid #EADCF9; border-radius:10px; font-family:'Zen Maru Gothic';}
+.kk-wipe-btn{background:#D9534F; box-shadow:0 3px 0 #A94442;}
+.kk-wipe-btn:disabled{background:#D8CCE3; box-shadow:none; cursor:not-allowed;}
 .kk-backup-divider{height:1px; background:rgba(201,168,240,.4); margin:16px 0;}
 .kk-backup-undo{display:block; width:100%; text-align:center; margin-top:10px;}
 .kk-backup-msg{font-family:'Yomogi'; font-size:12.5px; color:var(--rose-deep); font-weight:700; margin-top:8px; text-align:center;}
