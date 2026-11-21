@@ -1,0 +1,167 @@
+/* =====================================================================
+   テーマの 色（けいさんプリンセス ／ けいさんプリンス）
+   - 画面の CSS は 色を 直書きせず、ここの 変数（var(--rose) など）を つかう
+   - :root が プリンセス（もとの 色 そのまま）。html[data-theme="prince"] の ときだけ 下の 色に かわる
+   - --tc-xxxxxx は「プリンセスでの 色が #xxxxxx」の 変数。プリンス版は 空色〜水色〜やさしい紺、アクセントは 金と 若草
+   - *-rgb は rgba(var(--rose-rgb), .4) の ように すけさせる ときに つかう
+   - data-theme は src/theme.js の setTheme() が つける
+   ===================================================================== */
+:root{
+  /* テーマで かわらない 色 */
+  --gold:#FFC94D; --gold-deep:#F2A93B; --mint:#7DE0C8;
+  /* タイトルの 字の かげ・リンクの 下線（プリンスは 若草） */
+  --logo-shadow-rgb:255,143,196; --link-line:#FF8FC4;
+  --night-deep:#241848; --night-deep-rgb:36,24,72;
+  --tc-281848:#281848; --tc-281848-rgb:40,24,72;
+  --night:#3A2A6B; --night-rgb:58,42,107;
+  --plum:#4A2D6B; --plum-rgb:74,45,107;
+  --tc-6e6084:#6E6084; --tc-6e6084-rgb:110,96,132;
+  --plum-soft:#7A5C98; --plum-soft-rgb:122,92,152;
+  --tc-7c5c98:#7C5C98; --tc-7c5c98-rgb:124,92,152;
+  --tc-7c5cc4:#7C5CC4; --tc-7c5cc4-rgb:124,92,196;
+  --tc-8a6bb8:#8A6BB8; --tc-8a6bb8-rgb:138,107,184;
+  --tc-9a8bb0:#9A8BB0; --tc-9a8bb0-rgb:154,139,176;
+  --tc-9b7bd0:#9B7BD0; --tc-9b7bd0-rgb:155,123,208;
+  --tc-9b8be0:#9B8BE0; --tc-9b8be0-rgb:155,139,224;
+  --tc-a98bd6:#A98BD6; --tc-a98bd6-rgb:169,139,214;
+  --tc-a98ed0:#A98ED0; --tc-a98ed0-rgb:169,142,208;
+  --tc-b48ce8:#B48CE8; --tc-b48ce8-rgb:180,140,232;
+  --tc-b49cf0:#B49CF0; --tc-b49cf0-rgb:180,156,240;
+  --tc-b9a6d6:#B9A6D6; --tc-b9a6d6-rgb:185,166,214;
+  --tc-b9a8d2:#B9A8D2; --tc-b9a8d2-rgb:185,168,210;
+  --tc-c0568a:#C0568A; --tc-c0568a-rgb:192,86,138;
+  --tc-c2387d:#C2387D; --tc-c2387d-rgb:194,56,125;
+  --tc-c94d8c:#C94D8C; --tc-c94d8c-rgb:201,77,140;
+  --lav:#C9A8F0; --lav-rgb:201,168,240;
+  --tc-cdbde0:#CDBDE0; --tc-cdbde0-rgb:205,189,224;
+  --tc-d8cce3:#D8CCE3; --tc-d8cce3-rgb:216,204,227;
+  --tc-d9488f:#D9488F; --tc-d9488f-rgb:217,72,143;
+  --tc-d9c6f0:#D9C6F0; --tc-d9c6f0-rgb:217,198,240;
+  --tc-d9c8ee:#D9C8EE; --tc-d9c8ee-rgb:217,200,238;
+  --tc-d9cbea:#D9CBEA; --tc-d9cbea-rgb:217,203,234;
+  --tc-dcc6f2:#DCC6F2; --tc-dcc6f2-rgb:220,198,242;
+  --tc-e39bc1:#E39BC1; --tc-e39bc1-rgb:227,155,193;
+  --tc-e3c8f5:#E3C8F5; --tc-e3c8f5-rgb:227,200,245;
+  --tc-e3d3f3:#E3D3F3; --tc-e3d3f3-rgb:227,211,243;
+  --tc-e3d6f2:#E3D6F2; --tc-e3d6f2-rgb:227,214,242;
+  --tc-e3daee:#E3DAEE; --tc-e3daee-rgb:227,218,238;
+  --tc-e5daf0:#E5DAF0; --tc-e5daf0-rgb:229,218,240;
+  --tc-e6d9f5:#E6D9F5; --tc-e6d9f5-rgb:230,217,245;
+  --tc-e7c6e6:#E7C6E6; --tc-e7c6e6-rgb:231,198,230;
+  --tc-e7d2f7:#E7D2F7; --tc-e7d2f7-rgb:231,210,247;
+  --tc-e7d6fa:#E7D6FA; --tc-e7d6fa-rgb:231,214,250;
+  --rose-deep:#E85FA3; --rose-deep-rgb:232,95,163;
+  --tc-eadcf9:#EADCF9; --tc-eadcf9-rgb:234,220,249;
+  --tc-ede0f9:#EDE0F9; --tc-ede0f9-rgb:237,224,249;
+  --tc-eee6f7:#EEE6F7; --tc-eee6f7-rgb:238,230,247;
+  --tc-efe4f7:#EFE4F7; --tc-efe4f7-rgb:239,228,247;
+  --tc-efe6f7:#EFE6F7; --tc-efe6f7-rgb:239,230,247;
+  --tc-f06aae:#F06AAE; --tc-f06aae-rgb:240,106,174;
+  --tc-f1eaf9:#F1EAF9; --tc-f1eaf9-rgb:241,234,249;
+  --tc-f3defb:#F3DEFB; --tc-f3defb-rgb:243,222,251;
+  --tc-f3e6fa:#F3E6FA; --tc-f3e6fa-rgb:243,230,250;
+  --tc-f3e8fd:#F3E8FD; --tc-f3e8fd-rgb:243,232,253;
+  --tc-f3ecfb:#F3ECFB; --tc-f3ecfb-rgb:243,236,251;
+  --tc-f3eeff:#F3EEFF; --tc-f3eeff-rgb:243,238,255;
+  --tc-f4f0fb:#F4F0FB; --tc-f4f0fb-rgb:244,240,251;
+  --tc-f58ba8:#F58BA8; --tc-f58ba8-rgb:245,139,168;
+  --tc-f6e9ff:#F6E9FF; --tc-f6e9ff-rgb:246,233,255;
+  --tc-f7f1fd:#F7F1FD; --tc-f7f1fd-rgb:247,241,253;
+  --tc-f7f3fb:#F7F3FB; --tc-f7f3fb-rgb:247,243,251;
+  --tc-fce0ee:#FCE0EE; --tc-fce0ee-rgb:252,224,238;
+  --rose:#FF8FC4; --rose-rgb:255,143,196;
+  --tc-ff9bcb:#FF9BCB; --tc-ff9bcb-rgb:255,155,203;
+  --tc-ff9ec4:#FF9EC4; --tc-ff9ec4-rgb:255,158,196;
+  --tc-ffa3cf:#FFA3CF; --tc-ffa3cf-rgb:255,163,207;
+  --tc-ffb3c7:#FFB3C7; --tc-ffb3c7-rgb:255,179,199;
+  --tc-ffb3d6:#FFB3D6; --tc-ffb3d6-rgb:255,179,214;
+  --tc-ffc2da:#FFC2DA; --tc-ffc2da-rgb:255,194,218;
+  --tc-ffc7e3:#FFC7E3; --tc-ffc7e3-rgb:255,199,227;
+  --tc-ffd6e8:#FFD6E8; --tc-ffd6e8-rgb:255,214,232;
+  --tc-ffd6ea:#FFD6EA; --tc-ffd6ea-rgb:255,214,234;
+  --tc-ffe7f4:#FFE7F4; --tc-ffe7f4-rgb:255,231,244;
+  --tc-ffe8f4:#FFE8F4; --tc-ffe8f4-rgb:255,232,244;
+  --tc-ffe9f3:#FFE9F3; --tc-ffe9f3-rgb:255,233,243;
+  --tc-ffeaf4:#FFEAF4; --tc-ffeaf4-rgb:255,234,244;
+  --cream:#FFF6FB; --cream-rgb:255,246,251;
+}
+
+/* プリンス版：空色〜水色〜やさしい紺 */
+html[data-theme="prince"]{
+  /* キャラえらびの 肩書きの 字（カードの 枠の 色より こく。プリンセスは 枠と 同じ 色の まま） */
+  --lav-text:#2B6FB0; --tc-5fd6cb-text:#127A72; --tc-ffc2da-text:#8A6200; --tc-8fcb8b-text:#3A7D36;
+  --logo-shadow-rgb:140,200,80; --link-line:#8CC850;
+  --night-deep:#132038; --night-deep-rgb:19,32,56;
+  --tc-281848:#13223A; --tc-281848-rgb:19,34,58;
+  --night:#223657; --night-rgb:34,54,87;
+  --plum:#283C5E; --plum-rgb:40,60,94;
+  --tc-6e6084:#59677A; --tc-6e6084-rgb:89,103,122;
+  --plum-soft:#536B89; --plum-soft-rgb:83,107,137;
+  --tc-7c5c98:#536B8A; --tc-7c5c98-rgb:83,107,138;
+  --tc-7c5cc4:#8A6200; --tc-7c5cc4-rgb:138,98,0;
+  --tc-8a6bb8:#557CAE; --tc-8a6bb8-rgb:85,124,174;
+  --tc-9a8bb0:#8293AA; --tc-9a8bb0-rgb:130,147,170;
+  --tc-9b7bd0:#608DC7; --tc-9b7bd0-rgb:96,141,199;
+  --tc-9b8be0:#6A99D7; --tc-9b8be0-rgb:106,153,215;
+  --tc-a98bd6:#759CCE; --tc-a98bd6-rgb:117,156,206;
+  --tc-a98ed0:#7B9DC8; --tc-a98ed0-rgb:123,157,200;
+  --tc-b48ce8:#6EA0E2; --tc-b48ce8-rgb:110,160,226;
+  --tc-b49cf0:#7BACEB; --tc-b49cf0-rgb:123,172,235;
+  --tc-b9a6d6:#99B1D0; --tc-b9a6d6-rgb:153,177,208;
+  --tc-b9a8d2:#9DB2CC; --tc-b9a8d2-rgb:157,178,204;
+  --tc-c0568a:#1F5E99; --tc-c0568a-rgb:31,94,153;
+  --tc-c2387d:#2E759F; --tc-c2387d-rgb:46,117,159;
+  --tc-c94d8c:#3582AE; --tc-c94d8c-rgb:53,130,174;
+  --lav:#8EBDEB; --lav-rgb:142,189,235;
+  --tc-cdbde0:#B4C5DC; --tc-cdbde0-rgb:180,197,220;
+  --tc-d8cce3:#C6D1E0; --tc-d8cce3-rgb:198,209,224;
+  --tc-d9488f:#2787BE; --tc-d9488f-rgb:39,135,190;
+  --tc-d9c6f0:#B9D0ED; --tc-d9c6f0-rgb:185,208,237;
+  --tc-d9c8ee:#BDD1EA; --tc-d9c8ee-rgb:189,209,234;
+  --tc-d9cbea:#C2D2E7; --tc-d9cbea-rgb:194,210,231;
+  --tc-dcc6f2:#AED3F3; --tc-dcc6f2-rgb:174,211,243;
+  --tc-e39bc1:#7CB8DA; --tc-e39bc1-rgb:124,184,218;
+  --tc-e3c8f5:#BCD4F3; --tc-e3c8f5-rgb:188,212,243;
+  --tc-e3d3f3:#CADBF0; --tc-e3d3f3-rgb:202,219,240;
+  --tc-e3d6f2:#CEDDEF; --tc-e3d6f2-rgb:206,221,239;
+  --tc-e3daee:#D5DFEC; --tc-e3daee-rgb:213,223,236;
+  --tc-e5daf0:#D5DFEE; --tc-e5daf0-rgb:213,223,238;
+  --tc-e6d9f5:#D1E0F3; --tc-e6d9f5-rgb:209,224,243;
+  --tc-e7c6e6:#BAD4E2; --tc-e7c6e6-rgb:186,212,226;
+  --tc-e7d2f7:#C3E3FA; --tc-e7d2f7-rgb:195,227,250;
+  --tc-e7d6fa:#CBDEF9; --tc-e7d6fa-rgb:203,222,249;
+  --rose-deep:#2B7CC2; --rose-deep-rgb:43,124,194;
+  --tc-eadcf9:#D3E3F8; --tc-eadcf9-rgb:211,227,248;
+  --tc-ede0f9:#D9E7F8; --tc-ede0f9-rgb:217,231,248;
+  --tc-eee6f7:#E1EAF6; --tc-eee6f7-rgb:225,234,246;
+  --tc-efe4f7:#DFE9F5; --tc-efe4f7-rgb:223,233,245;
+  --tc-efe6f7:#E1EAF6; --tc-efe6f7-rgb:225,234,246;
+  --tc-f06aae:#2B7CC2; --tc-f06aae-rgb:43,124,194;
+  --tc-f1eaf9:#E6EEF8; --tc-f1eaf9-rgb:230,238,248;
+  --tc-f3defb:#D7EEFD; --tc-f3defb-rgb:215,238,253;
+  --tc-f3e6fa:#E1EBF9; --tc-f3e6fa-rgb:225,235,249;
+  --tc-f3e8fd:#E2EDFC; --tc-f3e8fd-rgb:226,237,252;
+  --tc-f3ecfb:#E7EFFA; --tc-f3ecfb-rgb:231,239,250;
+  --tc-f3eeff:#FFF7DD; --tc-f3eeff-rgb:255,247,221;
+  --tc-f4f0fb:#EDF2FA; --tc-f4f0fb-rgb:237,242,250;
+  --tc-f58ba8:#4EB4F0; --tc-f58ba8-rgb:78,180,240;
+  --tc-f6e9ff:#E4EFFD; --tc-f6e9ff-rgb:228,239,253;
+  --tc-f7f1fd:#EDF4FC; --tc-f7f1fd-rgb:237,244,252;
+  --tc-f7f3fb:#F0F5FA; --tc-f7f3fb-rgb:240,245,250;
+  --tc-fce0ee:#D1ECFB; --tc-fce0ee-rgb:209,236,251;
+  --rose:#4AA3E6; --rose-rgb:74,163,230;
+  --tc-ff9bcb:#4A9FE0; --tc-ff9bcb-rgb:74,159,224;
+  --tc-ff9ec4:#73C4F4; --tc-ff9ec4-rgb:115,196,244;
+  --tc-ffa3cf:#7AC7F4; --tc-ffa3cf-rgb:122,199,244;
+  --tc-ffb3c7:#90D0F6; --tc-ffb3c7-rgb:144,208,246;
+  --tc-ffb3d6:#92D1F6; --tc-ffb3d6-rgb:146,209,246;
+  --tc-ffc2da:#F5C451; --tc-ffc2da-rgb:245,196,81;
+  --tc-ffc7e3:#AFDDF9; --tc-ffc7e3-rgb:175,221,249;
+  --tc-ffd6e8:#C3E6FA; --tc-ffd6e8-rgb:195,230,250;
+  --tc-ffd6ea:#C4E7FA; --tc-ffd6ea-rgb:196,231,250;
+  --tc-ffe7f4:#EAF7FF; --tc-ffe7f4-rgb:234,247,255;
+  --tc-ffe8f4:#DFF1FC; --tc-ffe8f4-rgb:223,241,252;
+  --tc-ffe9f3:#DFF1FC; --tc-ffe9f3-rgb:223,241,252;
+  --tc-ffeaf4:#E1F2FD; --tc-ffeaf4-rgb:225,242,253;
+  --cream:#F4FAFF; --cream-rgb:244,250,255;
+}

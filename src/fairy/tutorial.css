@@ -1,13 +1,13 @@
 /* あそびかた（チュートリアル）— Tutorial.jsx / AreaTutorials.jsx */
-.tt-overlay{position:fixed; inset:0; z-index:60; background:rgba(40,24,72,.55); display:flex; align-items:flex-start; justify-content:center; padding:10px 8px; overflow-y:auto; -webkit-overflow-scrolling:touch;}
-.tt-panel{position:relative; width:100%; max-width:430px; background:#FFF9FD; border-radius:20px; box-shadow:0 10px 30px rgba(40,24,72,.35); padding:10px 10px 12px; display:flex; flex-direction:column; align-items:center; gap:8px; outline:none;}
+.tt-overlay{position:fixed; inset:0; z-index:60; background:rgba(var(--tc-281848-rgb),.55); display:flex; align-items:flex-start; justify-content:center; padding:10px 8px; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+.tt-panel{position:relative; width:100%; max-width:430px; background:#FFF9FD; border-radius:20px; box-shadow:0 10px 30px rgba(var(--tc-281848-rgb),.35); padding:10px 10px 12px; display:flex; flex-direction:column; align-items:center; gap:8px; outline:none;}
 .tt-top{display:flex; align-items:center; gap:8px; width:100%;}
-.tt-title{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#7A5C98; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.tt-title{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:var(--plum-soft); flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .tt-dots{display:flex; gap:5px; flex:0 0 auto;}
-.tt-dots i{width:10px; height:10px; border-radius:50%; background:#E6D9F5;}
-.tt-dots i.tt-dot-now{background:#F06AAE; box-shadow:0 0 0 3px #FFD6EA;}
+.tt-dots i{width:10px; height:10px; border-radius:50%; background:var(--tc-e6d9f5);}
+.tt-dots i.tt-dot-now{background:var(--tc-f06aae); box-shadow:0 0 0 3px var(--tc-ffd6ea);}
 .tt-dots i.tt-dot-done{background:#5FC79A;}
-.tt-skip{flex:0 0 auto; font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:#7A5C98; background:#fff; border:2px solid #D9C6F0; border-radius:14px; padding:4px 10px; cursor:pointer;}
+.tt-skip{flex:0 0 auto; font-family:'Zen Maru Gothic'; font-weight:900; font-size:12px; color:var(--plum-soft); background:#fff; border:2px solid var(--tc-d9c6f0); border-radius:14px; padding:4px 10px; cursor:pointer;}
 
 .tt-body{position:relative; width:100%; display:flex; flex-direction:column; align-items:center; gap:8px;}
 
@@ -24,7 +24,7 @@
 .tt-finger-hand{position:absolute; left:-15px; top:-4px; font-size:30px; line-height:1; filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));}
 .tt-finger-tap .tt-finger-hand{animation:tt-tap 1.2s ease-in-out infinite;}
 @keyframes tt-tap{0%,100%{transform:translateY(10px);} 45%,60%{transform:translateY(0) scale(.92);}}
-.tt-finger-ring{position:absolute; left:-14px; top:-14px; width:28px; height:28px; border-radius:50%; border:3px solid #F06AAE; animation:tt-ring 1.2s ease-out infinite;}
+.tt-finger-ring{position:absolute; left:-14px; top:-14px; width:28px; height:28px; border-radius:50%; border:3px solid var(--tc-f06aae); animation:tt-ring 1.2s ease-out infinite;}
 @keyframes tt-ring{0%,40%{transform:scale(.3); opacity:0;} 55%{opacity:1;} 100%{transform:scale(1.4); opacity:0;}}
 .tt-finger-swipe, .tt-finger-drag{animation:tt-move 2.2s ease-in-out infinite;}
 .tt-finger-drag{animation-duration:2.6s;}
@@ -37,15 +37,15 @@
 
 /* できたね！ */
 /* 場面の 上の はしに 出す（色が ついた 面・ジュースの りょうが かくれない ように） */
-.tt-ok{position:absolute; left:50%; top:6px; transform:translateX(-50%); z-index:8; background:rgba(255,255,255,.96); border:3px solid #5FC79A; border-radius:16px; padding:5px 16px 6px; text-align:center; box-shadow:0 4px 12px rgba(40,24,72,.22); animation:tt-pop .35s ease-out; pointer-events:none; max-width:90%; white-space:nowrap;}
+.tt-ok{position:absolute; left:50%; top:6px; transform:translateX(-50%); z-index:8; background:rgba(255,255,255,.96); border:3px solid #5FC79A; border-radius:16px; padding:5px 16px 6px; text-align:center; box-shadow:0 4px 12px rgba(var(--tc-281848-rgb),.22); animation:tt-pop .35s ease-out; pointer-events:none; max-width:90%; white-space:nowrap;}
 .tt-ok b{display:block; font-family:'Zen Maru Gothic'; font-weight:900; font-size:22px; line-height:1.2; color:#2FAF8E;}
-.tt-ok small{display:block; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:#3A2A6B; margin-top:2px;}
+.tt-ok small{display:block; font-family:'Zen Maru Gothic'; font-weight:700; font-size:13px; color:var(--night); margin-top:2px;}
 @keyframes tt-pop{from{transform:translateX(-50%) scale(.4); opacity:0;} to{transform:translateX(-50%) scale(1); opacity:1;}}
 
-.tt-cap{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:#7A5C98; text-align:center; min-height:1.3em; line-height:1.35;}
+.tt-cap{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:var(--plum-soft); text-align:center; min-height:1.3em; line-height:1.35;}
 .tt-acts{display:flex; justify-content:center; gap:8px; width:100%;}
 .tt-acts .tt-zone{width:auto; padding:3px;}
-.tt-float{position:absolute; left:50%; top:8px; transform:translateX(-50%); background:#fff; border:2px solid #F06AAE; color:#E85FA3; border-radius:14px; padding:3px 12px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; pointer-events:none; animation:tt-pop2 .3s ease-out;}
+.tt-float{position:absolute; left:50%; top:8px; transform:translateX(-50%); background:#fff; border:2px solid var(--tc-f06aae); color:var(--rose-deep); border-radius:14px; padding:3px 12px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; pointer-events:none; animation:tt-pop2 .3s ease-out;}
 @keyframes tt-pop2{from{opacity:0; transform:translateX(-50%) scale(.6);} to{opacity:1; transform:translateX(-50%) scale(1);}}
 
 .tt-juice{background:#fff; overflow:hidden;}
@@ -56,14 +56,14 @@
 .tt-pad{width:auto; padding:6px; background:#fff;}
 .tt-tsumiki2{width:auto; padding:6px; background:#fff;}
 .tt-topgrid{width:220px;}
-.tt-letter{display:flex; align-items:center; gap:8px; background:#FFFBEA; border:2px dashed #E5C35A; border-radius:12px; padding:4px 12px; font-family:'Zen Maru Gothic'; font-size:14px; color:#3A2A6B;}
+.tt-letter{display:flex; align-items:center; gap:8px; background:#FFFBEA; border:2px dashed #E5C35A; border-radius:12px; padding:4px 12px; font-family:'Zen Maru Gothic'; font-size:14px; color:var(--night);}
 .tt-letter > span{font-size:11px; color:#B08A2A; font-weight:900;}
 .tt-masume{background:#fff; padding:4px;}
 
 /* 1L と 1dL の 図 */
-.tt-card{position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:9; background:#fff; border:3px solid #FFC21A; border-radius:18px; padding:10px 14px 12px; box-shadow:0 8px 24px rgba(40,24,72,.3); display:flex; flex-direction:column; align-items:center; gap:6px; width:min(300px, 92%);}
+.tt-card{position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:9; background:#fff; border:3px solid #FFC21A; border-radius:18px; padding:10px 14px 12px; box-shadow:0 8px 24px rgba(var(--tc-281848-rgb),.3); display:flex; flex-direction:column; align-items:center; gap:6px; width:min(300px, 92%);}
 .tt-diagram-svg{width:100%; max-width:240px; height:auto;}
-.tt-diagram-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:15px; color:#3A2A6B; text-align:center;}
+.tt-diagram-text{font-family:'Zen Maru Gothic'; font-weight:700; font-size:15px; color:var(--night); text-align:center;}
 .tt-diagram-text b{color:#E8721C; font-size:18px;}
 
 .tt-end{display:flex; flex-direction:column; align-items:center; gap:8px; padding:10px 0 4px;}
@@ -71,12 +71,12 @@
 .tt-start{min-width:200px;}
 
 /* あそびかた ボタン（エリアの 画面） */
-.fl-how{align-self:flex-end; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#7A5C98; background:#fff; border:2px solid #C9A8F0; border-radius:16px; padding:5px 12px; cursor:pointer; box-shadow:0 2px 0 rgba(201,168,240,.6);}
+.fl-how{align-self:flex-end; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:var(--plum-soft); background:#fff; border:2px solid var(--lav); border-radius:16px; padding:5px 12px; cursor:pointer; box-shadow:0 2px 0 rgba(var(--lav-rgb),.6);}
 .fl-how:active{transform:translateY(2px); box-shadow:none;}
 
 /* はこの工房 段階1：めん・へん・ちょうてん の 見本 */
 .hk-words{display:flex; gap:6px; width:100%; justify-content:center;}
-.hk-word{flex:1 1 0; max-width:110px; display:flex; align-items:center; gap:4px; justify-content:center; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#3A2A6B; background:#fff; border:2px solid #E6D9F5; border-radius:12px; padding:3px 6px; cursor:pointer;}
+.hk-word{flex:1 1 0; max-width:110px; display:flex; align-items:center; gap:4px; justify-content:center; font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:var(--night); background:#fff; border:2px solid var(--tc-e6d9f5); border-radius:12px; padding:3px 6px; cursor:pointer;}
 .hk-word svg{flex:0 0 auto;}
 .hk-word-on{border-color:#FFC21A; background:#FFF6D6; box-shadow:0 0 0 2px #FFE14D, 0 0 10px 2px rgba(255,200,40,.6);}
 

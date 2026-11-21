@@ -160,11 +160,22 @@ export const THEMES = {
 /* ---------- いまの テーマ（App が セーブから よんで きめる。どの 画面からも よめる） ---------- */
 let current = "princess";
 const subs = new Set();
+// 色の 変数（src/themeColors.css）を きりかえる しるし：<html data-theme="prince">
+// ブラウザの 上の バーの 色（index.html の theme-color）も プリンスは 紺に
+const BAR_COLOR = { princess: "#3A2A6B", prince: "#1E3F73" };
+const markHtml = (t) => {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.theme = t;
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", BAR_COLOR[t]);
+};
+markHtml(current);
 export const getTheme = () => current;
 export function setTheme(t) {
   const n = normalizeTheme(t);
   if (n === current) return;
   current = n;
+  markHtml(n);
   subs.forEach((fn) => fn());
 }
 const subscribe = (fn) => { subs.add(fn); return () => { subs.delete(fn); }; };
@@ -177,6 +188,16 @@ export function themedArtKey(has, key, theme = current) {
   const s = ART_SUFFIX[normalizeTheme(theme)];
   if (s && has(key + s)) return key + s;
   return has(key) ? key : null;
+}
+
+/* ---------- 色：データに 直書きの 色（カードの 枠など）を テーマの 変数に する ----------
+   "#FFC2DA" → "var(--tc-ffc2da, #FFC2DA)"。src/themeColors.css に プリンス版の 色が あれば かわり、無ければ もとの 色 */
+const NAMED_COLOR = { "#C9A8F0": "lav", "#FF8FC4": "rose", "#E85FA3": "rose-deep" };
+// use = "text" の ときは 字の 色（--xxx-text が あれば それ。プリンセスには 無いので いつもの 色）
+export function themedColor(hex, use) {
+  if (typeof hex !== "string" || !/^#[0-9a-f]{6}$/i.test(hex)) return hex;
+  const n = NAMED_COLOR[hex.toUpperCase()] || "tc-" + hex.slice(1).toLowerCase();
+  return use === "text" ? `var(--${n}-text, var(--${n}, ${hex}))` : `var(--${n}, ${hex})`;
 }
 
 /* ---------- 文字 ---------- */
