@@ -1677,9 +1677,11 @@ export default function App() {
                   onClick={() => { SFX.tap(sound); setCharacterId(c.id); persist({ character: c.id }); setScreen("mode"); }}
                 >
                   <div className="kk-char-preview"><c.Comp mood="happy" size={88} /></div>
-                  <div className="kk-char-name">{c.label}</div>
-                  <div className="kk-char-title" style={{ color: c.accent }}>{c.title}</div>
-                  <div className="kk-char-sub">{c.sub}</div>
+                  <div className="kk-char-text">
+                    <div className="kk-char-name">{c.label}</div>
+                    <div className="kk-char-title" style={{ color: c.accent }}>{c.title}</div>
+                    <div className="kk-char-sub">{c.sub}</div>
+                  </div>
                 </button>
               ))}
             </div>
@@ -2649,7 +2651,9 @@ function Style() {
   .kk-char-sub{display:none;}
 }
 .kk-char-preview{flex-shrink:0; width:78px; display:flex; justify-content:center;}
-.kk-char-name{font-family:'Mochiy Pop One'; font-size:18px; color:var(--night);}
+/* 名前・せつめいは 1つの たての かたまりに（よこに ならべると 名前が 1文字ずつ おれる）。おれる ときは 空白の ところで */
+.kk-char-text{flex:1; min-width:0; display:flex; flex-direction:column; word-break:keep-all; overflow-wrap:anywhere;}
+.kk-char-name{font-family:'Mochiy Pop One'; font-size:18px; color:var(--night); line-height:1.3;}
 .kk-char-title{font-family:'Mochiy Pop One'; font-size:12.5px; margin-top:2px;}
 .kk-char-sub{font-family:'Yomogi'; font-size:11.5px; color:var(--plum-soft,#7A5C98); margin-top:3px; line-height:1.4;}
 
