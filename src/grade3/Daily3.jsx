@@ -18,6 +18,7 @@ import { YomitoriQuestion } from "../YomitoriQuestion.jsx";
 import { normalizeReadProgress, applyReadResults } from "../yomitori.js";
 import { DAILY3_COUNT, DAILY3_MIX, buildDaily3Set, makeChoices, noteWrong3, noteRight3, normalizeGrade3, UNIT_INFO } from "./g3.js";
 import { G3Question } from "./Question.jsx";
+import { G3Footer } from "./Footer.jsx";
 
 const TAG = { div: "🍪 わり算", dec: "🧃 小数", frac: "🍰 分数", yomi: "📖 よみとり", g2: "📘 2年生", fairy: "🧚 ようせいの くに" };
 
@@ -83,7 +84,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   /* ---------------- intro ---------------- */
   if (stage === "intro") {
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         <div className="dm-chara">{character("idle")}</div>
         <h2 className="kk-h2">📅 毎日計算 <small className="g3-grade-chip">3年生</small></h2>
         <div className="dm-card">
@@ -107,7 +108,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
               title={daily.dragon ? "つぎの たまごを えらんでから はじめよう" : "毎日計算 で そだてる たまごを えらんでね"} />
           </div>
         ) : <button className="kk-big-btn" onClick={start}>はじめる ♪</button>}
-        <button className="kk-text-btn" onClick={onExit}>ほかの れんしゅうに もどる</button>
+        <G3Footer onBack={onExit} backLabel="ほかの れんしゅうに もどる" />
       </div>
     );
   }
@@ -116,7 +117,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   if (stage === "done" && summary) {
     const s = summary, perfect = s.correct === DAILY3_COUNT;
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         <div className="dm-chara">{character(perfect ? "happy" : "idle")}</div>
         <h2 className="kk-h2">{perfect ? "ぜんもん せいかい！🎉" : "きょうの ぶん おしまい！"}</h2>
         {s.dragon.stageTo && s.dragonNow && (
@@ -174,7 +175,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   };
   if (q.wp) {
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         {top}
         <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
           onFinish={(r) => done1({ ...r, wp: true }, "yomi")} />
@@ -182,7 +183,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
     );
   }
   return (
-    <div className="dm-wrap">
+    <div className="dm-wrap g3-scope">
       {top}
       <G3Question key={idx} q={q} choices={q.choices} inputMode={inputMode} notebook sfx={sfx} character={character} isLast={idx + 1 >= set.length}
         onFirst={(right) => { nbRef.current = right ? noteRight3(nbRef.current, q) : noteWrong3(nbRef.current, q); }}
