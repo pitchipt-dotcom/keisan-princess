@@ -7,7 +7,7 @@
    - せいかい したら、わかった ことを 1文で 声かけして、じどうで つぎの「やってみよう」へ
    - まちがえても 止めない。さいごが おわったら onFinish（＝もんだいへ）
    ===================================================================== */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../fairy/fairy.css";
 import { PourScene } from "../fairy/PourScene.jsx";
 import { isExact, TYPES } from "../fairy/juice.js";
@@ -26,6 +26,8 @@ function Steps({ n, at, label }) {
 }
 /* 1画面：問題文 → せいかいの 声かけと「つぎへ →」（せいかい したら）→ 操作・こたえる（children） */
 function Task({ step, steps, line, ok, onNext, nextLabel = "つぎへ →", label, children }) {
+  // つぎの 課題に なったら いちばん上へ（下の 数字キーまで スクロール して いても、問題文から 見える ように）
+  useEffect(() => { if (typeof window !== "undefined") window.scrollTo(0, 0); }, [step, line]);
   return (
     <div className="g3-explore">
       <Steps n={steps} at={step} label={label} />
@@ -93,9 +95,9 @@ function NumAnswer({ fields, sfx, onSubmit, disabled }) {
 /* ================= わり算 =================
    問題文 → クッキー（くばるのは わからない ときの 手つだい）→ 数字キー。どちらが さきでも いい */
 const DIV_TASKS = [
-  { mode: "share", total: 12, plates: 3, line: "12こを 3まいの おさらに 同じ数ずつ。1さら 何こ？", fields: [{ k: "each", pre: "1さら", post: "こ" }] },
+  { mode: "share", total: 12, plates: 3, line: "12こを 3さらに 同じ数ずつ。1さら 何こ？", fields: [{ k: "each", pre: "1さら", post: "こ" }] },
   { mode: "group", total: 12, per: 4, line: "12こを 1さらに 4こずつ。おさらは 何まい？", fields: [{ k: "groups", pre: "", post: "まい" }] },
-  { mode: "share", total: 14, plates: 4, line: "14こを 4まいの おさらに 同じ数ずつ。あまりは？", fields: [{ k: "each", pre: "1さら", post: "こ" }, { k: "rest", pre: "あまり", post: "こ" }] },
+  { mode: "share", total: 14, plates: 4, line: "14こを 4さらに 同じ数ずつ。あまりは？", fields: [{ k: "each", pre: "1さら", post: "こ" }, { k: "rest", pre: "あまり", post: "こ" }] },
 ];
 const divAnswer = (t) => (t.mode === "group" ? { groups: Math.floor(t.total / t.per), rest: t.total % t.per } : { each: Math.floor(t.total / t.plates), rest: t.total % t.plates });
 const divOkText = (t, r) => (t.mode === "group" ? <>{t.total} ÷ {t.per} ＝ {r.groups}。4こずつで {r.groups}さら分 だね。</>
@@ -127,10 +129,10 @@ const DEC_TASKS = [
   { line: <>0.1Lますで くんで、右の ますを <b>0.3L</b>に しよう</>, into: "t", target: 300, demo: { id: "s", to: "c" },
     vessels: () => [V("s", "Ld", 1000, 58), V("c", "dld", 0, 172), V("t", "Ld", 0, 290)], pours: { s: ["c"], c: ["t", "s"], t: ["c"] },
     okText: <>0.1Lが 3こで 0.3L。0.1が 10こで 1L だよ。</> },
-  { line: <>あ（0.4L）と い（0.3L）を まん中へ。あわせて 何L？</>, into: "t", all: ["a", "b"], demo: { id: "a", to: "t" },
+  { line: <>あ と い を まん中へ。あわせて 何L？</>, into: "t", all: ["a", "b"], demo: { id: "a", to: "t" },
     vessels: () => [V("a", "Ld", 400, 56, "あ"), V("t", "Ld", 0, 180), V("b", "Ld", 300, 304, "い")], pours: { a: ["t"], b: ["t"] },
     choices: ["0.6L", "0.7L", "0.8L"], ans: "0.7L", okText: <>0.4 ＋ 0.3 ＝ 0.7。0.1が 4こと 3こで 7こ だね。</> },
-  { line: <>0.8Lから 右の ますへ <b>0.3L</b> うつそう。のこりは 何L？</>, into: "t", target: 300, demo: { id: "s", to: "t" },
+  { line: <>0.8Lから <b>0.3L</b> うつそう。のこりは 何L？</>, into: "t", target: 300, demo: { id: "s", to: "t" },
     vessels: () => [V("s", "Ld", 800, 100), V("t", "Ld", 0, 262)], pours: { s: ["t"], t: ["s"] },
     choices: ["0.4L", "0.5L", "0.6L"], ans: "0.5L", okText: <>0.8 − 0.3 ＝ 0.5。0.1が 8こから 3こ へって 5こ だね。</> },
 ];
@@ -170,7 +172,8 @@ export function DecExplore({ sfx, onFinish, label }) {
     <Task label={label} onNext={next} nextLabel={nextLabel} step={step} steps={n} line={t.line} ok={ok}>
       <div className="g3-pour">
         <PourScene vessels={vs} pours={t.pours} interactive={!poured && !ok} onChange={setVs} onPourEnd={onPourEnd} onGrab={() => setTouched(true)} demo={touched ? null : t.demo} />
-        <div className="g3-pour-amounts">{vs.map((v) => <span key={v.id}>{v.label ? v.label + "：" : ""}<b>{fmtL(v.amount)}</b></span>)}</div>
+        {/* 何L？ を えらぶ ときは かさの 数を 出さない（こたえが 見えて しまうので。ますの 目もりで よむ） */}
+        {!(t.choices && poured) && <div className="g3-pour-amounts">{vs.map((v) => <span key={v.id}>{v.label ? v.label + "：" : ""}<b>{fmtL(v.amount)}</b></span>)}</div>}
       </div>
       {over && <div className="g3-fig-msg g3-fig-msg-ng">多すぎたら、ぎゃくに そそいで もどそう</div>}
       {t.choices && poured && !ok && (

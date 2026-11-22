@@ -6,7 +6,7 @@
    - こたえかたは 三択から。10もんで 8もん いじょう（1かいめで）せいかいが 2かい つづくと 入力に なる（g3.js）
    - ごほうびは ★（→ コーデ）だけ。ドラゴンは そだたない
    ===================================================================== */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./grade3.css";
 import "../dailyMode.css";
 import { UNIT_INFO, ROUND, INPUT_AFTER, STAR_PER_RIGHT_UNIT, makeRound, makeChoices, applyUnitRound, setUnitInput, markExplored, normalizeGrade3 } from "./g3.js";
@@ -23,6 +23,8 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
   const [idx, setIdx] = useState(0);
   const [results, setResults] = useState([]);
   const [summary, setSummary] = useState(null);
+  // つぎの もんだい・画面に なったら いちばん上へ（問題文から 見える ように）
+  useEffect(() => { if (typeof window !== "undefined") window.scrollTo(0, 0); }, [idx, stage]);
 
   const start = () => {
     const qs = makeRound(unit).map((q) => ({ ...q, choices: makeChoices(q) }));

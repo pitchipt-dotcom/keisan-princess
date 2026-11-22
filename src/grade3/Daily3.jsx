@@ -30,6 +30,8 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   const [results, setResults] = useState([]);
   const [sec, setSec] = useState(0);
   const [summary, setSummary] = useState(null);
+  // つぎの もんだい・画面に なったら いちばん上へ（問題文から 見える ように）
+  useEffect(() => { if (typeof window !== "undefined") window.scrollTo(0, 0); }, [idx, stage]);
   const [donePage, setDonePage] = useState(0);
   const startRef = useRef(0);
   const [readStage, setReadStage] = useState("A");      // 読み方の 手つだいの だんかい（2年生の よみとりチェックと 共通）
