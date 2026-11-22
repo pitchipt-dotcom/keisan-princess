@@ -177,13 +177,13 @@
 .g3-sub-btn{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:var(--night); background:#fff; border:2px solid var(--lav);
   border-radius:999px; min-height:48px; padding:10px 24px; margin-top:16px; cursor:pointer; touch-action:manipulation;}
 .g3-sub-btn:active{transform:translateY(2px);}
-.g3-sub-btn-quiet{font-size:13px; color:var(--plum,#7A5C98); background:transparent; border-style:dashed;}
+.g3-sub-btn-quiet{font-size:13px; color:var(--plum); background:transparent; border-style:dashed;}
 
 /* いちばん下：「もどる」。答えや 数字キーから 点線と 広い すきまで はなし、画面の 下の はしに よせる */
 .g3-footer{margin-top:auto; padding-top:44px; width:100%; display:flex; flex-direction:column; align-items:center; gap:16px;}
 .g3-footer::before{content:""; display:block; width:100%; border-top:2px dashed color-mix(in srgb, var(--lav) 70%, transparent); margin-bottom:4px;}
 .g3-footer .g3-sub-btn{margin-top:0;}
-.g3-back{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:var(--plum,#7A5C98); background:rgba(255,255,255,.7); border:2px solid color-mix(in srgb, var(--lav) 80%, transparent);
+.g3-back{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:var(--plum); background:rgba(255,255,255,.7); border:2px solid color-mix(in srgb, var(--lav) 80%, transparent);
   border-radius:999px; min-height:48px; min-width:160px; padding:10px 24px; cursor:pointer; touch-action:manipulation;}
 .g3-back:active{transform:translateY(2px);}
 
