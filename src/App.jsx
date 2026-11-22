@@ -1649,7 +1649,9 @@ export default function App() {
         {/* ---------- TOP BAR ---------- */}
         {screen !== "title" && (
           <div className="kk-bar">
-            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily" || screen === "daily3" || screen === "g3unit") exitDaily(); else if (screen === "mode") setScreen("select"); else if (screen === "group") setScreen("mode"); else if (screen === "report") setScreen("mode"); else goMenu(); }} aria-label="もどる">‹ もどる</button>
+            {/* 3年生の 画面は 下の「もどる」だけ（答えの ボタンから はなれた ところ）。上は 場所だけ とって ★を まん中に */}
+            {screen === "g3unit" || screen === "daily3" ? <span className="kk-icon-btn kk-icon-spacer" aria-hidden="true">‹ もどる</span> :
+            <button className="kk-icon-btn" onClick={() => { SFX.tap(sound); if (screen === "dressup") setScreen("collection"); else if (screen === "collection") setScreen(q ? "play" : "mode"); else if (screen === "select") setScreen("title"); else if (screen === "daily" || screen === "daily3" || screen === "g3unit") exitDaily(); else if (screen === "mode") setScreen("select"); else if (screen === "group") setScreen("mode"); else if (screen === "report") setScreen("mode"); else goMenu(); }} aria-label="もどる">‹ もどる</button>}
             <div className="kk-bar-mid">
               <span className="kk-dust">★ {stardust}</span>
             </div>
@@ -2273,6 +2275,7 @@ function Style() {
 .kk-bar-mid{flex:1; display:flex; justify-content:center;}
 .kk-dust{font-family:'Mochiy Pop One'; background:var(--night); color:var(--gold); padding:7px 18px; border-radius:999px; box-shadow:0 4px 0 rgba(var(--plum-rgb),.35); font-size:18px; letter-spacing:.5px;}
 .kk-icon-btn{font-family:'Zen Maru Gothic'; font-weight:700; border:none; background:rgba(255,255,255,.85); color:var(--plum); padding:8px 12px; border-radius:14px; box-shadow:0 3px 0 rgba(var(--tc-7c5c98-rgb),.3); cursor:pointer; font-size:14px;}
+.kk-icon-spacer{visibility:hidden; pointer-events:none;}
 .kk-icon-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(var(--tc-7c5c98-rgb),.3);}
 
 /* ---- title ---- */

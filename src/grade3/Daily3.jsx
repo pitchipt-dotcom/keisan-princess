@@ -16,8 +16,9 @@ import { DragonMini, EggPicker, StageUpCelebration, DRAGONS } from "../DragonMod
 import { fmtSec, STAR_PER_RIGHT, STAR_DAILY_BONUS, REVIEW_MAX, Keypad } from "../DailyMode.jsx";
 import { YomitoriQuestion } from "../YomitoriQuestion.jsx";
 import { normalizeReadProgress, applyReadResults } from "../yomitori.js";
-import { DAILY3_COUNT, DAILY3_MIX, buildDaily3Set, makeChoices, noteWrong3, noteRight3, normalizeGrade3, UNIT_INFO } from "./g3.js";
+import { DAILY3_COUNT, buildDaily3Set, makeChoices, noteWrong3, noteRight3, normalizeGrade3, UNIT_INFO } from "./g3.js";
 import { G3Question } from "./Question.jsx";
+import { G3Footer } from "./Footer.jsx";
 
 const TAG = { div: "🍪 わり算", dec: "🧃 小数", frac: "🍰 分数", yomi: "📖 よみとり", g2: "📘 2年生", fairy: "🧚 ようせいの くに" };
 
@@ -29,6 +30,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   const [results, setResults] = useState([]);
   const [sec, setSec] = useState(0);
   const [summary, setSummary] = useState(null);
+  const [donePage, setDonePage] = useState(0);
   const startRef = useRef(0);
   const [readStage, setReadStage] = useState("A");      // 読み方の 手つだいの だんかい（2年生の よみとりチェックと 共通）
   const nbRef = useRef(g.daily.notebook);
@@ -77,28 +79,27 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
     const by = (u) => res.filter((r) => r.unit === u);
     setSummary({ correct, hints, total, isBest, stars, firstToday, streakDays: nd.streakDays || 0, noteCount: Object.keys(nbRef.current).length,
       dragon: report, dragonNow: nd.dragon, parts: ["div", "dec", "frac", "yomi", "g2", "fairy"].map((u) => ({ u, n: by(u).length, ok: by(u).filter((r) => r.right).length })).filter((p) => p.n > 0) });
+    setDonePage(0);
     setStage("done");
   };
 
   /* ---------------- intro ---------------- */
   if (stage === "intro") {
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         <div className="dm-chara">{character("idle")}</div>
         <h2 className="kk-h2">📅 毎日計算 <small className="g3-grade-chip">3年生</small></h2>
         <div className="dm-card">
-          <div className="dm-intro-line">きょうの もんだい <b>{DAILY3_COUNT}もん</b></div>
-          <div className="dm-intro-line g3-intro-sub">わり算・小数・分数が {DAILY3_MIX.g3}もん（そのうち 📖 よみとりチェックが {DAILY3_MIX.g3yomi}もん）、2年生の けいさんが {DAILY3_MIX.g2}もん、ようせいの くにから {DAILY3_MIX.fairy}もん</div>
-          <div className="dm-intro-line">じかんは はかるけど、<b>あわてなくて だいじょうぶ</b>。</div>
+          <div className="dm-intro-line">きょうの <b>{DAILY3_COUNT}もん</b>。あわてなくて だいじょうぶ。</div>
           {!needsEgg(daily) && <DragonMini daily={daily} />}
-          {dueCount > 0 && <div className="dm-intro-line dm-intro-review">📒 まちがいノートの おさらいが <b>{Math.min(dueCount, REVIEW_MAX)}もん</b> まざってるよ</div>}
-          <div className="dm-badges">
-            <div><b>{currentStreak(daily, today)}</b><small>れんぞく 日</small></div>
-            <div><b>{g.daily.bestSec != null ? fmtSec(g.daily.bestSec) : "—"}</b><small>ぜんもん せいかいの<br />さいこう タイム</small></div>
-            <div><b>{noteCount}</b><small>ノートの もんだい</small></div>
+          {dueCount > 0 && <div className="dm-intro-line dm-intro-review">📒 おさらいが <b>{Math.min(dueCount, REVIEW_MAX)}もん</b> あるよ</div>}
+          <div className="dm-badges g3-badges">
+            <div><b>{currentStreak(daily, today)}</b><small>れんぞく</small></div>
+            <div><b>{g.daily.bestSec != null ? fmtSec(g.daily.bestSec) : "—"}</b><small>さいこう</small></div>
+            <div><b>{noteCount}</b><small>ノート</small></div>
           </div>
-          {doneToday && <div className="dm-intro-done">きょうの ぶんは もう できたよ！ もういちど やっても いいよ♪</div>}
-          {!doneToday && daily.lastDate === today && <div className="dm-intro-line g3-intro-sub">🐉 きょうの ドラゴンの そだちポイントは 2年生の まいにち けいさんで もう もらったよ</div>}
+          {doneToday && <div className="dm-intro-done">きょうの ぶんは できたよ！ もういちど やっても いいよ</div>}
+          {!doneToday && daily.lastDate === today && <div className="dm-intro-done">🐉 ドラゴンの ポイントは 2年生で もらったよ</div>}
         </div>
         {needsEgg(daily) ? (
           <div className="dm-card">
@@ -107,48 +108,62 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
               title={daily.dragon ? "つぎの たまごを えらんでから はじめよう" : "毎日計算 で そだてる たまごを えらんでね"} />
           </div>
         ) : <button className="kk-big-btn" onClick={start}>はじめる ♪</button>}
-        <button className="kk-text-btn" onClick={onExit}>ほかの れんしゅうに もどる</button>
+        <G3Footer onBack={onExit} />
       </div>
     );
   }
 
   /* ---------------- done ---------------- */
+  /* けっかは 2まいに 分ける：1/2 … 点数・ことば・★、2/2 … ドラゴン（そだった とき・ポイントが ある とき だけ） */
   if (stage === "done" && summary) {
     const s = summary, perfect = s.correct === DAILY3_COUNT;
+    const hasDragon = !!(s.dragon.stageTo && s.dragonNow) || s.dragon.gains.length > 0;
+    const pages = hasDragon ? 2 : 1;
+    if (donePage === 1 && hasDragon) {
+      return (
+        <div className="dm-wrap g3-scope">
+          <span className="g3-page">2/2</span>
+          <h2 className="kk-h2">🐉 ドラゴン</h2>
+          {s.dragon.stageTo && s.dragonNow && (
+            <div className="dm-card">
+              <StageUpCelebration element={s.dragonNow.element} from={s.dragon.stageFrom} to={s.dragon.stageTo} />
+              {s.dragon.dexAdded && <div className="dr-dex-msg">📖 ドラゴンずかんに とうろく！</div>}
+              {s.dragon.becameMaster && <div className="dr-title-badge">👑 しょうごう「ドラゴンマスター」！</div>}
+            </div>
+          )}
+          {s.dragon.gains.length > 0 && (
+            <div className="dm-card">
+              <div className="dr-gains">
+                <div className="dr-gains-title">そだちポイント +{s.dragon.gained}</div>
+                {s.dragon.gains.map((x, i) => <div key={i} className="dr-gain"><span>{x.icon} {x.label}</span><b>+{x.pt}</b></div>)}
+              </div>
+            </div>
+          )}
+          <button className="kk-big-btn" onClick={onExit}>もどる</button>
+        </div>
+      );
+    }
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
+        {pages > 1 && <span className="g3-page">1/2</span>}
         <div className="dm-chara">{character(perfect ? "happy" : "idle")}</div>
         <h2 className="kk-h2">{perfect ? "ぜんもん せいかい！🎉" : "きょうの ぶん おしまい！"}</h2>
-        {s.dragon.stageTo && s.dragonNow && (
-          <div className="dm-card">
-            <StageUpCelebration element={s.dragonNow.element} from={s.dragon.stageFrom} to={s.dragon.stageTo} />
-            {s.dragon.dexAdded && <div className="dr-dex-msg">📖 ドラゴンずかんに とうろく！</div>}
-            {s.dragon.becameMaster && <div className="dr-title-badge">👑 しょうごう「ドラゴンマスター」！</div>}
-          </div>
-        )}
         <div className="dm-card">
           <div className="dm-score"><b>{s.correct}</b> / {DAILY3_COUNT} もん</div>
-          <div className="dm-intro-line">タイム：<b>{fmtSec(s.total)}</b>{s.isBest && <span className="dm-best"> さいこう きろく！</span>}</div>
-          {s.firstToday && <div className="dm-intro-line">🔥 <b>{s.streakDays}日</b> れんぞく！</div>}
+          <div className="dm-intro-line">⏱ <b>{fmtSec(s.total)}</b>{s.isBest && <span className="dm-best"> さいこう きろく！</span>}{s.firstToday && <>　🔥 <b>{s.streakDays}日</b> れんぞく</>}</div>
           {s.dragon.ticketUsed && <div className="dr-ticket">🌙 おやすみチケットで れんぞく キープ！</div>}
           <div className="dm-comment">
             {s.hints > 0
-              ? "ヒントを つかって さいごまで できたね。つぎは ヒントなしで ちょうせん してみよう！"
-              : perfect ? "ヒントなしで ぜんぶ じぶんの ちからで できたね！すごい！"
-                : "ヒントを つかわずに さいごまで がんばったね！まちがえた もんだいは ノートで おさらい しよう。"}
+              ? "さいごまで できたね。つぎは ヒントなしで やってみよう！"
+              : perfect ? "ヒントなしで ぜんぶ できたね！すごい！"
+                : "ヒントなしで がんばったね！まちがいは ノートで おさらい しよう。"}
           </div>
-          <div className="g3-parts">{s.parts.map((p) => <span key={p.u}>{TAG[p.u]} <b>{p.ok}/{p.n}</b></span>)}</div>
-          <div className="dm-intro-line">📒 まちがいノート：<b>{s.noteCount}もん</b>{s.noteCount > 0 ? "（また こんど 出るよ）" : ""}</div>
-          {s.dragon.gains.length > 0 && (
-            <div className="dr-gains">
-              <div className="dr-gains-title">🐉 ドラゴンの そだちポイント +{s.dragon.gained}</div>
-              {s.dragon.gains.map((x, i) => <div key={i} className="dr-gain"><span>{x.icon} {x.label}</span><b>+{x.pt}</b></div>)}
-            </div>
-          )}
-          {!s.firstToday && <div className="dm-intro-line" style={{ fontSize: 12 }}>そだちポイントは 1日1かい（2年生と 3年生 あわせて）。また あしたね！</div>}
-          <div className="dm-stars">星のかけら ★{s.stars} ゲット！{s.firstToday && <small>（きょうの ボーナス ★{STAR_DAILY_BONUS} こみ）</small>}</div>
+          {!s.firstToday && <div className="dm-intro-line">ドラゴンは 1日1かい。また あしたね！</div>}
+          <div className="dm-stars">★{s.stars} ゲット！</div>
         </div>
-        <button className="kk-big-btn" onClick={onExit}>もどる</button>
+        {pages > 1
+          ? <button className="kk-big-btn" onClick={() => { sfx.tap(); setDonePage(1); }}>ドラゴンを 見る →</button>
+          : <button className="kk-big-btn" onClick={onExit}>もどる</button>}
       </div>
     );
   }
@@ -174,19 +189,21 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
   };
   if (q.wp) {
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         {top}
-        <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
+        <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length} autoNext
           onFinish={(r) => done1({ ...r, wp: true }, "yomi")} />
+        <G3Footer onBack={onExit} />
       </div>
     );
   }
   return (
-    <div className="dm-wrap">
+    <div className="dm-wrap g3-scope">
       {top}
       <G3Question key={idx} q={q} choices={q.choices} inputMode={inputMode} notebook sfx={sfx} character={character} isLast={idx + 1 >= set.length}
         onFirst={(right) => { nbRef.current = right ? noteRight3(nbRef.current, q) : noteWrong3(nbRef.current, q); }}
         onDone={(r) => done1(r, q.unit)} />
+      <G3Footer onBack={onExit} />
     </div>
   );
 }

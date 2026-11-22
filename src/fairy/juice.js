@@ -21,9 +21,9 @@ export const TYPES = {
   mcup: { name: "けいりょうカップ", cap: 500, w: 62, h: 120, rate: 160, marks: range(10, 500, 10), snaps: range(100, 500, 100), shape: "mcup" },
   mjug: { name: "1Lの けいりょうカップ", cap: 1000, w: 80, h: 128, rate: 300, marks: range(50, 1000, 50), snaps: [], shape: "mcup" },
   // 3年生「小数」用：目もりは 0.1L ごと（数字つき。PourScene の Marks）
-  //   0.1L ごとの 線で 長めに 止まる（stick）。はなした ときは 0.1L に そろえる（grade3/Explore.jsx）
-  Ld:   { name: "1Lます",   cap: 1000, w: 84, h: 150, rate: 300, marks: range(100, 900, 100), snaps: range(100, 1000, 100), shape: "masu", dec: true, stick: 900 },
-  dld:  { name: "0.1Lます", cap: 100,  w: 44, h: 44,  rate: 90,  marks: [], snaps: [100], shape: "masu", dec: true },
+  //   0.1L ごとの 線で 少しだけ 止まる（stick 0.12秒）。0.4L を 1〜2秒で そそげる。はなした ときは 0.1L に そろえる（grade3/Explore.jsx）
+  Ld:   { name: "1Lます",   cap: 1000, w: 84, h: 150, rate: 380, marks: range(100, 900, 100), snaps: range(100, 1000, 100), shape: "masu", dec: true, stick: 120 },
+  dld:  { name: "0.1Lます", cap: 100,  w: 44, h: 44,  rate: 200, marks: [], snaps: [100], shape: "masu", dec: true, stick: 120 },
 };
 
 /* ---------- あらわし方 ---------- */

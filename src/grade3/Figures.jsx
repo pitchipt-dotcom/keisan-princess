@@ -111,6 +111,12 @@ export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, on
           <JarPic />
           <span className="g3-jar-count">のこり <b>{st.jar}</b>こ</span>
         </button>
+        {/* くばる・やりなおす は びんの よこ（たてに 場所を とらない） */}
+        <div className="g3-fig-acts g3-jar-acts">
+          {mode === "share" && <button className="ts-act ts-act-main" disabled={st.jar < plates || (done && !done.uneven)} onClick={dealRound}>くばる</button>}
+          {mode === "group" && <button className="ts-act ts-act-main" disabled={!!(done && !done.uneven) || st.jar <= 0} onClick={putGroup}>のせる</button>}
+          <button className="ts-act" onClick={reset}>やりなおす</button>
+        </div>
         {restLabel && (
           <div className="g3-rest">
             <div className="g3-rest-cookies">{Array.from({ length: st.jar }, (_, i) => <Cookie key={i} size={cs} />)}</div>
@@ -129,15 +135,26 @@ export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, on
             <span className="g3-plate-n">{n}</span>
           </button>
         ))}
-        {mode === "group" && st.on.length === 0 && <div className="g3-plate-empty">びんを タップして おさらに のせよう</div>}
+        {mode === "group" && st.on.length === 0 && <div className="g3-plate-empty">びんを タップしてね</div>}
       </div>
-      <div className="g3-fig-acts">
-        {mode === "share" && <button className="ts-act ts-act-main" disabled={st.jar < plates || (done && !done.uneven)} onClick={dealRound}>1こずつ くばる</button>}
-        {mode === "group" && <button className="ts-act ts-act-main" disabled={!!(done && !done.uneven) || st.jar <= 0} onClick={putGroup}>1こ のせる</button>}
-        <button className="ts-act" onClick={reset}>やりなおす</button>
-      </div>
-      {done && done.uneven && <div className="g3-fig-msg g3-fig-msg-ng">おさらの クッキーの 数、ぜんぶ 同じかな？「やりなおす」で もういちど くばってみよう</div>}
+      {done && done.uneven && <div className="g3-fig-msg g3-fig-msg-ng">数が ちがうよ。「やりなおす」で もういちど</div>}
     </div>
+  );
+}
+
+/* ================= 手じゅんの ばんごう（①→②→③） =================
+   ヒントの 図の 下に、見る じゅんばんを 1行ずつ。sw は 図の 色と そろえる 小さな 四角 */
+const MARKS = ["①", "②", "③", "④"];
+export function HintSteps({ items }) {
+  return (
+    <ol className="g3-hsteps">
+      {items.map((it, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && <li className="g3-hsteps-arrow" aria-hidden="true">↓</li>}
+          <li className="g3-hsteps-item"><span className="g3-hsteps-no">{MARKS[i]}</span>{(it.sw || it.color) && <span className={"g3-sw " + (it.sw || "")} style={it.color ? { background: it.color } : undefined} />}<span>{it.t}</span></li>
+        </React.Fragment>
+      ))}
+    </ol>
   );
 }
 
@@ -161,10 +178,9 @@ export function DecBlocks({ x, y, op }) {
   return (
     <div className="g3-hint-fig">
       <div className="g3-dec-cols">{colsEl}</div>
-      <div className="g3-fig-note">
-        1つの ますが <b>0.1L</b>。{fmtDec(x)}は 0.1が <b>{x}こ</b>、{fmtDec(y)}は 0.1が <b>{y}こ</b>。<br />
-        {op === "+" ? "あわせて 0.1が 何こ かな？ 10こで 1L だよ" : `${x}こから ${y}こ とると、0.1が 何こ のこる かな？`}
-      </div>
+      <HintSteps items={op === "+"
+        ? [{ sw: "g3-dec-a", t: <>{fmtDec(x)} は 0.1が <b>{x}こ</b></> }, { sw: "g3-dec-b", t: <>{fmtDec(y)} は 0.1が <b>{y}こ</b></> }, { t: <>あわせて 0.1が 何こ？</> }]
+        : [{ sw: "g3-dec-a", t: <>{fmtDec(x)} は 0.1が <b>{x}こ</b></> }, { sw: "g3-dec-gone", t: <><b>{y}こ</b> とる（✕）</> }, { t: <>のこりは 0.1が 何こ？</> }]} />
     </div>
   );
 }
@@ -232,13 +248,10 @@ export function FracHint({ q }) {
   const eaten = q.op === "-" ? range(q.a - q.b, q.a) : new Set();
   return (
     <div className="g3-hint-fig">
-      <FracShape d={q.d} painted={painted} extra={extra} eaten={eaten} size={150} />
-      <div className="g3-fig-note">
-        1つの きれが <Frac n={1} d={q.d} />。
-        {q.op === "+" ? <> <Frac n={1} d={q.d} />が {q.a}こと {q.b}こ。あわせて 何こ かな？</>
-          : q.one ? <> 1は <Frac n={q.d} d={q.d} />（{q.d}こ ぜんぶ）。{q.b}こ たべると、のこりは 何こ？</>
-            : <> <Frac n={1} d={q.d} />が {q.a}こ。{q.b}こ たべると、のこりは 何こ？</>}
-      </div>
+      <FracShape d={q.d} painted={painted} extra={extra} eaten={eaten} size={200} />
+      <HintSteps items={q.op === "+"
+        ? [{ t: <>1きれ ＝ <Frac n={1} d={q.d} /></> }, { t: <><span className="g3-sw" style={{ background: SHAPE_COLORS.cake.paint }} /> <b>{q.a}きれ</b> と <span className="g3-sw" style={{ background: SHAPE_COLORS.cake.extra }} /> <b>{q.b}きれ</b></> }, { t: <>ぜんぶで 何きれ？</> }]
+        : [{ t: <>1きれ ＝ <Frac n={1} d={q.d} />{q.one ? <>　1 ＝ <Frac n={q.d} d={q.d} /></> : null}</> }, { t: <><span className="g3-sw" style={{ background: SHAPE_COLORS.cake.paint }} /> <b>{q.a}きれ</b> から <b>{q.b}きれ</b> たべる</> }, { t: <>のこりは 何きれ？</> }]} />
     </div>
   );
 }
@@ -247,10 +260,8 @@ export function FracHint({ q }) {
 export function DivHint({ q, sfx }) {
   return (
     <div className="g3-hint-fig">
-      <div className="g3-fig-note">{q.a}この クッキーを {q.b}まいの おさらに 同じ数ずつ くばると、1さら 何こ？{q.r ? " あまりは？" : ""}</div>
-      <div className="g3-fig-note g3-fig-sub">わかったら くばりおわる まえでも こたえて いいよ</div>
       <CookieDeal total={q.a} plates={q.b} mode="share" sfx={sfx} small />
-      <div className="g3-fig-note g3-fig-sub">{q.r ? `${q.b}の だんの 九九で、${q.a}を こえない いちばん 大きい 答えを さがそう` : `${q.b}の だんの 九九：${q.b} × □ ＝ ${q.a}`}</div>
+      <HintSteps items={[{ t: <>{q.b}まいの おさらに 1こずつ くばる</> }, { t: <>1さらの 数を かぞえる</> }, ...(q.r ? [{ t: <>のこった 数が あまり</> }] : [])]} />
     </div>
   );
 }

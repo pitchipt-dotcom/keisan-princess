@@ -4,6 +4,7 @@
    - ながれは まいにち けいさんと おなじ：
        1かいめ まちがい → ヒントの 図を 出して もういちど（三択は えらんだ ものを うすく する）
        2かいめ まちがい → こたえを 見せて つぎへ（せめない）
+   - ヒントの 図は、こたえる らん（三択／数字キー）の 上に 出す（ヒントボタンで ひらく。1かいめ まちがいで じどうで ひらく）
    - ヒントを つかっても ポイントは かわらない（onDone の hint は おわりの ことばに だけ つかう）
    onFirst(right)：1かいめの こたえが でた とき（ノートの きろく 用）
    onDone({ right, hint })：「つぎへ」を おした とき
@@ -51,15 +52,15 @@ function Hint({ q, sfx }) {
   if (q.unit === "dec") return <DecBlocks x={q.x} y={q.y} op={q.op} />;
   if (q.unit === "frac") return <FracHint q={q} />;
   if (q.unit === "g2") return <ColumnHint q={q} />;
-  if (q.kind === "net") return <div className="g3-hint-fig"><div className="g3-fig-note">面は 6まい あるかな？ おりまげた とき、かさなる 面は ないかな？<br />ぜんぶ 同じ 正方形なら さいころの 形、長方形が まざると はこの 形だよ</div></div>;
-  return <div className="g3-hint-fig"><JuiceLevel dl={q.dl} numbered /><div className="g3-fig-note">目もり 1つが 1dL。下から かぞえてみよう（10dLで 1L）</div></div>;
+  if (q.kind === "net") return <div className="g3-hint-fig"><NetView layout={q.layout} /><div className="g3-fig-note">おりまげると、かさなる 面は ないかな？ ぜんぶ 正方形なら さいころの 形。</div></div>;
+  return <div className="g3-hint-fig"><JuiceLevel dl={q.dl} numbered /><div className="g3-fig-note">目もり 1つが 1dL。下から かぞえよう。</div></div>;
 }
-const HINT_LABEL = { div: "？ クッキーで くばってみる（ヒント）", dec: "？ 0.1の ブロックで 見る（ヒント）", frac: "？ ケーキの 図で 見る（ヒント）", g2: "？ ひっさんで みる（ヒント）", fairy: "？ ヒントを 見る" };
+const HINT_LABEL = { div: "？ ヒント（クッキー）", dec: "？ ヒント（ブロック）", frac: "？ ヒント（ケーキ）", g2: "？ ヒント（ひっさん）", fairy: "？ ヒント" };
 
 export function G3Question({ q, choices, inputMode, sfx, character, isLast, notebook = false, onFirst, onDone }) {
   const mode = q.unit === "g2" ? "input" : q.unit === "fairy" ? "choice" : inputMode ? "input" : "choice";
   const [phase, setPhase] = useState("ask");          // ask | right | wrong1 | reveal
-  const [hint, setHint] = useState(false);
+  const [hint, setHint] = useState(false);            // ヒントの 図を 出して いるか
   const [usedHint, setUsedHint] = useState(false);
   const [firstRight, setFirstRight] = useState(null);
   const [tried, setTried] = useState([]);            // 三択で えらんで ちがった もの
@@ -100,16 +101,22 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
       if (s.length >= (q.unit === "dec" ? 4 : 3)) return s;
       return s === "0" ? k : s + k;
     };
-    if (q.unit === "div") setVal((v) => ({ ...v, [field]: edit(v[field]) }));
-    else setVal((v) => edit(v));
+    if (q.unit === "div") {
+      setVal((v) => ({ ...v, [field]: edit(v[field]) }));
+      // しょう（1〜9）は 1けた なので、数字を 入れたら じどうで あまりの らんへ（「けす」では うごかない）
+      if (field === "q" && /^[0-9]$/.test(k)) setField("r");
+    } else setVal((v) => edit(v));
   };
 
   const finished = phase === "right" || phase === "reveal";
+  // 入力中の らん：太い 枠・色・点滅する カーソル。ほかの らんは うすい 枠（らんが 2つ ある ときに どこに 入るか わかるように）
   const blank = (s, on, onClick, label) => (
-    <button className={"g3-box" + (on ? " g3-box-on" : "") + (s ? "" : " g3-box-empty")} onClick={onClick} aria-label={label} disabled={finished}>{s || "？"}</button>
+    <button className={"g3-box" + (on ? " g3-box-on" : " g3-box-off") + (s ? "" : " g3-box-empty")} onClick={onClick} aria-label={label} aria-pressed={on} disabled={finished}>
+      {s || (on ? "" : "？")}{on && !finished && <span className="g3-caret" aria-hidden="true" />}
+    </button>
   );
   let rhs;
-  if (finished) rhs = <span className="dm-ans g3-ans-done"><AnsView q={q} s={q.ans} /></span>;
+  if (finished) rhs = <span className="dm-ans g3-ans-done"><AnsView q={q} s={q.ans} />{q.unit === "frac" && q.n === q.d ? <small className="g3-eq-one">（<Frac n={q.d} d={q.d} />）</small> : null}</span>;
   else if (mode === "choice") rhs = <span className="dm-ans dm-ans-empty">？</span>;
   else if (q.unit === "div") rhs = <>{blank(val.q, field === "q", () => setField("q"), "こたえの らん")} <small className="g3-amari">あまり</small> {blank(val.r, field === "r", () => setField("r"), "あまりの らん")}</>;
   else if (q.unit === "frac") rhs = <span className="g3-frac g3-frac-in">{blank(val, true, undefined, "分子の らん")}<span className="g3-frac-bar" /><span>{q.d}</span></span>;
@@ -130,17 +137,16 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
         ) : (
           <div className={"dm-q g3-q" + (q.unit === "frac" ? " g3-q-frac" : "") + (q.unit === "div" && mode === "input" && !finished ? " g3-q-div" : "")}><Formula q={q} /> ＝ {rhs}</div>
         )}
-        {mode === "input" && q.unit === "div" && !finished && <div className="g3-small-note">あまりが ない ときは「あまり」は からっぽで いいよ</div>}
-        {finished && q.unit === "frac" && q.n === q.d && <div className="g3-small-note"><Frac n={q.d} d={q.d} /> は 1 と おなじ だよ</div>}
-
         {phase === "right" && <div className="dm-msg dm-msg-ok">せいかい！✨</div>}
-        {phase === "wrong1" && <div className="dm-msg dm-msg-ng">おしい！ ヒントを 見て もういちど やってみよう</div>}
-        {phase === "reveal" && <div className="dm-msg dm-msg-ng">こたえは <b><AnsView q={q} s={q.ans} /></b> だよ。{notebook && q.unit !== "fairy" ? "ノートに いれておくね。" : ""}<br />図で たしかめて、また こんど ちょうせん しよう！</div>}
+        {phase === "wrong1" && <div className="dm-msg dm-msg-ng">おしい！ 図を 見て みよう</div>}
+        {phase === "reveal" && <div className="dm-msg dm-msg-ng">こたえは <b><AnsView q={q} s={q.ans} /></b>。{notebook && q.unit !== "fairy" ? "ノートに 入れたよ。" : "また ちょうせん しよう！"}</div>}
 
-        {(phase === "ask" || phase === "wrong1") && !hint && <button className="kk-hint-btn" onClick={showHint}>{HINT_LABEL[q.unit]}</button>}
-        {hint && <Hint q={q} sfx={sfx} />}
+        {(phase === "ask" || phase === "wrong1") && !hint && <button className="kk-hint-btn g3-hint-btn" onClick={showHint}>{HINT_LABEL[q.unit]}</button>}
+        {phase === "reveal" && !hint && <button className="kk-hint-btn g3-hint-btn" onClick={() => { sfx.tap(); setHint(true); }}>図で たしかめる</button>}
       </div>
 
+      {/* ヒントの 図は こたえる らんの 上 */}
+      {hint && <Hint q={q} sfx={sfx} />}
       {finished
         ? <button className="kk-big-btn" onClick={() => { sfx.tap(); onDone({ right: !!firstRight, hint: usedHint }); }}>{isLast ? "けっかを 見る →" : "つぎへ →"}</button>
         : mode === "choice"
