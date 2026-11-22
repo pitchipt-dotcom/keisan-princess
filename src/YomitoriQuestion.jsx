@@ -47,7 +47,9 @@ function Slots({ slots, inputs, active, onFocus, reveal }) {
   );
 }
 
-export function YomitoriQuestion({ q, stage = "A", sfx, Keypad, isLast, onFinish }) {
+/* autoNext：らんが 2つ いじょう ある ときに、数字を 1つ 入れたら じどうで つぎの らんへ（3年生の 毎日計算だけ。こたえが どれも 1けた）
+   2年生は つかわない（ふだんは false で、うごきは まえと おなじ） */
+export function YomitoriQuestion({ q, stage = "A", sfx, Keypad, isLast, onFinish, autoNext = false }) {
   const [usedHint, setUsedHint] = useState(false);
   const r = useReadMarks({ q, stage, sfx, onMissTap: () => setUsedHint(true) });
   const { selfMode, found, tapMsg, oneShot, praise, markMsg, markPending, selfMarked } = r;
@@ -88,6 +90,7 @@ export function YomitoriQuestion({ q, stage = "A", sfx, Keypad, isLast, onFinish
       if (k === "けす") return v.slice(0, -1);
       return v.length >= 3 ? v : (v === "0" ? k : v + k);
     }));
+    if (autoNext && k !== "けす" && active < st.slots.length - 1) setActive(active + 1);
   };
 
   const nextStep = () => {

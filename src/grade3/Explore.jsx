@@ -7,14 +7,13 @@
    - せいかい したら、わかった ことを 1文で 声かけして、じどうで つぎの「やってみよう」へ
    - まちがえても 止めない。さいごが おわったら onFinish（＝もんだいへ）
    ===================================================================== */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import "../fairy/fairy.css";
 import { PourScene } from "../fairy/PourScene.jsx";
 import { isExact, TYPES } from "../fairy/juice.js";
 import { CookieDeal, FracShape, Frac } from "./Figures.jsx";
 import { fmtDec } from "./g3.js";
 
-const NEXT_MS = 2600;        // せいかいの 声かけを 読む 時間（それから じどうで つぎへ）
 
 /* 単元の 名前と すすみの 点（見出しと 1行に まとめて、たての 場所を あける） */
 function Steps({ n, at, label }) {
@@ -25,25 +24,27 @@ function Steps({ n, at, label }) {
     </div>
   );
 }
-/* 1画面：問題文 → 操作・こたえる（children）→ せいかいの 声かけ（ok） */
-function Task({ step, steps, line, ok, label, children }) {
+/* 1画面：問題文 → せいかいの 声かけと「つぎへ →」（せいかい したら）→ 操作・こたえる（children） */
+function Task({ step, steps, line, ok, onNext, nextLabel = "つぎへ →", label, children }) {
   return (
     <div className="g3-explore">
       <Steps n={steps} at={step} label={label} />
       <div className="g3-line">{line}</div>
-      {ok && <div className="g3-ok" role="status"><b>せいかい！</b>{ok}</div>}
+      {ok && (
+        <div className="g3-ok" role="status">
+          <b>せいかい！</b>{ok}
+          <button className="kk-big-btn g3-next-btn" onClick={onNext}>{nextLabel}</button>
+        </div>
+      )}
       {children}
     </div>
   );
 }
-/* せいかい → 声かけを 見せて じどうで つぎへ */
-function useAutoNext(onNext) {
+/* せいかい → 声かけと「つぎへ →」を 出す。じどうでは すすまない（読んで いる とちゅうで かわらない ように） */
+function useNext(sfx, onNext, last) {
   const [ok, setOk] = useState(null);
-  const timer = useRef(0);
-  const cb = useRef(onNext); cb.current = onNext;
-  useEffect(() => () => clearTimeout(timer.current), []);
-  const succeed = (msg) => { setOk(msg); clearTimeout(timer.current); timer.current = setTimeout(() => { setOk(null); cb.current(); }, NEXT_MS); };
-  return [ok, succeed];
+  const next = () => { sfx.tap(); setOk(null); onNext(); };
+  return [ok, (msg) => setOk(msg), next, last ? "もんだいに すすむ →" : "つぎへ →"];
 }
 
 /* 数字で こたえる らん（すうじキーつき） */
@@ -57,6 +58,9 @@ function NumAnswer({ fields, sfx, onSubmit, disabled }) {
       const nx = d === "けす" ? cur.slice(0, -1) : cur.length >= 2 ? cur : cur === "0" ? d : cur + d;
       return { ...v, [act]: nx };
     });
+    // らんが 2つ（1さら □こ、あまり □こ）の ときは、こたえが 1けた なので 数字を 入れたら じどうで つぎの らんへ
+    const i = fields.findIndex((f) => f.k === act);
+    if (d !== "けす" && fields.length > 1 && i < fields.length - 1) setAct(fields[i + 1].k);
   };
   const empty = fields.some((f) => val[f.k] === "");
   return (
@@ -64,7 +68,10 @@ function NumAnswer({ fields, sfx, onSubmit, disabled }) {
       <div className="g3-numans-row">
         {fields.map((f) => (
           <span key={f.k} className="g3-numans-field">{f.pre}
-            <button className={"g3-box" + (act === f.k ? " g3-box-on" : "") + (val[f.k] ? "" : " g3-box-empty")} disabled={disabled} onClick={() => { sfx.tap(); setAct(f.k); }} aria-label={(f.pre || "") + "の らん"}>{val[f.k] || "？"}</button>
+            <button className={"g3-box" + (act === f.k && !disabled ? " g3-box-on" : " g3-box-off") + (val[f.k] ? "" : " g3-box-empty")} disabled={disabled} onClick={() => { sfx.tap(); setAct(f.k); }}
+              aria-label={(f.pre || "") + "の らん"} aria-pressed={act === f.k}>
+              {val[f.k] || (act === f.k && !disabled ? "" : "？")}{act === f.k && !disabled && <span className="g3-caret" aria-hidden="true" />}
+            </button>
             {f.post}</span>
         ))}
       </div>
@@ -98,14 +105,14 @@ export function DivExplore({ sfx, onFinish, label }) {
   const [step, setStep] = useState(0);
   const [msg, setMsg] = useState(null);
   const t = DIV_TASKS[step], last = step === DIV_TASKS.length - 1, n = DIV_TASKS.length;
-  const [ok, succeed] = useAutoNext(() => { if (last) onFinish(); else { setStep((s) => s + 1); setMsg(null); } });
+  const [ok, succeed, next, nextLabel] = useNext(sfx, () => { if (last) onFinish(); else { setStep((s) => s + 1); setMsg(null); } }, last);
   const want = divAnswer(t);
   const submit = (v, clear) => {
     if (t.fields.every((f) => v[f.k] === want[f.k])) { sfx.correct(); setMsg(null); succeed(divOkText(t, want)); return; }
     sfx.wrong(); clear(); setMsg("おしい！ クッキーを くばって たしかめよう");
   };
   return (
-    <Task label={label} step={step} steps={n} line={t.line} ok={ok}>
+    <Task label={label} onNext={next} nextLabel={nextLabel} step={step} steps={n} line={t.line} ok={ok}>
       <CookieDeal key={"c" + step} total={t.total} plates={t.plates} per={t.per} mode={t.mode} sfx={sfx} frozen={!!ok} />
       {msg && !ok && <div className="g3-fig-msg g3-fig-msg-ng">{msg}</div>}
       <NumAnswer key={step} fields={t.fields} sfx={sfx} onSubmit={submit} disabled={!!ok} />
@@ -136,11 +143,11 @@ export function DecExplore({ sfx, onFinish, label }) {
   const [poured, setPoured] = useState(false);         // そそぎ おわった（3つから えらぶ ばんに なる）
   const [over, setOver] = useState(false);
   const [tried, setTried] = useState([]);
-  const [ok, succeed] = useAutoNext(() => {
+  const [ok, succeed, next, nextLabel] = useNext(sfx, () => {
     if (last) { onFinish(); return; }
     const k = step + 1;
     setStep(k); setVs(DEC_TASKS[k].vessels()); setPoured(false); setOver(false); setTried([]); setTouched(false);
-  });
+  }, last);
   const reset = () => { setVs(t.vessels()); setOver(false); setPoured(false); setTried([]); };
   const onPourEnd = (before, after0, from, to) => {
     // はなしたら 0.1L（100mL）に そろえる：そそいだ がわ・うけた がわ の 2つで ぜんたいの りょうは かえない
@@ -160,7 +167,7 @@ export function DecExplore({ sfx, onFinish, label }) {
     else { sfx.correct(); succeed(t.okText); }
   };
   return (
-    <Task label={label} step={step} steps={n} line={t.line} ok={ok}>
+    <Task label={label} onNext={next} nextLabel={nextLabel} step={step} steps={n} line={t.line} ok={ok}>
       <div className="g3-pour">
         <PourScene vessels={vs} pours={t.pours} interactive={!poured && !ok} onChange={setVs} onPourEnd={onPourEnd} onGrab={() => setTouched(true)} demo={touched ? null : t.demo} />
         <div className="g3-pour-amounts">{vs.map((v) => <span key={v.id}>{v.label ? v.label + "：" : ""}<b>{fmtL(v.amount)}</b></span>)}</div>
@@ -198,7 +205,8 @@ export function FracExplore({ sfx, onFinish, label }) {
   const [part2, setPart2] = useState(false);           // たしざん：「あと 1まい」
   const [picked, setPicked] = useState(null);
   const t = FRAC_TASKS[step], last = step === FRAC_TASKS.length - 1, n = FRAC_TASKS.length;
-  const [ok, succeed] = useAutoNext(() => { if (last) { onFinish(); return; } setStep((s) => s + 1); setPainted(new Set()); setPart2(false); setPicked(null); });
+  const [ok, succeed, next, nextLabel] = useNext(sfx, () => { if (last) { onFinish(); return; } setStep((s) => s + 1); setPainted(new Set()); setPart2(false); setPicked(null); }, last);
+  const [mid, setMid] = useState(false);               // たしざん：2/5 が できた（「つぎへ →」で「あと 1まい」へ）
 
   if (t.compare) {
     const [[n0, d0], [n1, d1]] = t.compare;
@@ -210,7 +218,7 @@ export function FracExplore({ sfx, onFinish, label }) {
       succeed(t.ans === "same" ? <><Frac n={n0} d={d0} /> と <Frac n={n1} d={d1} /> は おなじ 大きさ だね。</> : <>分ける 数が 多いほど、1つ分は 小さく なるね。</>);
     };
     return (
-      <Task label={label} step={step} steps={n} ok={ok} line={<><Frac n={n0} d={d0} /> と <Frac n={n1} d={d1} />、大きいのは どっち？</>}>
+      <Task label={label} onNext={next} nextLabel={nextLabel} step={step} steps={n} ok={ok} line={<><Frac n={n0} d={d0} /> と <Frac n={n1} d={d1} />、大きいのは どっち？</>}>
         <div className="g3-compare">
           {t.compare.map(([nn, d], i) => (
             <button key={i} className={"g3-compare-btn" + (picked === i ? (i === t.ans ? " g3-ok" : " g3-ng") : "")} onClick={() => pick(i)}>
@@ -227,8 +235,7 @@ export function FracExplore({ sfx, onFinish, label }) {
 
   const need = part2 ? t.n + t.add : t.n;
   const tapSlice = (i) => {
-    if (ok) return;
-    if (t.add && !part2 && painted.size === t.n) return;    // 「あと 1まい」に かわるのを まつ
+    if (ok || mid) return;
     if (part2 && i < t.n) return;                          // さいしょに ぬった ところは そのまま
     sfx.tap();
     const p = new Set(painted);
@@ -236,15 +243,17 @@ export function FracExplore({ sfx, onFinish, label }) {
     setPainted(p);
     if (p.size !== need) return;
     sfx.correct();
-    if (t.add && !part2) { setTimeout(() => setPart2(true), 900); return; }   // 2/5 できた → つづけて「あと 1まい」
+    if (t.add && !part2) { setMid(true); return; }   // 2/5 できた →「つぎへ →」で「あと 1まい」
     succeed(t.add ? <><Frac n={t.n} d={t.d} /> ＋ <Frac n={t.add} d={t.d} /> ＝ <Frac n={need} d={t.d} />。分母は かわらないよ。</>
       : <>{t.d}つに 分けた うちの {t.n}つぶん だね。</>);
   };
   const first = part2 ? new Set([...painted].filter((i) => i < t.n)) : painted;
   const extra = part2 ? new Set([...painted].filter((i) => i >= t.n)) : new Set();
   const line = part2 ? <>あと <Frac n={t.add} d={t.d} /> ぬると、どう なる？</> : <><Frac n={t.n} d={t.d} /> に なるように ぬろう</>;
+  const midOk = mid && !part2 ? <>{t.d}つに 分けた うちの {t.n}つぶん だね。</> : null;
   return (
-    <Task label={label} step={step} steps={n} line={line} ok={ok}>
+    <Task label={label} step={step} steps={n} line={line} ok={ok || midOk}
+      onNext={midOk ? () => { sfx.tap(); setMid(false); setPart2(true); } : next} nextLabel={midOk ? "つぎへ →" : nextLabel}>
       <div className="g3-frac-stage">
         <FracShape d={t.d} kind={t.kind} painted={first} extra={extra} onTap={tapSlice} size={230} />
         <div className="g3-count">ぬった 数 <b>{painted.size}</b> / {t.d}</div>

@@ -354,3 +354,19 @@
 .g3-scope.dm-wrap{padding-bottom:4px;}
 .g3-scope .g3-jar-row{row-gap:6px;}
 .g3-scope .g3-numans{padding:6px 10px; gap:6px;}
+
+/* =====================================================================
+   答えが 2つ ある 入力（□こ あまり□こ など）：入力中の らんだけ はっきり
+   入力中 … 太い ピンクの 枠・うすい ピンクの 中・点滅する カーソル ／ ほか … うすい 枠
+   ===================================================================== */
+.g3-box-off{border:2px solid color-mix(in srgb, var(--lav) 55%, transparent); background:#fff; color:var(--night);}
+.g3-box-off.g3-box-empty{color:color-mix(in srgb, var(--lav) 70%, transparent);}
+.g3-box-on{border:4px solid var(--rose-deep); background:color-mix(in srgb, var(--rose) 14%, #fff); box-shadow:0 0 0 4px color-mix(in srgb, var(--rose) 30%, transparent); color:var(--rose-deep);}
+.g3-caret{display:inline-block; width:3px; height:1em; margin-left:2px; background:var(--rose-deep); border-radius:2px; vertical-align:middle; animation:g3-blink 1s steps(1) infinite;}
+@keyframes g3-blink{50%{opacity:0;}}
+.g3-scope .yt-slot-box{border:2px solid color-mix(in srgb, var(--lav) 55%, transparent); background:#fff;}
+.g3-scope .yt-slot-box.yt-slot-active{border:4px solid var(--rose-deep); background:color-mix(in srgb, var(--rose) 14%, #fff); box-shadow:0 0 0 4px color-mix(in srgb, var(--rose) 30%, transparent);}
+@media (prefers-reduced-motion: reduce){.g3-caret{animation:none;}}
+
+/* せいかいの あとの「つぎへ →」（じどうでは すすまない） */
+.g3-ok .g3-next-btn{margin:6px 0 2px; font-size:22px; min-height:52px; padding:10px 32px;}

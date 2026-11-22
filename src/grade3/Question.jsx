@@ -101,13 +101,19 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
       if (s.length >= (q.unit === "dec" ? 4 : 3)) return s;
       return s === "0" ? k : s + k;
     };
-    if (q.unit === "div") setVal((v) => ({ ...v, [field]: edit(v[field]) }));
-    else setVal((v) => edit(v));
+    if (q.unit === "div") {
+      setVal((v) => ({ ...v, [field]: edit(v[field]) }));
+      // しょう（1〜9）は 1けた なので、数字を 入れたら じどうで あまりの らんへ（「けす」では うごかない）
+      if (field === "q" && /^[0-9]$/.test(k)) setField("r");
+    } else setVal((v) => edit(v));
   };
 
   const finished = phase === "right" || phase === "reveal";
+  // 入力中の らん：太い 枠・色・点滅する カーソル。ほかの らんは うすい 枠（らんが 2つ ある ときに どこに 入るか わかるように）
   const blank = (s, on, onClick, label) => (
-    <button className={"g3-box" + (on ? " g3-box-on" : "") + (s ? "" : " g3-box-empty")} onClick={onClick} aria-label={label} disabled={finished}>{s || "？"}</button>
+    <button className={"g3-box" + (on ? " g3-box-on" : " g3-box-off") + (s ? "" : " g3-box-empty")} onClick={onClick} aria-label={label} aria-pressed={on} disabled={finished}>
+      {s || (on ? "" : "？")}{on && !finished && <span className="g3-caret" aria-hidden="true" />}
+    </button>
   );
   let rhs;
   if (finished) rhs = <span className="dm-ans g3-ans-done"><AnsView q={q} s={q.ans} />{q.unit === "frac" && q.n === q.d ? <small className="g3-eq-one">（<Frac n={q.d} d={q.d} />）</small> : null}</span>;

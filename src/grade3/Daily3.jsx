@@ -191,7 +191,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
     return (
       <div className="dm-wrap g3-scope">
         {top}
-        <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
+        <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length} autoNext
           onFinish={(r) => done1({ ...r, wp: true }, "yomi")} />
         <G3Footer onBack={onExit} />
       </div>
