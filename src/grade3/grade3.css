@@ -168,7 +168,7 @@
 .g3-scope .dm-keys{gap:12px;}
 .g3-scope .dm-key{min-height:56px; padding:8px 0;}
 .g3-scope .dm-key-ok, .g3-scope .dm-key-del{white-space:nowrap; letter-spacing:0;}
-@media (max-width:360px){ .g3-scope .dm-key-ok{font-size:16px;} }
+@media (max-width:360px){ .g3-scope .dm-key-ok{font-size:17px;} }
 .g3-scope .kk-hint-btn{min-height:48px; padding:10px 20px; font-size:14px;}
 .g3-scope .yt-slot-box{min-height:52px; min-width:56px;}
 .g3-scope .kk-big-btn{min-height:56px;}
@@ -193,3 +193,115 @@
   .g3-scope .dm-mini-chara > *{transform:scale(.7); transform-origin:bottom center;}
   .g3-scope .dm-chara > *{transform:scale(.8); transform-origin:bottom center;}
 }
+
+/* =====================================================================
+   字の 大きさ（テスターの 声：スマホだと 字が 小さい。小3でも 読み飛ばす）
+   スマホ縦を 基準に：説明・問題文は 18px いじょう、式と 数字は 28px いじょう。小さな 注意書きは なくすか 大きく
+   3年生の 画面（.g3-scope）だけ。1・2年生と 共通の 部品（よみとり・ドラゴンの ミニ表示）も ここで だけ 大きく
+   ===================================================================== */
+.g3-scope .dm-intro-line{font-size:18px; line-height:1.7;}
+.g3-scope .dm-intro-done{font-size:18px; line-height:1.6;}
+.g3-scope .dm-msg{font-size:20px; line-height:1.6;}
+.g3-scope .dm-msg-ok{font-size:26px;}
+.g3-scope .dm-comment{font-size:18px; line-height:1.7;}
+.g3-scope .dm-stars{font-size:22px;}
+.g3-scope .dm-count, .g3-scope .dm-timer{font-size:18px;}
+.g3-scope .dm-score b{font-size:48px;}
+.g3-scope .g3-unit-tag{font-size:16px;}
+.g3-scope .g3-badges small{font-size:17px; font-weight:900;}
+.g3-scope .g3-badges b{font-size:20px;}
+.g3-scope .dr-mini-text{font-size:16px;}
+.g3-scope .g3-unlock{font-size:18px;}
+.g3-scope .g3-grade-chip{font-size:15px;}
+
+/* もんだいの 式（主役）：数字は 28px いじょう。分数は 分子・分母 それぞれ 30px */
+.g3-scope .g3-q{font-size:38px;}
+.g3-scope .g3-q .g3-frac{font-size:30px; margin:0 4px;}
+.g3-scope .g3-q-div{font-size:32px;}
+.g3-scope .g3-q-div .g3-box{font-size:28px;}
+.g3-scope .g3-amari, .g3-scope .g3-ans-done small{font-size:18px;}
+.g3-scope .g3-frac-in{font-size:30px;}
+.g3-scope .g3-frac-in .g3-box{font-size:28px;}
+.g3-scope .g3-eq-one{font-size:20px; margin-left:4px;}
+.g3-scope .g3-choice{font-size:30px;}
+.g3-scope .g3-choice .g3-frac{font-size:28px;}
+.g3-scope .g3-choice small{font-size:16px;}
+.g3-scope .g3-choices-wide .g3-choice{font-size:20px;}
+.g3-scope .g3-q-text{font-size:20px; line-height:1.6;}
+.g3-scope .g3-fairy-tag{font-size:15px;}
+.g3-scope .kk-hint-btn{font-size:17px;}
+
+/* ヒントの 図と ①②③ */
+.g3-scope .g3-hint-fig{gap:10px; padding:12px;}
+.g3-scope .g3-fig-note{font-size:18px; line-height:1.6;}
+.g3-scope .g3-fig-msg{font-size:18px;}
+.g3-hsteps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; max-width:340px;}
+.g3-hsteps-item{display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:var(--night); line-height:1.5;}
+.g3-hsteps-item b{color:var(--rose-deep); font-family:'Mochiy Pop One'; font-weight:400; font-size:20px;}
+.g3-hsteps-item .g3-frac{font-size:18px; font-family:'Mochiy Pop One';}
+.g3-hsteps-no{flex:0 0 auto; font-size:22px; color:var(--rose-deep);}
+.g3-hsteps-arrow{font-size:18px; color:var(--plum); padding-left:6px; line-height:1;}
+.g3-sw{flex:0 0 auto; display:inline-block; width:20px; height:16px; border-radius:4px; border:1px solid rgba(0,0,0,.15); position:relative;}
+.g3-sw.g3-dec-gone::after{font-size:11px; line-height:14px;}
+
+/* クッキー・ジュース・ケーキ の 図の 字 */
+.g3-scope .g3-jar-count{font-size:18px;}
+.g3-scope .g3-jar-count b{font-size:26px;}
+.g3-scope .g3-plate-n{font-size:15px; min-width:24px;}
+.g3-scope .g3-rest{font-size:16px;}
+.g3-scope .g3-plate-empty{font-size:18px;}
+.g3-scope .g3-pour-amounts{font-size:18px; gap:6px 16px;}
+.g3-scope .g3-dec-col small{font-size:14px;}
+.g3-scope .g3-wall .g3-frac{font-size:18px;}
+.g3-count{font-family:'Zen Maru Gothic'; font-weight:900; font-size:20px; color:var(--night);}
+.g3-count b{font-family:'Mochiy Pop One'; font-weight:400; font-size:28px; color:var(--rose-deep);}
+
+/* 図で うごかして わかる：① よむ ／ ②③ 1行の 指示 ／ ④ わかった こと */
+.g3-read{position:relative; width:100%; background:#fff; border-radius:22px; padding:22px 18px 24px; box-shadow:0 5px 0 rgba(var(--lav-rgb),.45);
+  display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; margin:8px 0 18px;}
+.g3-read-title{font-family:'Mochiy Pop One'; font-weight:400; font-size:24px; color:var(--rose-deep);}
+.g3-read-text{margin:0; font-family:'Zen Maru Gothic'; font-weight:900; font-size:21px; line-height:1.7; color:var(--night);}
+.g3-read-text b{color:var(--rose-deep);}
+.g3-read-text .g3-frac{font-size:22px; font-family:'Mochiy Pop One';}
+.g3-page{align-self:flex-end; font-family:'Mochiy Pop One'; font-size:15px; color:#fff; background:var(--plum); border-radius:999px; padding:2px 12px;}
+.g3-read .g3-page{position:absolute; right:12px; top:-12px;}
+.g3-line{width:100%; font-family:'Zen Maru Gothic'; font-weight:900; font-size:20px; line-height:1.5; color:var(--night); background:#fff; border-radius:18px; padding:10px 14px;
+  box-shadow:0 4px 0 rgba(var(--lav-rgb),.45); display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap;}
+.g3-line .g3-frac{font-size:22px; font-family:'Mochiy Pop One';}
+.g3-scope .g3-result{gap:8px; padding:16px 14px;}
+.g3-scope .g3-eq{font-size:32px;}
+.g3-scope .g3-eq .g3-frac{font-size:30px;}
+.g3-result-text{margin:0; font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; line-height:1.7; color:var(--night); text-align:center;}
+.g3-scope .g3-numans-row{font-size:20px;}
+.g3-scope .g3-numans .g3-box{font-size:28px;}
+.g3-scope .g3-numans-keys{max-width:none; grid-template-columns:repeat(3,1fr);}
+.g3-meaning-tags{display:flex; flex-direction:column; justify-content:space-around; gap:18px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:var(--plum);}
+.g3-scope .g3-meaning .g3-frac-big{font-size:40px;}
+.g3-scope .g3-same-btn{font-size:18px;}
+
+/* よみとりチェック（2年生と 共通の 画面）：3年生の 中で だけ 大きく */
+.g3-scope .yt-tag{font-size:15px;}
+.g3-scope .yt-seg{font-size:20px;}
+.g3-scope .yt-guide{font-size:17px;}
+.g3-scope .yt-small, .g3-scope .yt-hint, .g3-scope .yt-mark-msg, .g3-scope .yt-praise{font-size:17px;}
+.g3-scope .yt-done{font-size:16px;}
+.g3-scope .yt-step{font-size:18px;}
+.g3-scope .yt-unit{font-size:20px;}
+.g3-scope .yt-guide-self{font-size:16px;}
+
+/* のこりの 小さな 字 */
+.g3-scope .dr-mini-text{font-size:18px;}
+.g3-scope .dr-mini-text small{display:none;}          /* れんぞく日数は 下の バッジと おなじなので 出さない */
+.g3-scope .dm-key{font-size:30px;}
+.g3-scope .dm-key-ok, .g3-scope .dm-key-del{font-size:18px;}
+.g3-sub-btn, .g3-back{font-size:18px;}
+.g3-sub-btn-quiet{font-size:16px;}
+.g3-scope .g3-unit-tag{font-size:17px;}
+
+/* 式は 1行に（小さい スマホでは 少し だけ 小さく。それでも 28px いじょう） */
+.g3-scope .g3-q{font-size:clamp(30px, 10vw, 38px); flex-wrap:nowrap; white-space:nowrap;}
+.g3-scope .g3-q-div{font-size:clamp(28px, 8.6vw, 32px);}
+.g3-scope .g3-q-frac{flex-wrap:nowrap;}
+.g3-scope .yt-slots{flex-wrap:wrap; justify-content:center; gap:6px 10px;}
+.g3-scope .dr-gains-title{font-size:20px;}
+.g3-scope .dr-gain{font-size:17px;}

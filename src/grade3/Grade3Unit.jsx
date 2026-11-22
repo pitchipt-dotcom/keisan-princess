@@ -63,13 +63,12 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
         <div className="dm-chara">{character("idle")}</div>
         {head}
         <div className="dm-card">
-          <div className="dm-intro-line">もんだい <b>{ROUND}もん</b>。{u.input ? <>こたえは <b>じぶんで 入力</b> しよう</> : <>こたえは <b>3つから えらぼう</b></>}</div>
-          {!u.input && <div className="dm-intro-line g3-intro-sub">10もんで 8もん いじょう できるのが {INPUT_AFTER}かい つづくと、じぶんで 入力に ステップアップ！{u.good > 0 && <>（あと {INPUT_AFTER - u.good}かい）</>}</div>}
-          <div className="dm-intro-line g3-intro-sub">わからない ときは ヒントで 図が 見られるよ</div>
+          <div className="dm-intro-line">もんだい <b>{ROUND}もん</b>。{u.input ? <>こたえは <b>じぶんで 入力</b>。</> : <>こたえは <b>3つから えらぶ</b>よ。</>}</div>
+          {!u.input && u.good > 0 && <div className="dm-intro-line">あと <b>{INPUT_AFTER - u.good}かい</b>で 入力に ステップアップ！</div>}
         </div>
         <button className="kk-big-btn" onClick={() => { sfx.tap(); start(); }}>もんだい ♪</button>
         <button className="g3-sub-btn" onClick={() => { sfx.tap(); setStage("explore"); }}>図で うごかして たしかめる</button>
-        {u.input && <button className="g3-sub-btn g3-sub-btn-quiet" onClick={() => { sfx.tap(); onSave(setUnitInput(g, unit, false)); }}>3つから えらぶ もんだいに もどす</button>}
+        {u.input && <button className="g3-sub-btn g3-sub-btn-quiet" onClick={() => { sfx.tap(); onSave(setUnitInput(g, unit, false)); }}>3つから えらぶ に もどす</button>}
         <G3Footer onBack={onExit} />
       </div>
     );
@@ -85,12 +84,12 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
           <div className="dm-score"><b>{s.correct}</b> / {ROUND} もん</div>
           <div className="dm-comment">
             {s.hints > 0
-              ? "ヒントを つかって さいごまで できたね。つぎは ヒントなしで やってみよう！"
-              : perfect ? "ヒントなしで ぜんぶ じぶんの ちからで できたね！すごい！"
-                : "ヒントを つかわずに さいごまで がんばったね！"}
+              ? "さいごまで できたね。つぎは ヒントなしで やってみよう！"
+              : perfect ? "ヒントなしで ぜんぶ できたね！すごい！"
+                : "ヒントなしで さいごまで がんばったね！"}
           </div>
-          {s.unlock && <div className="g3-unlock">🎉 ステップアップ！ つぎから こたえを <b>じぶんで 入力</b> してみよう</div>}
-          {!s.input && !s.unlock && s.toUnlock > 0 && s.correct >= 8 && <div className="dm-intro-line g3-intro-sub">あと {s.toUnlock}かいで 入力に ステップアップ！</div>}
+          {s.unlock && <div className="g3-unlock">🎉 つぎから こたえを <b>じぶんで 入力</b>！</div>}
+          {!s.input && !s.unlock && s.toUnlock > 0 && s.correct >= 8 && <div className="dm-intro-line">あと {s.toUnlock}かいで 入力に ステップアップ！</div>}
           <div className="dm-stars">星のかけら ★{s.stars} ゲット！</div>
         </div>
         <button className="kk-big-btn" onClick={() => { sfx.tap(); start(); }}>もういちど ♪</button>
