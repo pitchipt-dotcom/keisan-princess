@@ -137,7 +137,7 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
         {phase === "wrong1" && <div className="dm-msg dm-msg-ng">おしい！ ヒントを 見て もういちど やってみよう</div>}
         {phase === "reveal" && <div className="dm-msg dm-msg-ng">こたえは <b><AnsView q={q} s={q.ans} /></b> だよ。{notebook && q.unit !== "fairy" ? "ノートに いれておくね。" : ""}<br />図で たしかめて、また こんど ちょうせん しよう！</div>}
 
-        {(phase === "ask" || phase === "wrong1") && !hint && <button className="kk-hint-btn" onClick={showHint}>{HINT_LABEL[q.unit]}</button>}
+        {(phase === "ask" || phase === "wrong1") && !hint && <button className="kk-hint-btn g3-hint-btn" onClick={showHint}>{HINT_LABEL[q.unit]}</button>}
         {hint && <Hint q={q} sfx={sfx} />}
       </div>
 

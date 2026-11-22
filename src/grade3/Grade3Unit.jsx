@@ -12,6 +12,7 @@ import "../dailyMode.css";
 import { UNIT_INFO, ROUND, INPUT_AFTER, STAR_PER_RIGHT_UNIT, makeRound, makeChoices, applyUnitRound, setUnitInput, markExplored, normalizeGrade3 } from "./g3.js";
 import { DivExplore, DecExplore, FracExplore } from "./Explore.jsx";
 import { G3Question } from "./Question.jsx";
+import { G3Footer } from "./Footer.jsx";
 
 const EXPLORE = { div: DivExplore, dec: DecExplore, frac: FracExplore };
 
@@ -46,18 +47,19 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
 
   if (stage === "explore") {
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         {head}
         <Ex sfx={sfx} onFinish={finishExplore} />
-        {u.explored && <button className="kk-text-btn" onClick={() => { sfx.tap(); start(); }}>とばして もんだいへ</button>}
-        <button className="kk-text-btn" onClick={onExit}>もどる</button>
+        <G3Footer onBack={onExit}>
+          {u.explored && <button className="g3-sub-btn" onClick={() => { sfx.tap(); start(); }}>とばして もんだいへ →</button>}
+        </G3Footer>
       </div>
     );
   }
 
   if (stage === "intro") {
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         <div className="dm-chara">{character("idle")}</div>
         {head}
         <div className="dm-card">
@@ -66,9 +68,9 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
           <div className="dm-intro-line g3-intro-sub">わからない ときは ヒントで 図が 見られるよ</div>
         </div>
         <button className="kk-big-btn" onClick={() => { sfx.tap(); start(); }}>もんだい ♪</button>
-        <button className="kk-text-btn" onClick={() => { sfx.tap(); setStage("explore"); }}>図で うごかして たしかめる</button>
-        {u.input && <button className="kk-tiny-btn g3-mode-toggle" onClick={() => { sfx.tap(); onSave(setUnitInput(g, unit, false)); }}>3つから えらぶ もんだいに もどす</button>}
-        <button className="kk-text-btn" onClick={onExit}>もどる</button>
+        <button className="g3-sub-btn" onClick={() => { sfx.tap(); setStage("explore"); }}>図で うごかして たしかめる</button>
+        {u.input && <button className="g3-sub-btn g3-sub-btn-quiet" onClick={() => { sfx.tap(); onSave(setUnitInput(g, unit, false)); }}>3つから えらぶ もんだいに もどす</button>}
+        <G3Footer onBack={onExit} />
       </div>
     );
   }
@@ -76,7 +78,7 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
   if (stage === "done" && summary) {
     const s = summary, perfect = s.correct === ROUND;
     return (
-      <div className="dm-wrap">
+      <div className="dm-wrap g3-scope">
         <div className="dm-chara">{character(perfect ? "happy" : "idle")}</div>
         <h2 className="kk-h2">{perfect ? "ぜんもん せいかい！🎉" : `${info.label} おしまい！`}</h2>
         <div className="dm-card">
@@ -92,7 +94,7 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
           <div className="dm-stars">星のかけら ★{s.stars} ゲット！</div>
         </div>
         <button className="kk-big-btn" onClick={() => { sfx.tap(); start(); }}>もういちど ♪</button>
-        <button className="kk-text-btn" onClick={onExit}>もどる</button>
+        <G3Footer onBack={onExit} />
       </div>
     );
   }
@@ -100,7 +102,7 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
   const q = set[idx];
   if (!q) return null;
   return (
-    <div className="dm-wrap">
+    <div className="dm-wrap g3-scope">
       <div className="dm-top">
         <span className="dm-count">{idx + 1} / {set.length}</span>
         <span className="g3-unit-tag">{info.icon} {info.label}</span>

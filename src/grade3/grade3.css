@@ -3,7 +3,6 @@
 .g3-grade-chip{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:#fff; background:var(--tc-7c5cc4); border-radius:999px; padding:2px 10px; vertical-align:middle;}
 .g3-intro-sub{font-size:13px; color:var(--plum-soft); line-height:1.6;}
 .g3-unit-tag{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13px; color:var(--night); background:#fff; border-radius:999px; padding:4px 10px;}
-.g3-mode-toggle{margin-top:8px;}
 .g3-unlock{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:#2FAF8E; background:#EAFBF5; border-radius:14px; padding:8px 12px; line-height:1.6;}
 .g3-parts{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; font-family:'Zen Maru Gothic'; font-weight:700; font-size:12.5px; color:var(--night);}
 .g3-parts span{background:#FBF7FF; border:2px solid var(--tc-e7d2f7); border-radius:999px; padding:2px 10px;}
@@ -18,7 +17,7 @@
 .g3-q-div .g3-amari{font-size:15px;}
 .g3-ans-done{min-width:auto; padding:0 4px;}
 .g3-ans-done small, .g3-amari{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:var(--plum-soft);}
-.g3-box{font-family:'Mochiy Pop One'; font-size:30px; min-width:1.7em; height:1.5em; line-height:1.4em; padding:0 4px; color:var(--rose-deep); background:#fff;
+.g3-box{font-family:'Mochiy Pop One'; font-size:30px; min-width:52px; min-height:48px; height:auto; line-height:1.2; padding:4px 6px; display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; color:var(--rose-deep); background:#fff;
   border:3px solid var(--tc-e7d2f7); border-radius:12px; cursor:pointer; touch-action:manipulation;}
 .g3-box-on{border-color:var(--rose); box-shadow:0 0 0 3px rgba(var(--rose-rgb),.25);}
 .g3-box-empty{color:var(--lav);}
@@ -41,12 +40,12 @@
 .g3-wall .g3-frac{font-size:15px;}
 
 /* 三択 */
-.g3-choices{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%;}
+.g3-choices{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; width:100%;}
 .g3-choices-wide{grid-template-columns:1fr;}
 .g3-choice{font-family:'Mochiy Pop One'; font-size:26px; color:var(--night); background:#fff; border:3px solid var(--lav); border-radius:18px; padding:14px 4px; min-height:72px;
   cursor:pointer; box-shadow:0 5px 0 var(--tc-a98bd6); touch-action:manipulation; display:flex; align-items:center; justify-content:center; gap:4px;}
 .g3-choice small{font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; color:var(--plum-soft);}
-.g3-choices-wide .g3-choice{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; min-height:56px; padding:10px;}
+.g3-choices-wide .g3-choice{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; min-height:60px; padding:10px;}
 .g3-choice:active{transform:translateY(4px); box-shadow:0 1px 0 var(--tc-a98bd6);}
 .g3-choice-tried{opacity:.38; box-shadow:none; transform:none;}
 .g3-keys{grid-template-columns:repeat(3,1fr);}
@@ -59,8 +58,8 @@
 .g3-fig-sub{font-size:12px; color:var(--plum-soft);}
 .g3-fig-msg{font-family:'Zen Maru Gothic'; font-weight:900; font-size:13.5px; line-height:1.6; padding:6px 10px; border-radius:12px;}
 .g3-fig-msg-ng{color:var(--tc-c0568a); background:#FFF0F6;}
-.g3-fig-acts{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
-.g3-fig-acts .ts-act{padding:10px 14px; font-size:14px; min-height:44px;}
+.g3-fig-acts{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+.g3-fig-acts .ts-act{padding:12px 18px; font-size:15px; min-height:52px;}
 
 /* クッキー */
 .g3-cookies{display:flex; flex-direction:column; align-items:center; gap:8px; width:100%;}
@@ -148,7 +147,7 @@
 .g3-meaning{display:flex; align-items:center; gap:10px; text-align:left; font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:var(--night); line-height:1.6;}
 .g3-meaning small{font-size:12px; font-weight:700; color:var(--plum-soft);}
 .g3-meaning-frac{flex:0 0 auto;}
-.g3-same-btn{font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:var(--night); background:#fff; border:3px solid var(--tc-e7d2f7); border-radius:999px; padding:10px 24px; cursor:pointer; touch-action:manipulation; min-height:48px;}
+.g3-same-btn{font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:var(--night); background:#fff; border:3px solid var(--tc-e7d2f7); border-radius:999px; padding:12px 28px; cursor:pointer; touch-action:manipulation; min-height:52px;}
 .g3-same-btn.g3-ok{border-color:#2FAF8E; box-shadow:0 0 0 4px rgba(47,175,142,.2);}
 .g3-same-btn.g3-ng{border-color:var(--rose);}
 .g3-goal .g3-frac{font-size:1em; font-family:'Mochiy Pop One'; margin:0 3px;}
@@ -157,5 +156,40 @@
 .g3-numans-row{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:16px; color:var(--night);}
 .g3-numans-field{display:inline-flex; align-items:center; gap:4px;}
 .g3-numans .g3-box{font-size:24px; min-width:1.6em;}
-.g3-numans-keys{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:100%; max-width:320px;}
-.g3-numans-keys .jc-digit{min-height:44px;}
+.g3-numans-keys{display:grid; grid-template-columns:repeat(5,1fr); gap:9px; width:100%; max-width:340px;}
+.g3-numans-keys .jc-digit{height:auto; min-height:52px; font-size:20px;}
+
+/* =====================================================================
+   押しやすさ（テスターの 声：「もどる」を はなす・四角の ボタンを たてに 大きく）
+   3年生の 画面（.g3-scope）だけ。1・2年生と 共通の 部品（数字キー・ヒント・よみとりの らん）は ここで だけ 大きく する
+   目安：子どもが おす ボタンは たて 48px いじょう、となりとの すきまも 広め
+   ===================================================================== */
+.g3-scope{min-height:calc(100vh - 118px); min-height:calc(100dvh - 118px);}
+.g3-scope .dm-keys{gap:12px;}
+.g3-scope .dm-key{min-height:56px; padding:8px 0;}
+.g3-scope .dm-key-ok, .g3-scope .dm-key-del{white-space:nowrap; letter-spacing:0;}
+@media (max-width:360px){ .g3-scope .dm-key-ok{font-size:16px;} }
+.g3-scope .kk-hint-btn{min-height:48px; padding:10px 20px; font-size:14px;}
+.g3-scope .yt-slot-box{min-height:52px; min-width:56px;}
+.g3-scope .kk-big-btn{min-height:56px;}
+
+/* ほかの 画面へ うごく ボタン（図で たしかめる・とばして もんだいへ など）：小さな 字の リンクを やめて、たて 48px の ボタンに */
+.g3-sub-btn{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:var(--night); background:#fff; border:2px solid var(--lav);
+  border-radius:999px; min-height:48px; padding:10px 24px; margin-top:16px; cursor:pointer; touch-action:manipulation;}
+.g3-sub-btn:active{transform:translateY(2px);}
+.g3-sub-btn-quiet{font-size:13px; color:var(--plum,#7A5C98); background:transparent; border-style:dashed;}
+
+/* いちばん下：「もどる」。答えや 数字キーから 点線と 広い すきまで はなし、画面の 下の はしに よせる */
+.g3-footer{margin-top:auto; padding-top:44px; width:100%; display:flex; flex-direction:column; align-items:center; gap:16px;}
+.g3-footer::before{content:""; display:block; width:100%; border-top:2px dashed color-mix(in srgb, var(--lav) 70%, transparent); margin-bottom:4px;}
+.g3-footer .g3-sub-btn{margin-top:0;}
+.g3-back{font-family:'Zen Maru Gothic'; font-weight:900; font-size:15px; color:var(--plum,#7A5C98); background:rgba(255,255,255,.7); border:2px solid color-mix(in srgb, var(--lav) 80%, transparent);
+  border-radius:999px; min-height:48px; min-width:160px; padding:10px 24px; cursor:pointer; touch-action:manipulation;}
+.g3-back:active{transform:translateY(2px);}
+
+/* たてが みじかい スマホ：キャラを 小さく して、答えの ボタンが 画面に 入りやすく */
+@media (max-height:700px){
+  .g3-scope .dm-mini-chara{height:50px;}
+  .g3-scope .dm-mini-chara > *{transform:scale(.7); transform-origin:bottom center;}
+  .g3-scope .dm-chara > *{transform:scale(.8); transform-origin:bottom center;}
+}
