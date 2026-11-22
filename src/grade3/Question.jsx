@@ -131,7 +131,7 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
           <div className="g3-fairy-q">
             <div className="g3-fairy-tag">🧚 ようせいの くに</div>
             {q.kind === "net"
-              ? <><div className="g3-q-text">この てんかいずを くみたてると、どんな 形に なる？</div><NetView layout={q.layout} /></>
+              ? <><div className="g3-q-text">この てんかいずは、どんな 形に なる？</div><NetView layout={q.layout} /></>
               : <><div className="g3-q-text">1Lますに 入った ジュースは 何dL？</div>{!hint && <JuiceLevel dl={q.dl} />}</>}
           </div>
         ) : (
@@ -150,7 +150,7 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
       {finished
         ? <button className="kk-big-btn" onClick={() => { sfx.tap(); onDone({ right: !!firstRight, hint: usedHint }); }}>{isLast ? "けっかを 見る →" : "つぎへ →"}</button>
         : mode === "choice"
-          ? <div className={"g3-choices" + (fairyQ && q.kind === "net" ? " g3-choices-wide" : "")}>
+          ? <div className={"g3-choices" + (fairyQ && q.kind === "net" ? " g3-choices-wide" : "") + (hint ? " g3-choices-sticky" : "")}>
               {(choices || q.choices).map((c) => (
                 <button key={c} className={"g3-choice" + (tried.includes(c) ? " g3-choice-tried" : "")} disabled={tried.includes(c)} onClick={() => pickChoice(c)}>
                   <AnsView q={q} s={c} />

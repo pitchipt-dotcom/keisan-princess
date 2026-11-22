@@ -248,7 +248,7 @@ export function FracHint({ q }) {
   const eaten = q.op === "-" ? range(q.a - q.b, q.a) : new Set();
   return (
     <div className="g3-hint-fig">
-      <FracShape d={q.d} painted={painted} extra={extra} eaten={eaten} size={200} />
+      <FracShape d={q.d} painted={painted} extra={extra} eaten={eaten} size={150} />
       <HintSteps items={q.op === "+"
         ? [{ t: <>1きれ ＝ <Frac n={1} d={q.d} /></> }, { t: <><span className="g3-sw" style={{ background: SHAPE_COLORS.cake.paint }} /> <b>{q.a}きれ</b> と <span className="g3-sw" style={{ background: SHAPE_COLORS.cake.extra }} /> <b>{q.b}きれ</b></> }, { t: <>ぜんぶで 何きれ？</> }]
         : [{ t: <>1きれ ＝ <Frac n={1} d={q.d} />{q.one ? <>　1 ＝ <Frac n={q.d} d={q.d} /></> : null}</> }, { t: <><span className="g3-sw" style={{ background: SHAPE_COLORS.cake.paint }} /> <b>{q.a}きれ</b> から <b>{q.b}きれ</b> たべる</> }, { t: <>のこりは 何きれ？</> }]} />

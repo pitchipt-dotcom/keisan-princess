@@ -370,3 +370,43 @@
 
 /* せいかいの あとの「つぎへ →」（じどうでは すすまない） */
 .g3-ok .g3-next-btn{margin:6px 0 2px; font-size:22px; min-height:52px; padding:10px 32px;}
+
+/* 問題文（図で うごかして わかる の 上の 1〜2文・ようせいの くにの 問い）：24px。3行に ならない よう 文を みじかく して ある */
+.g3-scope .g3-line{font-size:24px; line-height:1.45; padding:8px 12px;}
+.g3-scope .g3-line .g3-frac{font-size:24px;}
+.g3-scope .g3-q-text{font-size:24px; line-height:1.45;}
+
+/* =====================================================================
+   目立たせる じゅんばん
+   - どの 画面でも 1番は 問題文（いちばん 大きく 太く、色の 枠）
+   - 図で うごかして わかる … 問題文 → イラスト → 答え。イラスト（クッキー・おさら・入れ物・ケーキ）は さわって わかる ための ものなので 大きさは そのまま。
+     「のこり ○こ」と おさらの 上の 数の まるだけ、問題文より 目立たない よう 小さく
+   - 問題の 画面（ヒントの 図が 出る）… 問題文 → 答え → イラスト。ヒントの 図は 小さく、色と 数字を ひかえめに
+   ならびは どちらも 上から 問題文 → イラスト → 答え の まま。数字キーの 大きさは かえない
+   ===================================================================== */
+/* 1番：問題文 */
+.g3-scope .g3-line{font-size:25px; font-weight:900; line-height:1.45; color:var(--night); background:#fff; border:3px solid var(--rose);
+  box-shadow:0 5px 0 color-mix(in srgb, var(--rose) 35%, transparent); padding:10px 12px;}
+.g3-scope .g3-line .g3-frac{font-size:25px;}
+.g3-scope .g3-q-text{font-size:25px;}
+/* 「のこり ○こ」・おさらの 上の 数：小さく ひかえめに（図で うごかして わかる・ヒント どちらも） */
+.g3-scope .g3-jar-count{font-size:15px; font-weight:700; color:var(--plum-soft);}
+.g3-scope .g3-jar-count b{font-size:17px; font-family:'Zen Maru Gothic'; font-weight:900; color:var(--plum-soft);}
+.g3-scope .g3-plate-n{font-size:11px; min-width:16px; padding:0 4px; top:-4px; right:0; background:color-mix(in srgb, var(--lav) 75%, #fff); color:var(--plum-soft);}
+.g3-scope .g3-plate-full .g3-plate-n{background:color-mix(in srgb, #2FAF8E 55%, #fff); color:#fff;}
+/* 問題の 画面：ヒントの 図は わきやく（答えの ボタンより 目立たない） */
+.g3-scope .g3-hint-fig{border:2px dashed color-mix(in srgb, var(--lav) 55%, transparent); background:color-mix(in srgb, var(--lav) 8%, #fff); padding:8px 10px; gap:6px;}
+.g3-scope .g3-hint-fig .g3-hsteps-item{color:var(--plum-soft);}
+.g3-scope .g3-hint-fig .g3-hsteps-item b{font-family:'Zen Maru Gothic'; font-weight:900; font-size:18px; color:var(--plum-soft);}
+.g3-scope .g3-hint-fig .g3-hsteps-no{font-size:18px; color:var(--plum-soft);}
+.g3-scope .g3-hint-fig .g3-dec-cell{width:30px; height:9px;}
+.g3-scope .g3-hint-fig .g3-dec-cols{gap:6px;}
+.g3-scope .g3-hint-fig .g3-fig-note{color:var(--plum-soft);}
+.g3-scope .g3-hint-fig .ts-act{font-size:20px; min-height:48px;}
+
+/* 問題の 画面で ヒントを ひらいた とき：三択は 画面の 下に くっつける（ヒントの 図が 長くても、問題文と 答えが スクロール なしで 同時に 見える）
+   アプリ全体の わく（.kk-root）が overflow を もつので sticky は きかない → fixed。下の「もどる」が かくれない よう ページの 下に すきま */
+.g3-scope .g3-choices-sticky{position:fixed; left:50%; bottom:0; transform:translateX(-50%); z-index:20; width:min(456px, calc(100vw - 16px)); box-sizing:border-box;
+  padding:10px 10px calc(12px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.92); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  border-radius:20px 20px 0 0; box-shadow:0 -4px 14px rgba(var(--lav-rgb),.4);}
+.g3-scope:has(.g3-choices-sticky){padding-bottom:120px;}
