@@ -48,8 +48,7 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
   if (stage === "explore") {
     return (
       <div className="dm-wrap g3-scope">
-        {head}
-        <Ex sfx={sfx} onFinish={finishExplore} />
+        <Ex sfx={sfx} onFinish={finishExplore} label={`${info.icon} ${info.label}`} />
         <G3Footer onBack={onExit}>
           {u.explored && <button className="g3-sub-btn" onClick={() => { sfx.tap(); start(); }}>とばして もんだいへ →</button>}
         </G3Footer>
@@ -67,7 +66,7 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
           {!u.input && u.good > 0 && <div className="dm-intro-line">あと <b>{INPUT_AFTER - u.good}かい</b>で 入力に ステップアップ！</div>}
         </div>
         <button className="kk-big-btn" onClick={() => { sfx.tap(); start(); }}>もんだい ♪</button>
-        <button className="g3-sub-btn" onClick={() => { sfx.tap(); setStage("explore"); }}>図で うごかして たしかめる</button>
+        <button className="g3-sub-btn" onClick={() => { sfx.tap(); setStage("explore"); }}>図で たしかめる</button>
         {u.input && <button className="g3-sub-btn g3-sub-btn-quiet" onClick={() => { sfx.tap(); onSave(setUnitInput(g, unit, false)); }}>3つから えらぶ に もどす</button>}
         <G3Footer onBack={onExit} />
       </div>
@@ -113,6 +112,7 @@ export function Grade3Unit({ unit, grade3, character, sfx, onSave, onComplete, o
           setResults(res);
           if (idx + 1 >= set.length) finish(res); else setIdx(idx + 1);
         }} />
+      <G3Footer onBack={onExit} />
     </div>
   );
 }

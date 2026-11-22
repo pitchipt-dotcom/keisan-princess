@@ -108,7 +108,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
               title={daily.dragon ? "つぎの たまごを えらんでから はじめよう" : "毎日計算 で そだてる たまごを えらんでね"} />
           </div>
         ) : <button className="kk-big-btn" onClick={start}>はじめる ♪</button>}
-        <G3Footer onBack={onExit} backLabel="ほかの れんしゅうに もどる" />
+        <G3Footer onBack={onExit} />
       </div>
     );
   }
@@ -193,6 +193,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
         {top}
         <YomitoriQuestion key={q.id} q={q} stage={readStage} sfx={sfx} Keypad={Keypad} isLast={idx + 1 >= set.length}
           onFinish={(r) => done1({ ...r, wp: true }, "yomi")} />
+        <G3Footer onBack={onExit} />
       </div>
     );
   }
@@ -202,6 +203,7 @@ export function Daily3Play({ daily, grade3, character, sfx, onComplete, onPickEg
       <G3Question key={idx} q={q} choices={q.choices} inputMode={inputMode} notebook sfx={sfx} character={character} isLast={idx + 1 >= set.length}
         onFirst={(right) => { nbRef.current = right ? noteRight3(nbRef.current, q) : noteWrong3(nbRef.current, q); }}
         onDone={(r) => done1(r, q.unit)} />
+      <G3Footer onBack={onExit} />
     </div>
   );
 }

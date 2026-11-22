@@ -266,7 +266,9 @@
 .g3-page{align-self:flex-end; font-family:'Mochiy Pop One'; font-size:15px; color:#fff; background:var(--plum); border-radius:999px; padding:2px 12px;}
 .g3-read .g3-page{position:absolute; right:12px; top:-12px;}
 .g3-line{width:100%; font-family:'Zen Maru Gothic'; font-weight:900; font-size:20px; line-height:1.5; color:var(--night); background:#fff; border-radius:18px; padding:10px 14px;
-  box-shadow:0 4px 0 rgba(var(--lav-rgb),.45); display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap;}
+  box-shadow:0 4px 0 rgba(var(--lav-rgb),.45); display:block; text-align:center;}
+.g3-line b{color:var(--rose-deep);}
+.g3-line .g3-frac{vertical-align:middle;}
 .g3-line .g3-frac{font-size:22px; font-family:'Mochiy Pop One';}
 .g3-scope .g3-result{gap:8px; padding:16px 14px;}
 .g3-scope .g3-eq{font-size:32px;}
@@ -305,3 +307,50 @@
 .g3-scope .yt-slots{flex-wrap:wrap; justify-content:center; gap:6px 10px;}
 .g3-scope .dr-gains-title{font-size:20px;}
 .g3-scope .dr-gain{font-size:17px;}
+
+/* =====================================================================
+   ボタンの 中の 字（テスターの 声：もう少し 大きく）：言葉の 入った ボタンは 20〜22px。数字キーの 数字は 30px の まま
+   2行に おれる ものは ボタンの 言葉を みじかく した（「1こずつ くばる」→「くばる」など）
+   ===================================================================== */
+.g3-scope .ts-act, .g3-scope .g3-fig-acts .ts-act{font-size:20px; min-height:52px; padding:10px 22px; white-space:nowrap;}
+.g3-scope .dm-key-ok, .g3-scope .dm-key-del{font-size:20px;}
+.g3-scope .kk-hint-btn{font-size:20px; white-space:nowrap;}
+.g3-scope .g3-same-btn{font-size:20px;}
+.g3-scope .g3-choices-wide .g3-choice{font-size:20px;}
+.g3-sub-btn, .g3-back{font-size:20px;}
+.g3-sub-btn-quiet{font-size:20px; padding:10px 18px; white-space:nowrap;}
+.g3-scope .kk-big-btn{font-size:22px;}
+/* よみとりの 横ながの すうじキー（6れつ）は、3年生では ふつうの 3れつに（「こたえる」が おれない） */
+.g3-scope .yt-wide-keys{grid-template-columns:repeat(3,1fr);}
+@media (max-width:360px){
+  .g3-scope .dm-key-ok{font-size:20px; letter-spacing:-1px;}
+  .g3-scope .ts-act, .g3-scope .g3-fig-acts .ts-act{padding:10px 16px;}
+}
+/* せいかいの 声かけ（図で うごかして わかる）：問題文の すぐ 下に 出して、じどうで つぎへ */
+.g3-ok{width:100%; font-family:'Zen Maru Gothic'; font-weight:900; font-size:19px; line-height:1.6; color:var(--night); background:#EAFBF5; border:3px solid #9FE6D6;
+  border-radius:18px; padding:10px 14px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 8px; animation:g3-pop .35s ease-out;}
+.g3-ok > b{font-family:'Mochiy Pop One'; font-weight:400; font-size:22px; color:#2FAF8E; width:100%;}
+.g3-ok .g3-frac{font-size:22px; font-family:'Mochiy Pop One';}
+@keyframes g3-pop{from{transform:scale(.92); opacity:0;} to{transform:none; opacity:1;}}
+@media (prefers-reduced-motion: reduce){.g3-ok{animation:none;}}
+
+/* 図で うごかして わかる：1画面に おさめる（字と ボタンの 大きさは そのまま、すきまと 見出しを つめる） */
+.g3-title-sm{font-size:20px; margin:0 0 4px;}
+.g3-scope .g3-explore{gap:8px;}
+.g3-scope .g3-jar{flex-direction:row; gap:8px;}
+.g3-scope .g3-jar-img{width:52px; height:58px;}
+.g3-scope .g3-cookies{gap:6px;}
+.g3-scope .g3-numans{padding:8px 10px; gap:8px;}
+.g3-steps-row{display:flex; align-items:center; justify-content:center; gap:12px; margin-top:2px;}
+.g3-steps-label{font-family:'Mochiy Pop One'; font-weight:400; font-size:20px; color:var(--night);}
+.g3-scope .g3-jar-row{gap:10px; flex-wrap:wrap;}
+.g3-scope .g3-jar{flex-direction:column; gap:0;}
+.g3-scope .g3-jar-img{width:46px; height:50px;}
+.g3-scope .g3-jar-acts{gap:8px;}
+.g3-scope .g3-jar-acts .ts-act{padding:10px 14px;}
+.g3-scope .dm-key{min-height:56px; height:56px; padding:0; line-height:1;}
+.g3-scope .dm-keys{gap:10px 12px;}
+.g3-scope .g3-line{padding:8px 12px;}
+.g3-scope.dm-wrap{padding-bottom:4px;}
+.g3-scope .g3-jar-row{row-gap:6px;}
+.g3-scope .g3-numans{padding:6px 10px; gap:6px;}

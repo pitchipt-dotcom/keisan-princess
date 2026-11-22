@@ -111,6 +111,12 @@ export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, on
           <JarPic />
           <span className="g3-jar-count">のこり <b>{st.jar}</b>こ</span>
         </button>
+        {/* くばる・やりなおす は びんの よこ（たてに 場所を とらない） */}
+        <div className="g3-fig-acts g3-jar-acts">
+          {mode === "share" && <button className="ts-act ts-act-main" disabled={st.jar < plates || (done && !done.uneven)} onClick={dealRound}>くばる</button>}
+          {mode === "group" && <button className="ts-act ts-act-main" disabled={!!(done && !done.uneven) || st.jar <= 0} onClick={putGroup}>のせる</button>}
+          <button className="ts-act" onClick={reset}>やりなおす</button>
+        </div>
         {restLabel && (
           <div className="g3-rest">
             <div className="g3-rest-cookies">{Array.from({ length: st.jar }, (_, i) => <Cookie key={i} size={cs} />)}</div>
@@ -130,11 +136,6 @@ export function CookieDeal({ total, plates = 0, per = 0, mode = "share", sfx, on
           </button>
         ))}
         {mode === "group" && st.on.length === 0 && <div className="g3-plate-empty">びんを タップしてね</div>}
-      </div>
-      <div className="g3-fig-acts">
-        {mode === "share" && <button className="ts-act ts-act-main" disabled={st.jar < plates || (done && !done.uneven)} onClick={dealRound}>1こずつ くばる</button>}
-        {mode === "group" && <button className="ts-act ts-act-main" disabled={!!(done && !done.uneven) || st.jar <= 0} onClick={putGroup}>1こ のせる</button>}
-        <button className="ts-act" onClick={reset}>やりなおす</button>
       </div>
       {done && done.uneven && <div className="g3-fig-msg g3-fig-msg-ng">数が ちがうよ。「やりなおす」で もういちど</div>}
     </div>

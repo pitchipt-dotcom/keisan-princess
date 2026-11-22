@@ -4,8 +4,7 @@
    - ながれは まいにち けいさんと おなじ：
        1かいめ まちがい → ヒントの 図を 出して もういちど（三択は えらんだ ものを うすく する）
        2かいめ まちがい → こたえを 見せて つぎへ（せめない）
-   - 1画面で やる ことは 1つ：「こたえる 画面」（しき＋三択／数字キー）と「ヒントの 画面」（しき＋図）を わける
-     ヒントの 画面の 下の「こたえる →」で こたえる 画面に もどる
+   - ヒントの 図は、こたえる らん（三択／数字キー）の 上に 出す（ヒントボタンで ひらく。1かいめ まちがいで じどうで ひらく）
    - ヒントを つかっても ポイントは かわらない（onDone の hint は おわりの ことばに だけ つかう）
    onFirst(right)：1かいめの こたえが でた とき（ノートの きろく 用）
    onDone({ right, hint })：「つぎへ」を おした とき
@@ -61,7 +60,7 @@ const HINT_LABEL = { div: "？ ヒント（クッキー）", dec: "？ ヒント
 export function G3Question({ q, choices, inputMode, sfx, character, isLast, notebook = false, onFirst, onDone }) {
   const mode = q.unit === "g2" ? "input" : q.unit === "fairy" ? "choice" : inputMode ? "input" : "choice";
   const [phase, setPhase] = useState("ask");          // ask | right | wrong1 | reveal
-  const [hint, setHint] = useState(false);            // true：ヒントの 画面（図だけ）。false：こたえる 画面
+  const [hint, setHint] = useState(false);            // ヒントの 図を 出して いるか
   const [usedHint, setUsedHint] = useState(false);
   const [firstRight, setFirstRight] = useState(null);
   const [tried, setTried] = useState([]);            // 三択で えらんで ちがった もの
@@ -69,7 +68,6 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
   const [field, setField] = useState("q");           // わり算の 入力：q（しょう）| r（あまり）
 
   const showHint = () => { sfx.tap(); setHint(true); setUsedHint(true); };
-  const backToAnswer = () => { sfx.tap(); setHint(false); };
   const judge = (ok) => {
     if (ok) {
       sfx.correct();
@@ -141,12 +139,9 @@ export function G3Question({ q, choices, inputMode, sfx, character, isLast, note
         {phase === "reveal" && !hint && <button className="kk-hint-btn g3-hint-btn" onClick={() => { sfx.tap(); setHint(true); }}>図で たしかめる</button>}
       </div>
 
-      {/* ヒントの 画面：図と「こたえる →」だけ（答えの ボタンは 出さない） */}
+      {/* ヒントの 図は こたえる らんの 上 */}
       {hint && <Hint q={q} sfx={sfx} />}
-      {hint
-        ? <button className="kk-big-btn" onClick={finished ? () => { sfx.tap(); onDone({ right: !!firstRight, hint: usedHint }); } : backToAnswer}>
-            {finished ? (isLast ? "けっかを 見る →" : "つぎへ →") : "こたえる →"}</button>
-        : finished
+      {finished
         ? <button className="kk-big-btn" onClick={() => { sfx.tap(); onDone({ right: !!firstRight, hint: usedHint }); }}>{isLast ? "けっかを 見る →" : "つぎへ →"}</button>
         : mode === "choice"
           ? <div className={"g3-choices" + (fairyQ && q.kind === "net" ? " g3-choices-wide" : "")}>
