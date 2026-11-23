@@ -25,10 +25,10 @@ const FAIRY_OF = { juice: "ramune", hako: "peta", tsumiki: "mint", masume: "popp
 
 /* ======================= ジュースの泉 ======================= */
 const J_STEPS = [
-  { say: "いれものを ゆびで ひっぱって かたむけると、ジュースが でるよ" },
+  { say: "いれものを ゆびで もって ちかくへ はこぶと、かたむいて ジュースが でるよ" },
   { say: "ゆびを はなすと とまるよ" },
   { say: "めもりの せんで とめてみよう" },
-  { say: "いれすぎたら もどすで もどせるよ" },
+  { say: "いれすぎたら「ひとつもどす」で もどせるよ" },
 ];
 const jStart = () => [{ id: "pot", type: "pot", amount: 1500, x: 88 }, { id: "L", type: "L", amount: 0, x: 258 }];
 const J_POURS = { pot: ["L"] };
@@ -85,7 +85,7 @@ function JuiceTutorial({ t, sfx }) {
   const onRelease = (info) => {
     setHolding(false);
     if (info.auto) { t.autoDone(); return; }
-    if (s === 0 && !info.poured) { if (t.fail("1Lますの うえまで うごかして、ゆびを したへ さげてね")) runAuto(amtOf(vs, "L") + 100); }
+    if (s === 0 && !info.poured) { if (t.fail("1Lますの ちかくまで もっていってね")) runAuto(amtOf(vs, "L") + 100); }
     if (s === 1) {
       if (info.poured) t.succeed("できたね！ ゆびを はなすと とまったね");
       else if (t.fail("ジュースが でたら、ゆびを はなしてみよう")) runAuto(amtOf(vs, "L") + 100);
@@ -97,7 +97,7 @@ function JuiceTutorial({ t, sfx }) {
     const L = amtOf(after, "L");
     if (isExact(L, 100)) { t.succeed("できたね！ ぴったり 1dL だね"); return; }
     if (L > 100.5) {
-      setVs(before.map((v) => ({ ...v, stickUntil: 0 })));
+      setVs(before);
       if (t.fail("いきすぎちゃった。もとに もどしたよ。ひかる せんで とめよう")) { setVs(jStart()); setTimeout(() => runAuto(100), 50); }
       return;
     }
@@ -105,7 +105,7 @@ function JuiceTutorial({ t, sfx }) {
   };
   const doUndo = () => {
     if (!undo.length) return;
-    sfx.tap(); setVs(undo[undo.length - 1].map((v) => ({ ...v, stickUntil: 0 }))); setUndo(undo.slice(0, -1));
+    sfx.tap(); setVs(undo[undo.length - 1]); setUndo(undo.slice(0, -1));
     if (s === 3) t.succeed("できたね！ ひとつ まえに もどったね");
   };
 
@@ -119,10 +119,10 @@ function JuiceTutorial({ t, sfx }) {
           glowMark={s >= 2 ? { id: "L", ml: 100 } : null} />
         {holding && s === 1 && t.trying && <div className="tt-float">✋ ゆびを はなしてね</div>}
       </Spot>
-      <div className="tt-cap">{["つぼを ゆびで おさえて 1Lますの うえへ。そのまま ゆびを したへ さげよう", holding ? "" : "かたむけて ジュースが でたら、ゆびを はなそう", "ひかる 1dLの せんの ところで ゆびを はなそう", "「もどす」を おしてみよう"][s]}</div>
+      <div className="tt-cap">{["つぼを ゆびで おさえて、1Lますの ちかくへ もっていこう", holding ? "" : "ジュースが でたら、ゆびを はなそう", "ひかる 1dLの せんの ところで ゆびを はなそう", "「ひとつもどす」を おしてみよう"][s]}</div>
       <div className="tt-acts">
         <Spot on={s === 3 && !diagram} className="tt-anchor">
-          <button className="ts-act" disabled={!undo.length || s !== 3 || diagram} onClick={doUndo}>↩ もどす</button>
+          <button className="ts-act" disabled={!undo.length || s !== 3 || diagram} onClick={doUndo}>↩ ひとつもどす</button>
           <Finger kind="tap" x={50} y={60} show={s === 3 && !diagram && t.trying} />
         </Spot>
       </div>

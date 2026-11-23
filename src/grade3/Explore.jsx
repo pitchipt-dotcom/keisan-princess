@@ -10,7 +10,7 @@
 import React, { useEffect, useState } from "react";
 import "../fairy/fairy.css";
 import { PourScene } from "../fairy/PourScene.jsx";
-import { isExact, TYPES } from "../fairy/juice.js";
+import { isExact } from "../fairy/juice.js";
 import { CookieDeal, FracShape, Frac } from "./Figures.jsx";
 import { fmtDec } from "./g3.js";
 
@@ -127,10 +127,10 @@ export function DivExplore({ sfx, onFinish, label }) {
 const V = (id, type, amount, x, label) => ({ id, type, amount, x, label });
 const DEC_TASKS = [
   { line: <>0.1Lますで くんで、右の ますを <b>0.3L</b>に しよう</>, into: "t", target: 300, demo: { id: "s", to: "c" },
-    vessels: () => [V("s", "Ld", 1000, 58), V("c", "dld", 0, 172), V("t", "Ld", 0, 290)], pours: { s: ["c"], c: ["t", "s"], t: ["c"] },
+    vessels: () => [V("s", "Ld", 1000, 58), V("c", "dld", 0, 172), V("t", "Ld", 0, 290)], pours: { s: ["c"], c: ["t", "s"], t: ["c", "s"] },     // 1Lます → 右の ます は なし（0.1Lますで くむ 課題なので）
     okText: <>0.1Lが 3こで 0.3L。0.1が 10こで 1L だよ。</> },
   { line: <>あ と い を まん中へ。あわせて 何L？</>, into: "t", all: ["a", "b"], demo: { id: "a", to: "t" },
-    vessels: () => [V("a", "Ld", 400, 56, "あ"), V("t", "Ld", 0, 180), V("b", "Ld", 300, 304, "い")], pours: { a: ["t"], b: ["t"] },
+    vessels: () => [V("a", "Ld", 400, 56, "あ"), V("t", "Ld", 0, 180), V("b", "Ld", 300, 304, "い")], pours: { a: ["t", "b"], b: ["t", "a"], t: ["a", "b"] },
     choices: ["0.6L", "0.7L", "0.8L"], ans: "0.7L", okText: <>0.4 ＋ 0.3 ＝ 0.7。0.1が 4こと 3こで 7こ だね。</> },
   { line: <>0.8Lから <b>0.3L</b> うつそう。のこりは 何L？</>, into: "t", target: 300, demo: { id: "s", to: "t" },
     vessels: () => [V("s", "Ld", 800, 100), V("t", "Ld", 0, 262)], pours: { s: ["t"], t: ["s"] },
@@ -145,21 +145,22 @@ export function DecExplore({ sfx, onFinish, label }) {
   const [poured, setPoured] = useState(false);         // そそぎ おわった（3つから えらぶ ばんに なる）
   const [over, setOver] = useState(false);
   const [tried, setTried] = useState([]);
+  const [undo, setUndo] = useState([]);                // 「ひとつもどす」用：そそぐ まえの ようす
   const [ok, succeed, next, nextLabel] = useNext(sfx, () => {
     if (last) { onFinish(); return; }
     const k = step + 1;
-    setStep(k); setVs(DEC_TASKS[k].vessels()); setPoured(false); setOver(false); setTried([]); setTouched(false);
+    setStep(k); setVs(DEC_TASKS[k].vessels()); setPoured(false); setOver(false); setTried([]); setTouched(false); setUndo([]);
   }, last);
-  const reset = () => { setVs(t.vessels()); setOver(false); setPoured(false); setTried([]); };
-  const onPourEnd = (before, after0, from, to) => {
-    // はなしたら 0.1L（100mL）に そろえる：そそいだ がわ・うけた がわ の 2つで ぜんたいの りょうは かえない
-    const after = after0.map((v) => ({ ...v }));
-    const tv = after.find((v) => v.id === to), fv = after.find((v) => v.id === from);
-    const pair = Math.round(tv.amount + fv.amount);
-    tv.amount = Math.min(TYPES[tv.type].cap, Math.round(tv.amount / 100) * 100);
-    fv.amount = pair - tv.amount;
-    if (fv.amount > TYPES[fv.type].cap || fv.amount < 0) { fv.amount = Math.max(0, Math.min(TYPES[fv.type].cap, Math.round(fv.amount / 100) * 100)); tv.amount = pair - fv.amount; }
-    setVs(after);
+  const reset = () => { setVs(t.vessels()); setOver(false); setPoured(false); setTried([]); setUndo([]); };
+  const overOf = (list) => t.target != null && list.find((v) => v.id === t.into).amount > t.target + 0.5;
+  const undoOne = () => {
+    if (!undo.length) return;
+    sfx.tap(); const prev = undo[undo.length - 1];
+    setVs(prev); setUndo(undo.slice(0, -1)); setOver(overOf(prev));
+  };
+  const onPourEnd = (before, after) => {
+    // はなした ときに 0.1L（100mL）に そろうのは PourScene（juice.js の roundPour）
+    setUndo((u) => [...u.slice(-29), before]);
     const tg = after.find((v) => v.id === t.into);
     let done = false;
     if (t.target != null) { done = isExact(tg.amount, t.target); setOver(!done && tg.amount > t.target + 0.5); }
@@ -175,7 +176,7 @@ export function DecExplore({ sfx, onFinish, label }) {
         {/* 何L？ を えらぶ ときは かさの 数を 出さない（こたえが 見えて しまうので。ますの 目もりで よむ） */}
         {!(t.choices && poured) && <div className="g3-pour-amounts">{vs.map((v) => <span key={v.id}>{v.label ? v.label + "：" : ""}<b>{fmtL(v.amount)}</b></span>)}</div>}
       </div>
-      {over && <div className="g3-fig-msg g3-fig-msg-ng">多すぎたら、ぎゃくに そそいで もどそう</div>}
+      {over && <div className="g3-fig-msg g3-fig-msg-ng">多すぎたら「ひとつもどす」か、ぎゃくに そそいで もどそう</div>}
       {t.choices && poured && !ok && (
         <div className="g3-choices">
           {t.choices.map((c) => (
@@ -184,7 +185,12 @@ export function DecExplore({ sfx, onFinish, label }) {
           ))}
         </div>
       )}
-      {!poured && !ok && <div className="g3-fig-acts"><button className="ts-act" onClick={() => { sfx.tap(); reset(); }}>さいしょから</button></div>}
+      {!poured && !ok && (
+        <div className="g3-fig-acts">
+          <button className="ts-act" disabled={!undo.length} onClick={undoOne}>↩ ひとつもどす</button>
+          <button className="ts-act" onClick={() => { sfx.tap(); reset(); }}>さいしょから</button>
+        </div>
+      )}
     </Task>
   );
 }

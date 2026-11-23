@@ -44,6 +44,7 @@
 
 .tt-cap{font-family:'Zen Maru Gothic'; font-weight:700; font-size:12px; color:var(--plum-soft); text-align:center; min-height:1.3em; line-height:1.35;}
 .tt-acts{display:flex; justify-content:center; gap:8px; width:100%;}
+.tt-acts .ts-act{font-size:20px; min-height:48px; padding:8px 16px;}
 .tt-acts .tt-zone{width:auto; padding:3px;}
 .tt-float{position:absolute; left:50%; top:8px; transform:translateX(-50%); background:#fff; border:2px solid var(--tc-f06aae); color:var(--rose-deep); border-radius:14px; padding:3px 12px; font-family:'Zen Maru Gothic'; font-weight:900; font-size:14px; pointer-events:none; animation:tt-pop2 .3s ease-out;}
 @keyframes tt-pop2{from{opacity:0; transform:translateX(-50%) scale(.6);} to{opacity:1; transform:translateX(-50%) scale(1);}}
