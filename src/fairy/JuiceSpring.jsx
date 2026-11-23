@@ -1,6 +1,6 @@
 /* =====================================================================
    妖精の国 — ジュースの泉（小2：かさ L・dL・mL を 自分の 手で そそいで おぼえる）
-   時間は はからない。まちがえても バツで 止めない。そそぎすぎたら「もどす」
+   時間は はからない。まちがえても バツで 止めない。そそぎすぎたら「ひとつもどす」
    だんかい（ゴールは だんかいの はじめに 帯で 1文）
      1 はかって いれよう … 1dLますで くんで、1Lますを ちょうど N dL に
      2 いくつ ぶん？ … 2つの 1Lますを あわせると 何L何dL？ → こたえてから 水そうに そそいで たしかめる（1Lを こえると 線が 光る）
@@ -23,7 +23,7 @@ export const JSTAGES = [
 ];
 const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
 const PRAISE = ["ぴったり！ じょうずに はかれたね！", "すごい！ 目もりを よく 見たね！", "できた！ ラムネも にっこり！"];
-const HOWTO = "入れ物を おさえて、そそぐ 入れ物の ほうへ うごかしてね。そのまま ゆびを 下へ うごかすと かたむいて そそげるよ";
+const HOWTO = "入れ物を もって、そそぐ 入れ物の ちかくへ はこぼう。ふちが 光ったら そそげるよ。ゆびを はなすと 止まるよ";
 
 /* こたえの 入力（L・dL ／ mL） */
 export function AmountPad({ units, value, active, onActive, onChange, onSubmit, submitLabel = "こたえる" }) {
@@ -140,16 +140,16 @@ export function JuiceSpring({ stage, sfx, onGain, onClearStage }) {
     toldHow.current = true;
     setUndo((u) => [...u.slice(-29), before]);
     const A = (id) => after.find((v) => v.id === id).amount;
-    if (p.stage === 1 && A("L") > p.target + 0.5) setMsg("ちょっと おおいかも？「もどす」で もどせるよ");
+    if (p.stage === 1 && A("L") > p.target + 0.5) setMsg("ちょっと おおいかも？「ひとつもどす」で もどせるよ");
     if (p.stage === 2 && phase === "pour") {
       if (A("A") < 0.01 && A("B") < 0.01) finish2(A("tank"));
       else if (A("tank") >= 1000 - 0.5) setMsg("1Lの 線を こえたね！ のこりも いれよう");
     }
-    if (p.stage === 4 && p.kind === "fine" && A("dl") > p.target + 0.5) setMsg(`${p.target}mLの 線を こえたよ。「もどす」で もどそう`);
+    if (p.stage === 4 && p.kind === "fine" && A("dl") > p.target + 0.5) setMsg(`${p.target}mLの 線を こえたよ。「ひとつもどす」で もどそう`);
   };
   const doUndo = () => {
     if (!undo.length) return;
-    sfx.tap(); setVessels(undo[undo.length - 1].map((v) => ({ ...v, stickUntil: 0 }))); setUndo(undo.slice(0, -1));
+    sfx.tap(); setVessels(undo[undo.length - 1]); setUndo(undo.slice(0, -1));
     setMsg("ひとつ まえに もどしたよ");
   };
 
@@ -164,7 +164,7 @@ export function JuiceSpring({ stage, sfx, onGain, onClearStage }) {
     const onLine = p.stage === 1 ? Math.abs(a / 100 - Math.round(a / 100)) < 0.005 : Math.abs(a / 10 - Math.round(a / 10)) < 0.05;
     if (!onLine) setMsg(`目もりの 線と 線の あいだに なっているよ。${p.target / (unit === "dL" ? 100 : 1)}${unit}の 線に ぴったり あわせよう`);
     else if (a < p.target) setMsg(`まだ すこし たりないみたい。${unit === "dL" ? "1Lますの 目もりを かぞえてみよう" : "目もりを よく 見てね"}`);
-    else setMsg("ちょっと おおいみたい。「もどす」で もどして みよう");
+    else setMsg("ちょっと おおいみたい。「ひとつもどす」で もどして みよう");
   };
   const submit2 = () => {          // だんかい2：こたえてから 水そうで たしかめる
     sfx.tap();
@@ -255,11 +255,11 @@ export function JuiceSpring({ stage, sfx, onGain, onClearStage }) {
           onSubmit={p.stage === 2 ? submit2 : submitAnswer} submitLabel={p.stage === 2 ? "こたえて たしかめる" : "こたえる"} />
       )}
       <div className="jc-acts">
-        {pourOn && phase === "pour" && <button className="ts-act" disabled={!undo.length} onClick={doUndo}>↩ もどす</button>}
+        {pourOn && phase === "pour" && <button className="ts-act" disabled={!undo.length} onClick={doUndo}>↩ ひとつもどす</button>}
         {phase === "pour" && (p.stage === 1 || p.kind === "fine") && <button className="ts-act ts-act-main" onClick={check1}>できた！</button>}
         {phase === "pour" && p.stage === 3 && <button className="ts-act ts-act-main" onClick={check3}>わけた！</button>}
         {phase === "pour" && p.stage === 4 && p.kind !== "fine" && <button className="ts-act ts-act-main" onClick={() => { sfx.tap(); setPhase("answer"); setActive("mL"); setMsg(p.kind === "l2ml" ? "けいりょうカップの 目もりを よもう。1Lは 何mL？" : "けいりょうカップの 目もりを よもう。何mL かな？"); }}>いれた！ よむ</button>}
-        {phase === "answer" && p.stage === 4 && <button className="ts-act" disabled={!undo.length} onClick={doUndo}>↩ もどす</button>}
+        {phase === "answer" && p.stage === 4 && <button className="ts-act" disabled={!undo.length} onClick={doUndo}>↩ ひとつもどす</button>}
         {phase === "done" && <button className="ts-act ts-act-main" onClick={next}>{pi + 1 >= probs.length ? "おわる" : "つぎの もんだい"} →</button>}
       </div>
     </div>

@@ -1,8 +1,8 @@
 /* =====================================================================
    ジュースの泉 — かさ（L・dL・mL）（純粋関数。画面は JuiceSpring.jsx / PourScene.jsx）
    - りょうは ぜんぶ mL の 数で もつ（1dL＝100mL、1L＝1000mL）
-   - 入れ物：type ごとに 入る りょう（cap）・目もり（marks）・すいつく 目もり（snaps）・そそぐ はやさ（rate）
-   - そそぐ：かたむけた 角度で ながれる りょうが きまる。目もりの 線で かるく すいつく（少し 止まる）
+   - 入れ物：type ごとに 入る りょう（cap）・目もり（marks）・そそがれる はやさ（pour mL/秒。ない ときは POUR_RATE）・そろえる 単位（step。ない ときは 100mL）
+   - そそぐ：そそぎ先の ちかくで きまった はやさで ながれる。指を はなすと 目もりに そろう（roundPour）
    ===================================================================== */
 
 export const ML_PER_DL = 100, ML_PER_L = 1000;
@@ -10,20 +10,20 @@ const range = (a, b, s) => { const r = []; for (let v = a; v <= b; v += s) r.pus
 
 /* 入れ物の しゅるい（w,h は 絵の 大きさ。中の かさは 下から まっすぐ ふえる） */
 export const TYPES = {
-  pot:  { name: "ジュースの つぼ", cap: 2000, w: 74, h: 92,  rate: 220, marks: [], snaps: [], shape: "pot" },
-  L:    { name: "1Lます",   cap: 1000, w: 78, h: 100, rate: 380, marks: range(100, 1000, 100), snaps: range(100, 1000, 100), shape: "masu" },
-  dl:   { name: "1dLます",  cap: 100,  w: 40, h: 40,  rate: 90,  marks: [], snaps: [100], shape: "masu" },
+  pot:  { name: "ジュースの つぼ", cap: 2000, w: 74, h: 92,  pour: 450, marks: [], shape: "pot" },
+  L:    { name: "1Lます",   cap: 1000, w: 78, h: 100, marks: range(100, 1000, 100), shape: "masu" },
+  dl:   { name: "1dLます",  cap: 100,  w: 40, h: 40,   marks: [], shape: "masu" },
   // だんかい4 の 1dLます：ふちに ちかい ところだけ 10mL の こまかい 目もり
-  dlf:  { name: "1dLます",  cap: 100,  w: 64, h: 84,  rate: 70,  marks: [50, 60, 70, 80, 90], snaps: [50, 60, 70, 80, 90, 100], shape: "masu", fine: true },
-  cup:  { name: "コップ",   cap: 400,  w: 38, h: 60,  rate: 140, marks: [100, 200, 300], snaps: [100, 200, 300], shape: "cup" },
-  // 水そうと 1Lの けいりょうカップは たくさん いっきに そそぐので すいつかない（1Lの 線は 光る）
-  tank: { name: "水そう",   cap: 2000, w: 124, h: 112, rate: 380, marks: range(100, 2000, 100), snaps: [], shape: "tank" },
-  mcup: { name: "けいりょうカップ", cap: 500, w: 62, h: 120, rate: 160, marks: range(10, 500, 10), snaps: range(100, 500, 100), shape: "mcup" },
-  mjug: { name: "1Lの けいりょうカップ", cap: 1000, w: 80, h: 128, rate: 300, marks: range(50, 1000, 50), snaps: [], shape: "mcup" },
+  dlf:  { name: "1dLます",  cap: 100,  w: 64, h: 84,  pour: 30, step: 10, marks: [50, 60, 70, 80, 90], shape: "masu", fine: true },
+  cup:  { name: "コップ",   cap: 400,  w: 38, h: 60,  marks: [100, 200, 300], shape: "cup" },
+  // つぼ・水そう・1Lの けいりょうカップは たくさん いっきに うけるので はやく ながれる（水そうの 1Lの 線は 光る）
+  tank: { name: "水そう",   cap: 2000, w: 124, h: 112, pour: 450, marks: range(100, 2000, 100), shape: "tank" },
+  mcup: { name: "けいりょうカップ", cap: 500, w: 62, h: 120, marks: range(10, 500, 10), shape: "mcup" },
+  mjug: { name: "1Lの けいりょうカップ", cap: 1000, w: 80, h: 128, pour: 450, marks: range(50, 1000, 50), shape: "mcup" },
   // 3年生「小数」用：目もりは 0.1L ごと（数字つき。PourScene の Marks）
-  //   0.1L ごとの 線で 少しだけ 止まる（stick 0.12秒）。0.4L を 1〜2秒で そそげる。はなした ときは 0.1L に そろえる（grade3/Explore.jsx）
-  Ld:   { name: "1Lます",   cap: 1000, w: 84, h: 150, rate: 380, marks: range(100, 900, 100), snaps: range(100, 1000, 100), shape: "masu", dec: true, stick: 120 },
-  dld:  { name: "0.1Lます", cap: 100,  w: 44, h: 44,  rate: 200, marks: [], snaps: [100], shape: "masu", dec: true, stick: 120 },
+  //   はなした ときは 0.1L（100mL）に そろう（roundPour）
+  Ld:   { name: "1Lます",   cap: 1000, w: 84, h: 150, marks: range(100, 900, 100), shape: "masu", dec: true },
+  dld:  { name: "0.1Lます", cap: 100,  w: 44, h: 44,  marks: [], shape: "masu", dec: true },
 };
 
 /* ---------- あらわし方 ---------- */
@@ -42,47 +42,42 @@ export function answerToML(ans) {
 }
 
 /* ---------- そそぐ ----------
-   src から tgt へ、かたむき tilt（度）で dt 秒 そそぐ。now は ミリ秒（すいつきの 時間に つかう）
-   かえりち：{ move（うつる mL）, stickUntil（tgt が すいついて 止まる 時こく。かわらなければ もとの 値） } */
+   そそぎ先の ちかくまで もっていくと、そそぐ いちに すいついて かってに かたむき、きまった はやさで ながれる
+   （指の 角度や こまかい いちでは かわらない）。いっぱいに なったら 止まる（あふれる ぶんは もとの 入れ物に のこる）
+   指を はなしたら、うつした りょうを 目もり（ふつうは 100mL＝1dL／0.1L、こまかい 1dLますは 10mL）に そろえる */
 export const MAX_TILT = 115;
-export const STICK_MS = 380;
-export function lipAngle(v) {                    // この 角度を こえると ジュースが ふちに とどく
+export const POUR_RATE = 150;                     // 1びょうで うつる mL（そそぎ先の pour が ない とき）
+export function lipAngle(v) {                    // この 角度を こえると ジュースが ふちに とどく（絵の かたむきに だけ つかう）
   const T = TYPES[v.type], fill = Math.max(0, Math.min(1, v.amount / T.cap));
   return T.shape === "pot" ? 14 + (1 - fill) * 40 : 12 + (1 - fill) * 68;
 }
-export function nextSnap(v) { return TYPES[v.type].snaps.find((s) => s > v.amount + 1e-6); }
-export function flowStep(src, tgt, tilt, dt, now) {
-  const S = TYPES[src.type], G = TYPES[tgt.type];
-  const stickUntil = tgt.stickUntil || 0;
-  if (now < stickUntil) return { move: 0, stickUntil };
-  const th = lipAngle(src);
-  if (tilt <= th || src.amount <= 1e-6) return { move: 0, stickUntil };
-  const k = Math.min(1, (tilt - th) / 40);
-  let move = Math.min(S.rate, G.cap * 1.2) * k * dt;
-  const ns = nextSnap(tgt);
-  if (ns != null && ns - tgt.amount < 15) move *= 0.35;          // 線の すこし 手まえで ゆっくり
-  move = Math.min(move, src.amount, G.cap - tgt.amount);
-  if (src.amount - move < 0.01) move = src.amount;                // からっぽは ぴったり 0 に
-  if (G.cap - tgt.amount - move < 0.01) move = Math.min(src.amount, G.cap - tgt.amount);   // いっぱいは ぴったり cap に
-  if (move <= 0) return { move: 0, stickUntil };
-  if (ns != null && tgt.amount + move >= ns - 1e-6) return { move: ns - tgt.amount, stickUntil: now + (G.stick || STICK_MS) };   // 線で すいつく
-  return { move, stickUntil };
-}
-/* flowStep の けっかを あてはめる（小さな ごさは まるめる：からっぽ・線・いっぱいが ぴったりに なる） */
+/* そそいで いる ときの かたむき：のこりが へるほど ふかく かたむける（絵だけ） */
+export const pourTilt = (v) => Math.max(50, Math.min(MAX_TILT, lipAngle(v) + 30));
+export const pourRate = (src, tgt) => TYPES[tgt.type].pour || POUR_RATE;
+export const pourStep = (src, tgt) => Math.min(TYPES[src.type].step || 100, TYPES[tgt.type].step || 100);
 const tidy = (x) => Math.round(x * 1e6) / 1e6;
-export function applyFlow(src, tgt, r) {
-  return { src: { ...src, amount: tidy(src.amount - r.move) }, tgt: { ...tgt, amount: tidy(tgt.amount + r.move), stickUntil: r.stickUntil } };
+/* src から tgt へ dt 秒 そそぐ → { move（うつる mL） } */
+export function flowStep(src, tgt, dt) {
+  const room = TYPES[tgt.type].cap - tgt.amount;
+  let move = Math.min(pourRate(src, tgt) * dt, src.amount, room);
+  if (src.amount - move < 0.01) move = Math.min(src.amount, room);       // からっぽは ぴったり 0 に
+  if (room - move < 0.01) move = Math.min(src.amount, room);             // いっぱいは ぴったり cap に
+  return { move: move > 1e-9 ? move : 0 };
 }
-/* ゆびを はなした とき：線の ±6mL いないなら 線に ぴったり あわせる（その ぶんは src と やりとり） */
-export function releaseSnap(src, tgt) {
-  const snaps = TYPES[tgt.type].snaps;
-  let best = null;
-  for (const s of snaps) if (Math.abs(s - tgt.amount) <= 6 && (best == null || Math.abs(s - tgt.amount) < Math.abs(best - tgt.amount))) best = s;
-  if (best == null) return { src, tgt };
-  const d = best - tgt.amount;                        // ＋なら src から もらう
-  if (d > 0 && src.amount < d) return { src, tgt };
-  if (d < 0 && src.amount - d > TYPES[src.type].cap) return { src, tgt };
-  return { src: { ...src, amount: src.amount - d }, tgt: { ...tgt, amount: best } };
+export function applyFlow(src, tgt, r) {
+  return { src: { ...src, amount: tidy(src.amount - r.move) }, tgt: { ...tgt, amount: tidy(tgt.amount + r.move) } };
+}
+/* 指を はなした とき：この 1かいで うつした りょう moved を 目もりの 単位に まるめる（その ぶんは src と やりとり）
+   → { src, tgt, moved（まるめた あとの りょう） } */
+export function roundPour(src, tgt, moved) {
+  const u = pourStep(src, tgt);
+  let r = Math.round(moved / u) * u;
+  const need = (x) => x - moved;                  // ＋なら src から さらに もらう
+  if (need(r) > 1e-6 && (src.amount < need(r) - 1e-6 || TYPES[tgt.type].cap - tgt.amount < need(r) - 1e-6)) r -= u;
+  if (r < 0) r = 0;
+  if (need(r) < -1e-6 && TYPES[src.type].cap - src.amount < -need(r) - 1e-6) r += u;     // もとに もどす ばしょが ない とき（ふつうは ない）
+  const d = need(r);
+  return { src: { ...src, amount: tidy(src.amount - d) }, tgt: { ...tgt, amount: tidy(tgt.amount + d) }, moved: r };
 }
 
 /* ---------- もんだい ---------- */
@@ -97,7 +92,7 @@ export function makeMeasure(level, r = Math.random) {
     stage: 1, level, target: n * ML_PER_DL, into: "L",
     goal: `1Lますに ちょうど ${n}dL いれよう`,
     vessels: [V("pot", "pot", 1800, 52), V("dl", "dl", 0, 150), V("L", "L", 0, 262)],
-    pours: { pot: ["dl"], dl: ["L", "pot"], L: ["dl"] },
+    pours: { pot: ["dl"], dl: ["L", "pot"], L: ["dl", "pot"] },     // つぼ → 1Lます は なし（1dLますで はかる 課題なので）
   };
 }
 
@@ -112,7 +107,7 @@ export function makeSum(level, r = Math.random) {
     stage: 2, level, a: a * ML_PER_DL, b: b * ML_PER_DL, total, units: ["L", "dL"], answer: splitLdL(total),
     goal: "2つの 1Lますを あわせると、ぜんぶで 何L何dL？",
     vessels: [V("A", "L", a * ML_PER_DL, 50, "あ"), V("tank", "tank", 0, 180), V("B", "L", b * ML_PER_DL, 310, "い")],
-    pours: { A: ["tank"], B: ["tank"] },
+    pours: { A: ["tank", "B"], B: ["tank", "A"], tank: ["A", "B"] },
   };
 }
 
@@ -154,7 +149,7 @@ export function makeML(kind, r = Math.random) {
     return { stage: 4, kind, k, units: ["mL"], answer: { mL: k * 100 }, total: k * 100,
       goal: `1dLますで ${k}はい いれると 何mL？`,
       vessels: [V("pot", "pot", 1800, 50), V("dl", "dl", 0, 150), V("mc", "mcup", 0, 262)],
-      pours: { pot: ["dl"], dl: ["mc", "pot"], mc: ["dl"] } };
+      pours: { pot: ["dl"], dl: ["mc", "pot"], mc: ["dl", "pot"] } };     // つぼ → けいりょうカップ は なし（1dLますで くむ 課題なので）
   }
   if (kind === "fine") {             // 1dLますの こまかい 目もり：ちょうど X mL
     const x = pick([60, 70, 80, 90], r);

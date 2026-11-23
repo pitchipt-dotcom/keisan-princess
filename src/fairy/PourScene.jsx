@@ -1,19 +1,27 @@
 /* =====================================================================
    ジュースの泉 — 入れ物を 指で もって かたむけて そそぐ（SVG）
-   - 入れ物を おさえて よこに うごかすと もちあがり、そそげる 入れ物の 上に くる（すいつく）
-   - そのまま 指を 下へ うごかすほど かたむく。ふちまで かたむくと ジュースが ながれる
-   - 指を はなすと 止まって もとの 場所に もどる
-   - 目もりの 線では かるく すいつく（すこし 止まる。はなした ときも 線の ちかくなら ぴったりに）
-   りょうの 計算は juice.js（flowStep / releaseSnap）。ここは 絵と 指の うごきだけ
+   - 入れ物を おさえて うごかすと もちあがって 指に ついてくる
+   - そそげる 入れ物の ちかく（ぴったりで なくて よい）に くると、そそぐ いちに すいついて かってに かたむき、
+     ふちが 光って きまった はやさで ながれる。指が すこし ずれても、大きく はなれない かぎり そそぎつづける
+   - そそぎ先が いっぱいに なったら 止まる（あふれる ぶんは もとの 入れ物に のこる）
+   - 指を はなすと 止まって、うつした りょうは 目もりに そろい、入れ物は もとの 場所に もどる
+   りょうの 計算は juice.js（flowStep / roundPour）。ここは 絵と 指の うごきだけ
+   onPourEnd(before, after, from, to)：1かい そそぎ おわった とき（そろえた あと。まるめて 0 なら よばない）→「ひとつもどす」に つかう
    あそびかた（チュートリアル）用：glowMark（目もりの 線を 光らせる）・demo（お手本の かげと 指）・
      auto（お手本どおりに じっさいに そそぐ）・onGrab／onRelease（もった・はなした）
    ===================================================================== */
 import React, { useEffect, useRef, useState } from "react";
-import { TYPES, MAX_TILT, flowStep, applyFlow, releaseSnap, lipAngle } from "./juice.js";
+import { TYPES, flowStep, applyFlow, roundPour, pourTilt } from "./juice.js";
 
 export const SCENE_W = 360, SCENE_H = 306, GROUND = 280;
 const JUICE = "#FFA94D", JUICE_TOP = "#FFD08A";
-const TILT_PX = 85;                                  // 指を 下へ 85px で いちばん かたむく
+const NEAR = 24;               // もっている 入れ物と そそぎ先の よこの すきまが これ いないで すいつく（上に かさなって いれば もちろん）
+const KEEP = 44;               // すいついた あとは、さらに この ぶん はなれるまで そそぎつづける（指が すこし ずれても 止まらない）
+const SWITCH = 12;             // ほかの 相手が これだけ ちかければ のりかえる（通りすぎる とき）
+const FAST = 320;              // 指が これより はやく よこに うごいて いる ときは あたらしい 相手に すいつかない（通りすぎる だけの とき）
+const PICK_MOVE = 16;          // もってから この ぶん うごかすまでは すいつかない（となりに すぐ そそがない）
+const SNAP_MS = 200;           // すいついて かたむく じかん（その あと ながれはじめる）
+const BACK_MS = 220;           // はなした あと もとの 場所に もどる じかん
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -105,27 +113,55 @@ function Vessel({ v, pose, glowL1, glowMl, hot, grab, onDown, ghost = false }) {
         {T.shape === "mcup" && <path d={`M${w} ${h * 0.18} q 14 0 14 ${h * 0.22} q 0 ${h * 0.22} -14 ${h * 0.22}`} fill="none" stroke="#7FB2E8" strokeWidth={3} />}
       </>}
       {hot && !glass && <rect x={-7} y={-6} width={w + 14} height={h + 13} rx={6} fill="none" stroke="#E85FA3" strokeWidth={3} strokeDasharray="6 4" />}
+      {/* そそげる きょりに 入ったら、ふちを 光らせる */}
+      {hot && <line x1={-6} x2={w + 6} y1={-3} y2={-3} stroke="#FFC21A" strokeWidth={5} strokeLinecap="round" className="jc-glow-line jc-rim" pointerEvents="none" />}
     </g>
   );
 }
 
 /* vessels：[{ id, type, amount, x, label }]、pours：{ id: [そそげる 相手…] }
-   onChange(vessels)：りょうが かわる たびに、onPourEnd(before, after, from, to)：1かい そそぎ おわった とき */
-/* お手本の うごき（k：0〜1）。v を もちあげて tgt の 上へ → ゆびを 下へ（かたむける） */
+   onChange(vessels)：りょうが かわる たびに */
+/* お手本の うごき（k：0〜1）。v を もちあげて tgt の ちかくへ（あとは すいついて かってに かたむく） */
 const DEMO_MS = 3000;
 const ease = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 function scriptPoint(v, tgt, k) {
   const T = TYPES[v.type], y0 = GROUND - T.h / 2;
-  const a = clamp(k / 0.35, 0, 1), b = clamp((k - 0.42) / 0.3, 0, 1);
-  return { fx: v.x + (tgt.x - v.x) * ease(a), fy: y0 + TILT_PX * 0.8 * ease(b), y0 };
+  const a = clamp(k / 0.35, 0, 1);
+  return { fx: v.x + (tgt.x - v.x) * ease(a), fy: y0 - 40 * Math.sin(Math.PI * a), y0, tiltK: clamp((k - 0.38) / 0.12, 0, 1) };
 }
+
+/* 入れ物の いちと かたむき。target が あれば そそぐ いち（side：そそぎ先の 左 1／右 -1）、なければ 指に ついてくる */
+function poseOf(v, cx, topY, target, side, tilt) {
+  const T = TYPES[v.type];
+  if (!target) {
+    const tx = clamp(cx, T.w / 2, SCENE_W - T.w / 2) - T.w / 2;
+    const ty = clamp(topY, 4, GROUND - T.h - 8);
+    return { lip: [tx + T.w, ty], pose: { tx, ty, deg: 0, lipX: T.w } };
+  }
+  const G = TYPES[target.type];
+  const lipX = target.x - side * G.w * 0.16;
+  const lipY = GROUND - G.h - 10 - Math.max(0, 1 - tilt / 50) * T.h * 0.55;
+  const lipLocal = side > 0 ? T.w : 0;
+  return { lip: [lipX, lipY], pose: { tx: lipX - lipLocal, ty: lipY, deg: side * tilt, lipX: lipLocal } };
+}
+/* そそぎ先の 左右：ちかづいて きた がわ。入れ物が 画面から はみだす ときは はんたいがわ */
+function sideFor(v, target, cx) {
+  const T = TYPES[v.type], G = TYPES[target.type];
+  let side = target.x >= cx ? 1 : -1;
+  const lipX = (s) => target.x - s * G.w * 0.16;
+  if (side > 0 && lipX(1) - T.w * 0.7 < 0) side = -1;
+  else if (side < 0 && lipX(-1) + T.w * 0.7 > SCENE_W) side = 1;
+  return side;
+}
+const streamPath = (lx, ly, s, sy) => `M${lx} ${ly} C ${lx + s * 9} ${ly - 2}, ${lx + s * 7} ${ly + 12}, ${lx + s * 6} ${sy}`;
 
 export function PourScene({ vessels, pours, interactive = true, onChange, onPourEnd, glowL1 = false, hint = null, glowMark = null, demo = null, auto = null, onGrab, onRelease }) {
   const svgRef = useRef(null);
   const vref = useRef(vessels); vref.current = vessels;
   const cbs = useRef({}); cbs.current = { onChange, onPourEnd, onGrab, onRelease };
   const [demoK, setDemoK] = useState(null);
-  const H = useRef(null);                       // もっている：{ id, grabDX, startY, fx, fy, side, target, tilt, lip:[x,y], before, moved, flowing }
+  // もっている：{ id, grabDX, grabDY, fx, fy, x0, y0, lifted, target, side, since, tilt, seg:{ to, moved, before }, poured, flowing }
+  const H = useRef(null);
   const R = useRef(null);                       // もどる アニメ：{ id, from:{tx,ty,deg,lipX}, t0 }
   const raf = useRef(0);
   const [, setTick] = useState(0);
@@ -140,55 +176,79 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
     return [p.x, p.y];
   };
   const restPose = (v) => { const T = TYPES[v.type]; return { tx: v.x - T.w / 2, ty: GROUND - T.h, deg: 0, lipX: T.w }; };
+  const find = (id) => vref.current.find((x) => x.id === id);
 
-  /* もっている 入れ物の いち（そそげる 相手の 上に すいつく） */
-  function heldPose(hd) {
-    const v = vref.current.find((x) => x.id === hd.id), T = TYPES[v.type];
-    const cx = hd.fx - hd.grabDX;
-    let target = null, best = 110;
-    for (const id of (pours[hd.id] || [])) {
-      const t = vref.current.find((x) => x.id === id);
+  /* そそぎ先を きめる：もっている 入れ物と そそぎ先の よこの すきま（かさなれば マイナス）が NEAR いないなら すいつく。
+     いまの 相手は NEAR＋KEEP まで はなれるまで かえない（ほかの 相手が SWITCH いじょう ちかい ときは のりかえる） */
+  function pickTarget(hd, cx) {
+    const W = TYPES[find(hd.id).type].w;
+    const gap = (t) => Math.abs(t.x - cx) - (W + TYPES[t.type].w) / 2;
+    const cur = hd.target ? find(hd.target) : null;
+    const keep = cur && gap(cur) <= NEAR + KEEP;
+    if (!hd.lifted) return null;
+    if (hd.vx > FAST) return keep ? cur : null;
+    let best = null, bd = Infinity;
+    for (const id of pours[hd.id] || []) {
+      const t = find(id); if (!t || t === cur) continue;
       const d = Math.abs(t.x - cx);
-      if (d < best) { best = d; target = t; }
+      if (gap(t) <= NEAR && d < bd) { bd = d; best = t; }
     }
-    const tilt = clamp((hd.fy - hd.startY) / TILT_PX, 0, 1) * MAX_TILT;
-    let side = hd.side || 1, lipX, lipY;
-    if (target) {
-      side = target.x >= cx ? 1 : -1;
-      const G = TYPES[target.type];
-      lipX = target.x - side * G.w * 0.16;
-      lipY = GROUND - G.h - 10 - Math.max(0, 1 - tilt / 50) * T.h * 0.55;
-    } else {
-      lipX = clamp(cx, T.w / 2, SCENE_W - T.w / 2) + side * T.w / 2;
-      lipY = Math.min(GROUND - T.h - 30, 150);
-    }
-    const lipLocal = side > 0 ? T.w : 0;
-    return { target, side, tilt, lip: [lipX, lipY], pose: { tx: lipX - lipLocal, ty: lipY, deg: side * tilt, lipX: lipLocal } };
+    if (keep && !(best && bd < Math.abs(cur.x - cx) - SWITCH)) return cur;
+    return best;
+  }
+  const heldPose = (hd) => {
+    const v = find(hd.id), target = hd.target ? find(hd.target) : null;
+    return { v, target, ...poseOf(v, hd.fx - hd.grabDX, hd.fy - hd.grabDY, target, hd.side, hd.tilt) };
+  };
+
+  /* 1かいぶんの そそぎを おえる：目もりに そろえて、うつって いれば onPourEnd */
+  function endSeg(hd) {
+    const sg = hd.seg; hd.seg = null;
+    if (!sg || sg.moved <= 1e-6) return;
+    const vs = vref.current, si = vs.findIndex((x) => x.id === hd.id), ti = vs.findIndex((x) => x.id === sg.to);
+    const r = roundPour(vs[si], vs[ti], sg.moved);
+    const nv = vs.slice(); nv[si] = r.src; nv[ti] = r.tgt;
+    vref.current = nv; cbs.current.onChange(nv);
+    if (r.moved > 1e-6) { hd.poured = true; cbs.current.onPourEnd && cbs.current.onPourEnd(sg.before, nv, hd.id, sg.to); }
   }
 
   const loop = (tPrev) => (tNow) => {
     const hd = H.current;
     const dt = Math.min(0.05, (tNow - tPrev) / 1000);
     if (hd && hd.script) {          // お手本どおりに うごかす：きまった りょうまで そそいだら はなす
-      const sc = hd.script, v = vref.current.find((x) => x.id === hd.id), tg = vref.current.find((x) => x.id === sc.to);
+      const sc = hd.script, v = find(hd.id), tg = find(sc.to);
       const pt = scriptPoint(v, tg, Math.min(0.75, (tNow - sc.t0) / DEMO_MS));
       hd.fx = pt.fx; hd.fy = pt.fy;
       if (tg.amount >= sc.stopAt - 0.5 || v.amount < 0.01 || tNow - sc.t0 > 9000) { onUp(); return; }
     }
     if (hd) {
-      const hp = heldPose(hd);
-      hd.side = hp.side; hd.target = hp.target ? hp.target.id : null; hd.flowing = false;
-      if (hp.target) {
-        const vs = vref.current;
-        const si = vs.findIndex((x) => x.id === hd.id), ti = vs.findIndex((x) => x.id === hp.target.id);
-        const r = flowStep(vs[si], vs[ti], hp.tilt, dt, performance.now());
-        if (r.move > 0 || r.stickUntil !== (vs[ti].stickUntil || 0)) {
+      const cx = hd.fx - hd.grabDX;
+      // よこの はやさ：さいごの 0.12びょうで うごいた きょり
+      hd.trail.push([tNow, hd.fx]); while (hd.trail.length > 2 && tNow - hd.trail[0][0] > 120) hd.trail.shift();
+      const [t0, x0] = hd.trail[0]; hd.vx = tNow > t0 ? Math.abs(hd.fx - x0) / ((tNow - t0) / 1000) : 0;
+      if (!hd.lifted && Math.hypot(hd.fx - hd.x0, hd.fy - hd.y0) >= PICK_MOVE) hd.lifted = true;
+      const t = pickTarget(hd, cx);
+      const tid = t ? t.id : null;
+      if (tid !== hd.target) {
+        endSeg(hd);
+        hd.target = tid; hd.since = tNow;
+        if (t) hd.side = sideFor(find(hd.id), t, cx);
+      }
+      // かたむき：すいついたら SNAP_MS で そそぐ 角度へ。はなれたら もどす
+      const v = find(hd.id);
+      const want = t ? pourTilt(v) : 0;
+      hd.tilt += (want - hd.tilt) * Math.min(1, dt / (SNAP_MS / 1000 / 3));
+      hd.flowing = false;
+      if (t && tNow - hd.since >= SNAP_MS) {
+        const vs = vref.current, si = vs.findIndex((x) => x.id === hd.id), ti = vs.findIndex((x) => x.id === t.id);
+        const r = flowStep(vs[si], vs[ti], dt);
+        if (r.move > 0) {
+          if (!hd.seg) hd.seg = { to: t.id, moved: 0, before: vs };
           const a = applyFlow(vs[si], vs[ti], r);
           const nv = vs.slice(); nv[si] = a.src; nv[ti] = a.tgt;
           vref.current = nv; cbs.current.onChange(nv);
-          if (r.move > 0) { hd.moved = true; hd.lastTo = hp.target.id; }
+          hd.seg.moved += r.move; hd.flowing = true;
         }
-        hd.flowing = r.move > 0 || (hp.tilt > lipAngle(vs[si]) && vs[si].amount > 0.01 && performance.now() < (vref.current[ti].stickUntil || 0));
       }
       rerender();
       raf.current = requestAnimationFrame(loop(tNow));
@@ -196,38 +256,36 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
     }
     const rt = R.current;
     if (rt) {
-      if (tNow - rt.t0 >= 220) R.current = null;
+      if (tNow - rt.t0 >= BACK_MS) R.current = null;
       rerender();
       if (R.current) raf.current = requestAnimationFrame(loop(tNow));
     }
   };
 
+  const grab = (v, fx, fy, extra) => {
+    const T = TYPES[v.type];
+    cancelAnimationFrame(raf.current); R.current = null;
+    H.current = { id: v.id, grabDX: fx - v.x, grabDY: fy - (GROUND - T.h), fx, fy, x0: fx, y0: fy, trail: [], vx: 0, lifted: false,
+      target: null, side: 1, since: 0, tilt: 0, seg: null, poured: false, flowing: false, ...extra };
+    raf.current = requestAnimationFrame(loop(performance.now()));
+  };
   const onDown = (v) => (e) => {
     if (!interactive || H.current) return;
     e.preventDefault(); e.stopPropagation();
     try { svgRef.current.setPointerCapture(e.pointerId); } catch (_) { /* なし */ }
     const [fx, fy] = toScene(e);
-    cancelAnimationFrame(raf.current); R.current = null;
-    H.current = { id: v.id, grabDX: fx - v.x, startY: fy, fx, fy, side: 1, target: null, before: vref.current, moved: false };
+    grab(v, fx, fy);
     cbs.current.onGrab && cbs.current.onGrab(v.id);
-    raf.current = requestAnimationFrame(loop(performance.now()));
   };
   const onMove = (e) => { const hd = H.current; if (!hd || hd.script) return; const [fx, fy] = toScene(e); hd.fx = fx; hd.fy = fy; };
   const onUp = (e) => {
     const hd = H.current; if (!hd) return;
     if (e && hd.script) return;                   // お手本の とちゅうは ゆびを はなしても つづける
     const hp = heldPose(hd);
+    endSeg(hd);                                   // 止めて、目もりに そろえる
     H.current = null;
-    // はなした とき：線の ちかくなら ぴったりに
-    if (hd.moved && hd.lastTo) {
-      const vs = vref.current, si = vs.findIndex((x) => x.id === hd.id), ti = vs.findIndex((x) => x.id === hd.lastTo);
-      const s = releaseSnap(vs[si], vs[ti]);
-      const nv = vs.map((x, i) => (i === si ? s.src : i === ti ? { ...s.tgt, stickUntil: 0 } : x));
-      vref.current = nv; cbs.current.onChange(nv);
-      cbs.current.onPourEnd && cbs.current.onPourEnd(hd.before, nv, hd.id, hd.lastTo);
-    }
-    R.current = { id: hd.id, from: hp.pose, t0: performance.now() };
-    cbs.current.onRelease && cbs.current.onRelease({ id: hd.id, poured: !!hd.moved, auto: !!hd.script });
+    R.current = { id: hd.id, from: hp.pose, t0: performance.now() };     // もとの 場所へ もどる
+    cbs.current.onRelease && cbs.current.onRelease({ id: hd.id, poured: !!hd.poured, auto: !!hd.script });
     cancelAnimationFrame(raf.current);
     raf.current = requestAnimationFrame(loop(performance.now()));
   };
@@ -238,9 +296,7 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
     if (!auto || H.current) return;
     const v = vref.current.find((x) => x.id === auto.id); if (!v) return;
     const y0 = GROUND - TYPES[v.type].h / 2;
-    cancelAnimationFrame(raf.current); R.current = null;
-    H.current = { id: v.id, grabDX: 0, startY: y0, fx: v.x, fy: y0, side: 1, target: null, before: vref.current, moved: false, script: { t0: performance.now(), to: auto.to, stopAt: auto.stopAt } };
-    raf.current = requestAnimationFrame(loop(performance.now()));
+    grab(v, v.x, y0, { script: { t0: performance.now(), to: auto.to, stopAt: auto.stopAt } });
     /* eslint-disable-next-line */
   }, [autoKey]);
 
@@ -263,11 +319,11 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
       const hp = heldPose(hd); poses[v.id] = hp.pose; held = { v, hp };
       if (hd.flowing && hp.target) {
         const t = vessels.find((x) => x.id === hp.target.id), G = TYPES[t.type];
-        const sy = GROUND - (t.amount / G.cap) * G.h, [lx, ly] = hp.lip, s = hp.side;
-        stream = `M${lx} ${ly} C ${lx + s * 9} ${ly - 2}, ${lx + s * 7} ${ly + 12}, ${lx + s * 6} ${sy}`;
+        const sy = GROUND - (t.amount / G.cap) * G.h, [lx, ly] = hp.lip;
+        stream = streamPath(lx, ly, hd.side, sy);
       }
     } else if (rt && rt.id === v.id) {
-      const k = Math.min(1, (now - rt.t0) / 220), e = 1 - (1 - k) * (1 - k), rp = restPose(v), f = rt.from;
+      const k = Math.min(1, (now - rt.t0) / BACK_MS), e = 1 - (1 - k) * (1 - k), rp = restPose(v), f = rt.from;
       poses[v.id] = { tx: f.tx + (rp.tx - f.tx) * e, ty: f.ty + (rp.ty - f.ty) * e, deg: f.deg * (1 - e), lipX: f.lipX };
     } else poses[v.id] = restPose(v);
   }
@@ -276,11 +332,12 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
     const v = vessels.find((x) => x.id === demo.id), tg = vessels.find((x) => x.id === demo.to);
     if (v && tg) {
       const pt = scriptPoint(v, tg, Math.min(1, demoK / 0.85));
-      const hp = heldPose({ id: v.id, grabDX: 0, startY: pt.y0, fx: pt.fx, fy: pt.fy, side: 1 });
+      const T = TYPES[v.type], on = pt.tiltK > 0;
+      const side = on ? sideFor(v, tg, v.x) : 1;
+      const hp = poseOf(v, pt.fx, pt.fy - T.h / 2, on ? tg : null, side, pourTilt(v) * ease(pt.tiltK));
       const G = TYPES[tg.type], [lx, ly] = hp.lip, sy = GROUND - (tg.amount / G.cap) * G.h;
-      const pouring = hp.target && hp.tilt > lipAngle(v) && v.amount > 0.01;
-      ghost = { v, pose: hp.pose, fx: pt.fx, fy: pt.fy, fade: demoK > 0.85 ? 1 - (demoK - 0.85) / 0.15 : Math.min(1, demoK / 0.06),
-        stream: pouring ? `M${lx} ${ly} C ${lx + 9} ${ly - 2}, ${lx + 7} ${ly + 12}, ${lx + 6} ${sy}` : null };
+      ghost = { v, tg: on ? tg.id : null, pose: hp.pose, fx: pt.fx, fy: pt.fy, fade: demoK > 0.85 ? 1 - (demoK - 0.85) / 0.15 : Math.min(1, demoK / 0.06),
+        stream: pt.tiltK >= 1 && v.amount > 0.01 ? streamPath(lx, ly, side, sy) : null };
     }
   }
   const order = vessels.filter((v) => !(hd && hd.id === v.id) && !(rt && rt.id === v.id)).concat(vessels.filter((v) => (hd && hd.id === v.id) || (rt && rt.id === v.id)));
@@ -302,7 +359,7 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
       {order.map((v) => (
         <Vessel key={v.id} v={v} pose={poses[v.id]} glowL1={glowL1 && v.type === "tank" && v.amount >= 1000 - 0.5}
           glowMl={glowMark && glowMark.id === v.id ? glowMark.ml : null}
-          hot={hd && hd.target === v.id} grab={hd && hd.id === v.id} onDown={canDrag(v) ? onDown(v) : undefined} />
+          hot={(hd && hd.target === v.id) || (ghost && ghost.tg === v.id)} grab={hd && hd.id === v.id} onDown={canDrag(v) ? onDown(v) : undefined} />
       ))}
       {ghost && (
         <g opacity={ghost.fade} pointerEvents="none" className="jc-ghost">
@@ -312,9 +369,9 @@ export function PourScene({ vessels, pours, interactive = true, onChange, onPour
         </g>
       )}
       {stream && <path d={stream} fill="none" stroke={JUICE} strokeWidth={5} strokeLinecap="round" className="jc-stream" pointerEvents="none" />}
-      {held && held.hp.tilt < 8 && (
-        <text x={clamp(held.hp.lip[0], 70, SCENE_W - 70)} y={Math.max(14, held.hp.pose.ty - 10)} textAnchor="middle" fontSize={11} fontWeight={900} fill="#E85FA3" pointerEvents="none">
-          {held.hp.target ? "↓ ゆびを 下へ うごかすと かたむくよ" : "そそぐ 入れ物の ほうへ うごかそう"}
+      {held && !held.hp.target && held.v && (
+        <text x={clamp(held.hp.pose.tx + TYPES[held.v.type].w / 2, 90, SCENE_W - 90)} y={Math.max(14, held.hp.pose.ty - 10)} textAnchor="middle" fontSize={12} fontWeight={900} fill="#E85FA3" pointerEvents="none">
+          そそぐ 入れ物の ちかくへ もっていこう
         </text>
       )}
     </svg>
